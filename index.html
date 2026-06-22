@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
@@ -247,8 +247,22 @@ select.form-control option { background: var(--specter-dark-accent); }
         </div>
       </div>
 
-      <!-- Step 6: swPhone -->
+      <!-- Step 6: swPcModels -->
       <div class="wizard-step" id="step-6">
+        <div class="section-card">
+          <div class="section-card-body">
+            <div class="wizard-question">Welche Software-Wallet-Apps nutzt du auf dem Computer?</div>
+            <div id="sw-pc-model-selects"></div>
+            <div class="wizard-nav">
+              <button class="btn btn-back" onclick="wizardBack()">&#8592; Zur&#252;ck</button>
+              <button class="btn btn-next" id="next-6" onclick="wizardNext()">Weiter &#8594;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 7: swPhone -->
+      <div class="wizard-step" id="step-7">
         <div class="section-card">
           <div class="section-card-body">
             <div class="wizard-question">Wie viele Software-Wallet-Apps hast du auf deinem Smartphone?</div>
@@ -261,14 +275,28 @@ select.form-control option { background: var(--specter-dark-accent); }
             </div>
             <div class="wizard-nav">
               <button class="btn btn-back" onclick="wizardBack()">&#8592; Zur&#252;ck</button>
-              <button class="btn btn-next" id="next-6" onclick="wizardNext()" disabled>Weiter &#8594;</button>
+              <button class="btn btn-next" id="next-7" onclick="wizardNext()" disabled>Weiter &#8594;</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Step 7: exCount -->
-      <div class="wizard-step" id="step-7">
+      <!-- Step 8: swPhoneModels -->
+      <div class="wizard-step" id="step-8">
+        <div class="section-card">
+          <div class="section-card-body">
+            <div class="wizard-question">Welche Software-Wallet-Apps nutzt du auf dem Smartphone?</div>
+            <div id="sw-phone-model-selects"></div>
+            <div class="wizard-nav">
+              <button class="btn btn-back" onclick="wizardBack()">&#8592; Zur&#252;ck</button>
+              <button class="btn btn-next" id="next-8" onclick="wizardNext()">Weiter &#8594;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 9: exCount -->
+      <div class="wizard-step" id="step-9">
         <div class="section-card">
           <div class="section-card-body">
             <div class="wizard-question">Bei wie vielen Online-B&#246;rsen (Exchanges) hast du einen aktiven Account?</div>
@@ -281,28 +309,28 @@ select.form-control option { background: var(--specter-dark-accent); }
             </div>
             <div class="wizard-nav">
               <button class="btn btn-back" onclick="wizardBack()">&#8592; Zur&#252;ck</button>
-              <button class="btn btn-next" id="next-7" onclick="wizardNext()" disabled>Weiter &#8594;</button>
+              <button class="btn btn-next" id="next-9" onclick="wizardNext()" disabled>Weiter &#8594;</button>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Step 8: exNames -->
-      <div class="wizard-step" id="step-8">
+      <div class="wizard-step" id="step-10">
         <div class="section-card">
           <div class="section-card-body">
             <div class="wizard-question">Welche Online-B&#246;rsen nutzt du?</div>
             <div id="ex-name-selects"></div>
             <div class="wizard-nav">
               <button class="btn btn-back" onclick="wizardBack()">&#8592; Zur&#252;ck</button>
-              <button class="btn btn-next" id="next-8" onclick="wizardNext()">Weiter &#8594;</button>
+              <button class="btn btn-next" id="next-10" onclick="wizardNext()">Weiter &#8594;</button>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Step 9: twofa -->
-      <div class="wizard-step" id="step-9">
+      <div class="wizard-step" id="step-11">
         <div class="section-card">
           <div class="section-card-body">
             <div class="wizard-question">Nutzt du f&#252;r die B&#246;rsen-Logins eine 2FA-App (z.B. Google Authenticator)?</div>
@@ -312,14 +340,14 @@ select.form-control option { background: var(--specter-dark-accent); }
             </div>
             <div class="wizard-nav">
               <button class="btn btn-back" onclick="wizardBack()">&#8592; Zur&#252;ck</button>
-              <button class="btn btn-next" id="next-9" onclick="wizardNext()" disabled>Weiter &#8594;</button>
+              <button class="btn btn-next" id="next-11" onclick="wizardNext()" disabled>Weiter &#8594;</button>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Step 10: pwm -->
-      <div class="wizard-step" id="step-10">
+      <div class="wizard-step" id="step-12">
         <div class="section-card">
           <div class="section-card-body">
             <div class="wizard-question">Hast du wichtige Daten in einer Passwortmanager-App gespeichert (z.B. 1Password, Bitwarden)?</div>
@@ -329,14 +357,28 @@ select.form-control option { background: var(--specter-dark-accent); }
             </div>
             <div class="wizard-nav">
               <button class="btn btn-back" onclick="wizardBack()">&#8592; Zur&#252;ck</button>
-              <button class="btn btn-next" id="next-10" onclick="wizardNext()" disabled>Weiter &#8594;</button>
+              <button class="btn btn-next" id="next-12" onclick="wizardNext()" disabled>Weiter &#8594;</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Step 11: dig -->
-      <div class="wizard-step" id="step-11">
+      <!-- Step 13: pwmApp -->
+      <div class="wizard-step" id="step-13">
+        <div class="section-card">
+          <div class="section-card-body">
+            <div class="wizard-question">Welche Passwortmanager-App nutzt du?</div>
+            <div id="pwm-app-select"></div>
+            <div class="wizard-nav">
+              <button class="btn btn-back" onclick="wizardBack()">&#8592; Zur&#252;ck</button>
+              <button class="btn btn-next" id="next-13" onclick="wizardNext()">Weiter &#8594;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 14: dig -->
+      <div class="wizard-step" id="step-14">
         <div class="section-card">
           <div class="section-card-body">
             <div class="wizard-question">Hast du deinen Nachlassplan auch digital abgespeichert (z.B. auf einer SD-Karte oder einem USB-Stick)?</div>
@@ -346,14 +388,14 @@ select.form-control option { background: var(--specter-dark-accent); }
             </div>
             <div class="wizard-nav">
               <button class="btn btn-back" onclick="wizardBack()">&#8592; Zur&#252;ck</button>
-              <button class="btn btn-next" id="next-11" onclick="wizardNext()" disabled>Weiter &#8594;</button>
+              <button class="btn btn-next" id="next-14" onclick="wizardNext()" disabled>Weiter &#8594;</button>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Step 12: enc -->
-      <div class="wizard-step" id="step-12">
+      <div class="wizard-step" id="step-15">
         <div class="section-card">
           <div class="section-card-body">
             <div class="wizard-question">Hast du deinen Nachlassplan auf der SD-Karte oder dem USB-Stick verschl&#252;sselt?</div>
@@ -363,14 +405,14 @@ select.form-control option { background: var(--specter-dark-accent); }
             </div>
             <div class="wizard-nav">
               <button class="btn btn-back" onclick="wizardBack()">&#8592; Zur&#252;ck</button>
-              <button class="btn btn-next" id="next-12" onclick="wizardNext()" disabled>Weiter &#8594;</button>
+              <button class="btn btn-next" id="next-15" onclick="wizardNext()" disabled>Weiter &#8594;</button>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Step 13: multisig -->
-      <div class="wizard-step" id="step-13">
+      <div class="wizard-step" id="step-16">
         <div class="section-card">
           <div class="section-card-body">
             <div class="wizard-question">Nutzt du ein Multisignatur-Wallet (z.B. Electrum, Specter Desktop)?</div>
@@ -380,14 +422,48 @@ select.form-control option { background: var(--specter-dark-accent); }
             </div>
             <div class="wizard-nav">
               <button class="btn btn-back" onclick="wizardBack()">&#8592; Zur&#252;ck</button>
-              <button class="btn btn-next" id="next-13" onclick="wizardNext()" disabled>Weiter &#8594;</button>
+              <button class="btn btn-next" id="next-16" onclick="wizardNext()" disabled>Weiter &#8594;</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Step 14: ssss -->
-      <div class="wizard-step" id="step-14">
+      <!-- Step 17: multisigWallet -->
+      <div class="wizard-step" id="step-17">
+        <div class="section-card">
+          <div class="section-card-body">
+            <div class="wizard-question">Welches Multisig-Wallet / welche Software nutzt du?</div>
+            <div id="multisig-wallet-select"></div>
+            <div class="wizard-nav">
+              <button class="btn btn-back" onclick="wizardBack()">&#8592; Zur&#252;ck</button>
+              <button class="btn btn-next" id="next-17" onclick="wizardNext()">Weiter &#8594;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 18: multisigCosigners -->
+      <div class="wizard-step" id="step-18">
+        <div class="section-card">
+          <div class="section-card-body">
+            <div class="wizard-question">Wie viele weitere Mitunterzeichner (Personen mit Teilschl&#252;ssel) gibt es?</div>
+            <div class="wizard-choice-group">
+              <button class="wizard-choice-btn" onclick="setCountChoice('multisigCosigners',0,this)">0</button>
+              <button class="wizard-choice-btn" onclick="setCountChoice('multisigCosigners',1,this)">1</button>
+              <button class="wizard-choice-btn" onclick="setCountChoice('multisigCosigners',2,this)">2</button>
+              <button class="wizard-choice-btn" onclick="setCountChoice('multisigCosigners',3,this)">3</button>
+              <button class="wizard-choice-btn" onclick="setCountChoice('multisigCosigners',4,this)">4</button>
+            </div>
+            <div class="wizard-nav">
+              <button class="btn btn-back" onclick="wizardBack()">&#8592; Zur&#252;ck</button>
+              <button class="btn btn-next" id="next-18" onclick="wizardNext()" disabled>Weiter &#8594;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 19: ssss -->
+      <div class="wizard-step" id="step-19">
         <div class="section-card">
           <div class="section-card-body">
             <div class="wizard-question">Nutzt du ein Shamir's Secret Sharing Scheme (SSSS)?</div>
@@ -397,14 +473,34 @@ select.form-control option { background: var(--specter-dark-accent); }
             </div>
             <div class="wizard-nav">
               <button class="btn btn-back" onclick="wizardBack()">&#8592; Zur&#252;ck</button>
-              <button class="btn btn-next" id="next-14" onclick="wizardNext()" disabled>Weiter &#8594;</button>
+              <button class="btn btn-next" id="next-19" onclick="wizardNext()" disabled>Weiter &#8594;</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Step 15: pmssss -->
-      <div class="wizard-step" id="step-15">
+      <!-- Step 20: ssssPersons -->
+      <div class="wizard-step" id="step-20">
+        <div class="section-card">
+          <div class="section-card-body">
+            <div class="wizard-question">Wie viele weitere Personen mit Teilgeheimnis (Secret) gibt es?</div>
+            <div class="wizard-choice-group">
+              <button class="wizard-choice-btn" onclick="setCountChoice('ssssPersons',0,this)">0</button>
+              <button class="wizard-choice-btn" onclick="setCountChoice('ssssPersons',1,this)">1</button>
+              <button class="wizard-choice-btn" onclick="setCountChoice('ssssPersons',2,this)">2</button>
+              <button class="wizard-choice-btn" onclick="setCountChoice('ssssPersons',3,this)">3</button>
+              <button class="wizard-choice-btn" onclick="setCountChoice('ssssPersons',4,this)">4</button>
+            </div>
+            <div class="wizard-nav">
+              <button class="btn btn-back" onclick="wizardBack()">&#8592; Zur&#252;ck</button>
+              <button class="btn btn-next" id="next-20" onclick="wizardNext()" disabled>Weiter &#8594;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 21: pmssss -->
+      <div class="wizard-step" id="step-21">
         <div class="section-card">
           <div class="section-card-body">
             <div class="wizard-question">Nutzt du ein (Poor Man's) Shamir's Secret Sharing Scheme (Papiervariante)?</div>
@@ -414,14 +510,32 @@ select.form-control option { background: var(--specter-dark-accent); }
             </div>
             <div class="wizard-nav">
               <button class="btn btn-back" onclick="wizardBack()">&#8592; Zur&#252;ck</button>
-              <button class="btn btn-next" id="next-15" onclick="wizardNext()" disabled>Weiter &#8594;</button>
+              <button class="btn btn-next" id="next-21" onclick="wizardNext()" disabled>Weiter &#8594;</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Step 16: Summary -->
-      <div class="wizard-step" id="step-16">
+      <!-- Step 22: poorPersons -->
+      <div class="wizard-step" id="step-22">
+        <div class="section-card">
+          <div class="section-card-body">
+            <div class="wizard-question">Wie viele weitere Personen mit Teilgeheimnis (Secret) gibt es?</div>
+            <div class="wizard-choice-group">
+              <button class="wizard-choice-btn" onclick="setCountChoice('poorPersons',0,this)">0</button>
+              <button class="wizard-choice-btn" onclick="setCountChoice('poorPersons',1,this)">1</button>
+              <button class="wizard-choice-btn" onclick="setCountChoice('poorPersons',2,this)">2</button>
+            </div>
+            <div class="wizard-nav">
+              <button class="btn btn-back" onclick="wizardBack()">&#8592; Zur&#252;ck</button>
+              <button class="btn btn-next" id="next-22" onclick="wizardNext()" disabled>Weiter &#8594;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 23: Summary -->
+      <div class="wizard-step" id="step-23">
         <div class="section-card">
           <div class="section-card-header"><div class="section-card-title">Zusammenfassung deiner Auswahl</div></div>
           <div class="section-card-body">
@@ -484,14 +598,52 @@ var EXCHANGES = [
   {label:"Andere",    url:""}
 ];
 
+var SOFTWARE_WALLETS = [
+  {label:"Electrum",          url:"https://electrum.org"},
+  {label:"Sparrow Wallet",    url:"https://sparrowwallet.com"},
+  {label:"BlueWallet",        url:"https://bluewallet.io"},
+  {label:"Wasabi Wallet",     url:"https://wasabiwallet.io"},
+  {label:"Muun",              url:"https://muun.com"},
+  {label:"Phoenix",           url:"https://phoenix.acinq.co"},
+  {label:"Blockstream Green", url:"https://blockstream.com/green"},
+  {label:"Nunchuk",           url:"https://nunchuk.io"},
+  {label:"Exodus",            url:"https://www.exodus.com"},
+  {label:"Trust Wallet",      url:"https://trustwallet.com"},
+  {label:"MetaMask",          url:"https://metamask.io"},
+  {label:"Andere",            url:""}
+];
+var MULTISIG_WALLETS = [
+  {label:"Electrum",          url:"https://electrum.org"},
+  {label:"Sparrow Wallet",    url:"https://sparrowwallet.com"},
+  {label:"Specter Desktop",   url:"https://specter.solutions"},
+  {label:"Nunchuk",           url:"https://nunchuk.io"},
+  {label:"Casa",              url:"https://www.casa.io"},
+  {label:"Caravan",           url:"https://unchained.com/caravan"},
+  {label:"BlueWallet",        url:"https://bluewallet.io"},
+  {label:"Andere",            url:""}
+];
+var PASSWORD_MANAGERS = [
+  {label:"1Password",         url:"https://1password.com"},
+  {label:"Bitwarden",         url:"https://bitwarden.com"},
+  {label:"KeePassXC",         url:"https://keepassxc.org"},
+  {label:"LastPass",          url:"https://www.lastpass.com"},
+  {label:"Dashlane",          url:"https://www.dashlane.com"},
+  {label:"NordPass",          url:"https://nordpass.com"},
+  {label:"Proton Pass",       url:"https://proton.me/pass"},
+  {label:"Andere",            url:""}
+];
+
 // ===== STATE =====
 var state = {
   hw:null, hwCount:0, hwModels:[],
   sw:null, swPc:0, swPhone:0,
+  swPcModels:[], swPhoneModels:[],
   exCount:0, exNames:[],
-  twofa:null, pwm:null,
+  twofa:null, pwm:null, pwManager:"",
   dig:null, enc:null,
-  multisig:null, ssss:null, pmssss:null
+  multisig:null, multisigWallet:"", multisigCosigners:0,
+  ssss:null, ssssPersons:0,
+  pmssss:null, poorPersons:0
 };
 
 // ===== WIZARD =====
@@ -505,17 +657,24 @@ function stepVisible(n) {
     case 3: return state.hw === 'ja' && state.hwCount > 0;
     case 4: return true;
     case 5: return state.sw === 'ja';
-    case 6: return state.sw === 'ja';
-    case 7: return true;
-    case 8: return state.exCount > 0;
-    case 9: return state.exCount > 0;
-    case 10: return true;
-    case 11: return true;
-    case 12: return state.dig === 'ja';
-    case 13: return true;
+    case 6: return state.sw === 'ja' && state.swPc >= 1;
+    case 7: return state.sw === 'ja';
+    case 8: return state.sw === 'ja' && state.swPhone >= 1;
+    case 9: return true;
+    case 10: return state.exCount > 0;
+    case 11: return state.exCount > 0;
+    case 12: return true;
+    case 13: return state.pwm === 'ja';
     case 14: return true;
-    case 15: return true;
+    case 15: return state.dig === 'ja';
     case 16: return true;
+    case 17: return state.multisig === 'ja';
+    case 18: return state.multisig === 'ja';
+    case 19: return true;
+    case 20: return state.ssss === 'ja';
+    case 21: return true;
+    case 22: return state.pmssss === 'ja';
+    case 23: return true;
     default: return false;
   }
 }
@@ -528,7 +687,7 @@ function updateProgress() {
   document.getElementById('progress-wrap').style.display = 'block';
   var visibleSteps = 0;
   var currentPos = 0;
-  for (var i = 1; i <= 16; i++) {
+  for (var i = 1; i <= 23; i++) {
     if (stepVisible(i)) {
       visibleSteps++;
       if (i <= currentStep) currentPos++;
@@ -547,14 +706,18 @@ function showStep(n) {
   currentStep = n;
   updateProgress();
   if (n === 3) rebuildHwModelSelects();
-  if (n === 8) rebuildExNameSelects();
-  if (n === 16) renderSummary();
+  if (n === 6) rebuildSwPcModelSelects();
+  if (n === 8) rebuildSwPhoneModelSelects();
+  if (n === 10) rebuildExNameSelects();
+  if (n === 13) rebuildPwmAppSelect();
+  if (n === 17) rebuildMultisigWalletSelect();
+  if (n === 23) renderSummary();
 }
 
 function wizardNext() {
   var next = currentStep + 1;
-  while (next <= 16 && !stepVisible(next)) next++;
-  if (next <= 16) showStep(next);
+  while (next <= 23 && !stepVisible(next)) next++;
+  if (next <= 23) showStep(next);
 }
 
 function wizardBack() {
@@ -632,6 +795,97 @@ function syncExName(sel) {
   state.exNames[idx] = sel.value;
 }
 
+function buildDropdownOptions(arr) {
+  return arr.map(function(m){ return '<option value="'+m.label+'">'+m.label+'</option>'; }).join('');
+}
+
+function getSw(label) {
+  for (var j=0; j<SOFTWARE_WALLETS.length; j++) { if (SOFTWARE_WALLETS[j].label === label) return SOFTWARE_WALLETS[j]; }
+  return {label:'', url:''};
+}
+
+function getPwm(label) {
+  for (var j=0; j<PASSWORD_MANAGERS.length; j++) { if (PASSWORD_MANAGERS[j].label === label) return PASSWORD_MANAGERS[j]; }
+  return {label:'', url:''};
+}
+
+function getMs(label) {
+  for (var j=0; j<MULTISIG_WALLETS.length; j++) { if (MULTISIG_WALLETS[j].label === label) return MULTISIG_WALLETS[j]; }
+  return {label:'', url:''};
+}
+
+function rebuildSwPcModelSelects() {
+  var c = document.getElementById('sw-pc-model-selects');
+  c.innerHTML = '';
+  var opts = buildDropdownOptions(SOFTWARE_WALLETS);
+  for (var i = 1; i <= state.swPc; i++) {
+    c.innerHTML += '<div class="form-group"><label class="form-label">Computer-Wallet #'+i+'</label>'
+      +'<select class="form-control" data-idx="'+(i-1)+'" onchange="syncSwPcModel(this)">'
+      +'<option value="">-- Bitte w&#228;hlen --</option>'+opts+'</select></div>';
+  }
+  var selects = c.querySelectorAll('select');
+  for (var j = 0; j < selects.length; j++) {
+    var idx = parseInt(selects[j].getAttribute('data-idx'));
+    if (state.swPcModels[idx]) selects[j].value = state.swPcModels[idx];
+  }
+}
+
+function syncSwPcModel(sel) {
+  var idx = parseInt(sel.getAttribute('data-idx'));
+  state.swPcModels[idx] = sel.value;
+}
+
+function rebuildSwPhoneModelSelects() {
+  var c = document.getElementById('sw-phone-model-selects');
+  c.innerHTML = '';
+  var opts = buildDropdownOptions(SOFTWARE_WALLETS);
+  for (var i = 1; i <= state.swPhone; i++) {
+    c.innerHTML += '<div class="form-group"><label class="form-label">Smartphone-Wallet #'+i+'</label>'
+      +'<select class="form-control" data-idx="'+(i-1)+'" onchange="syncSwPhoneModel(this)">'
+      +'<option value="">-- Bitte w&#228;hlen --</option>'+opts+'</select></div>';
+  }
+  var selects = c.querySelectorAll('select');
+  for (var j = 0; j < selects.length; j++) {
+    var idx = parseInt(selects[j].getAttribute('data-idx'));
+    if (state.swPhoneModels[idx]) selects[j].value = state.swPhoneModels[idx];
+  }
+}
+
+function syncSwPhoneModel(sel) {
+  var idx = parseInt(sel.getAttribute('data-idx'));
+  state.swPhoneModels[idx] = sel.value;
+}
+
+function rebuildPwmAppSelect() {
+  var c = document.getElementById('pwm-app-select');
+  c.innerHTML = '';
+  var opts = buildDropdownOptions(PASSWORD_MANAGERS);
+  c.innerHTML = '<div class="form-group"><label class="form-label">Passwortmanager</label>'
+    +'<select class="form-control" onchange="syncPwmApp(this)">'
+    +'<option value="">-- Bitte w&#228;hlen --</option>'+opts+'</select></div>';
+  var sel = c.querySelector('select');
+  if (sel && state.pwManager) sel.value = state.pwManager;
+}
+
+function syncPwmApp(sel) {
+  state.pwManager = sel.value;
+}
+
+function rebuildMultisigWalletSelect() {
+  var c = document.getElementById('multisig-wallet-select');
+  c.innerHTML = '';
+  var opts = buildDropdownOptions(MULTISIG_WALLETS);
+  c.innerHTML = '<div class="form-group"><label class="form-label">Multisig-Software</label>'
+    +'<select class="form-control" onchange="syncMultisigWallet(this)">'
+    +'<option value="">-- Bitte w&#228;hlen --</option>'+opts+'</select></div>';
+  var sel = c.querySelector('select');
+  if (sel && state.multisigWallet) sel.value = state.multisigWallet;
+}
+
+function syncMultisigWallet(sel) {
+  state.multisigWallet = sel.value;
+}
+
 function renderSummary() {
   var ul = document.getElementById('summary-list');
   var items = [];
@@ -642,8 +896,10 @@ function renderSummary() {
   items.push(['Hardware-Wallets', hwVal]);
 
   if (state.sw === 'ja') {
-    items.push(['Software-Wallets (Computer)', state.swPc + ' App' + (state.swPc !== 1 ? 's' : '')]);
-    items.push(['Software-Wallets (Smartphone)', state.swPhone + ' App' + (state.swPhone !== 1 ? 's' : '')]);
+    var swPcApps = state.swPcModels.filter(function(m){return m;});
+    items.push(['Software-Wallets (Computer)', state.swPc + ' App' + (state.swPc !== 1 ? 's' : '') + (swPcApps.length > 0 ? ': ' + swPcApps.join(', ') : '')]);
+    var swPhoneApps = state.swPhoneModels.filter(function(m){return m;});
+    items.push(['Software-Wallets (Smartphone)', state.swPhone + ' App' + (state.swPhone !== 1 ? 's' : '') + (swPhoneApps.length > 0 ? ': ' + swPhoneApps.join(', ') : '')]);
   } else {
     items.push(['Software-Wallets', 'Nein']);
   }
@@ -657,16 +913,16 @@ function renderSummary() {
     items.push(['2FA-App', state.twofa === 'ja' ? 'Ja' : 'Nein']);
   }
 
-  items.push(['Passwortmanager', state.pwm === 'ja' ? 'Ja' : 'Nein']);
+  items.push(['Passwortmanager', state.pwm === 'ja' ? 'Ja' + (state.pwManager ? ' – ' + state.pwManager : '') : 'Nein']);
 
   var digVal = state.dig === 'ja'
     ? 'Ja' + (state.enc === 'ja' ? ' (verschlüsselt)' : ' (nicht verschlüsselt)')
     : 'Nein';
   items.push(['Digitale Sicherung', digVal]);
 
-  items.push(['Multisig-Wallet', state.multisig === 'ja' ? 'Ja' : 'Nein']);
-  items.push(['SSSS', state.ssss === 'ja' ? 'Ja' : 'Nein']);
-  items.push(["Poor Man's SSSS", state.pmssss === 'ja' ? 'Ja' : 'Nein']);
+  items.push(['Multisig-Wallet', state.multisig === 'ja' ? 'Ja' + (state.multisigWallet ? ' – ' + state.multisigWallet : '') + (state.multisigCosigners > 0 ? ', ' + state.multisigCosigners + ' Mitunterzeichner' : '') : 'Nein']);
+  items.push(['SSSS', state.ssss === 'ja' ? 'Ja' + (state.ssssPersons > 0 ? ', ' + state.ssssPersons + ' Personen' : '') : 'Nein']);
+  items.push(["Poor Man's SSSS", state.pmssss === 'ja' ? 'Ja' + (state.poorPersons > 0 ? ', ' + state.poorPersons + ' Personen' : '') : 'Nein']);
 
   ul.innerHTML = items.map(function(item) {
     return '<li><span>' + item[0] + '</span><span>' + item[1] + '</span></li>';
@@ -748,14 +1004,24 @@ function buildAndPrint() {
     }
   }
   for (var i=1; i<=state.swPc; i++) {
-    h += '<tr><td>SW Wallet Computer #'+i+'</td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td></tr>';
+    var swPcLabel = getSw(state.swPcModels[i-1] || '').label;
+    h += '<tr><td>SW Wallet Computer #'+i+(swPcLabel?' &ndash; '+swPcLabel:'')+'</td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td></tr>';
   }
   for (var i=1; i<=state.swPhone; i++) {
-    h += '<tr><td>SW Wallet Smartphone #'+i+'</td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td></tr>';
+    var swPhoneLabel = getSw(state.swPhoneModels[i-1] || '').label;
+    h += '<tr><td>SW Wallet Smartphone #'+i+(swPhoneLabel?' &ndash; '+swPhoneLabel:'')+'</td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td></tr>';
   }
   for (var i=1; i<=state.exCount; i++) {
     var e = getEx(i);
     h += '<tr><td>Exchange #'+i+(e.label?' &ndash; '+e.label:'')+'</td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td></tr>';
+  }
+  if (state.pwm === 'ja' && state.pwManager) {
+    var pwmLabel = getPwm(state.pwManager).label;
+    h += '<tr><td>Passwortmanager'+(pwmLabel?' &ndash; '+pwmLabel:'')+'</td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td></tr>';
+  }
+  if (state.multisig === 'ja' && state.multisigWallet) {
+    var msLabel = getMs(state.multisigWallet).label;
+    h += '<tr><td>Multisig'+(msLabel?' &ndash; '+msLabel:'')+'</td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td><td class="td-empty"></td></tr>';
   }
   h += '</tbody></table>';
 
@@ -790,9 +1056,11 @@ function buildAndPrint() {
       h += eRow('Benutzername:');
       h += eRow('Passwort:');
       for (var i=1; i<=state.swPc; i++) {
+        var swPcApp = getSw(state.swPcModels[i-1] || '');
         h += '<div class="pdf-wallet-block">';
         h += '<div class="pdf-wallet-block-title">Wallet #'+i+'</div>';
-        h += eRow('Wallet-Name:');
+        h += fRow('Software-Wallet (App):', swPcApp.label || null);
+        h += fRow('Website:', swPcApp.url || null);
         h += eRow('Wallet f&uuml;r Kryptow&auml;hrung:');
         h += eRow('Wallet-Passwort:');
         h += eRow('Optionaler Sicherheitscode (Passphrase):');
@@ -808,9 +1076,11 @@ function buildAndPrint() {
       h += eRow('Login-PIN:');
       h += '<p class="pdf-text">Falls das Smartphone per Fingerabdruck oder Gesichtserkennung gesch&uuml;tzt ist, ben&ouml;tigt ihr zwingend die PIN &ndash; z.&thinsp;B. nach einem Neustart oder wenn die biometrische Entsperrung fehlschl&auml;gt.</p>';
       for (var i=1; i<=state.swPhone; i++) {
+        var swPhoneApp = getSw(state.swPhoneModels[i-1] || '');
         h += '<div class="pdf-wallet-block">';
         h += '<div class="pdf-wallet-block-title">Wallet #'+i+'</div>';
-        h += eRow('Wallet-Name:');
+        h += fRow('Software-Wallet (App):', swPhoneApp.label || null);
+        h += fRow('Website:', swPhoneApp.url || null);
         h += eRow('Wallet f&uuml;r Kryptow&auml;hrung:');
         h += eRow('Wallet-Passwort:');
         h += eRow('Optionaler Sicherheitscode (Passphrase):');
@@ -852,9 +1122,10 @@ function buildAndPrint() {
   if (state.pwm === 'ja') {
     h += '<h2 class="pdf-h2">Passwortmanager-App</h2>';
     h += '<p class="pdf-text">Ich nutze eine Passwortmanager-App, in der wichtige Zugangsdaten gespeichert sind. Um darauf zugreifen zu k&ouml;nnen, ben&ouml;tigt ihr die folgenden Angaben.</p>';
+    var pwmObj = getPwm(state.pwManager || '');
+    h += fRow('Name der Passwort-Manager-App:', pwmObj.label || null);
     h += eRow('Smartphone-Marke:');
     h += eRow('Login-PIN:');
-    h += eRow('Name der Passwort-Manager-App:');
     h += eRow('Passwort:');
   }
 
@@ -862,14 +1133,18 @@ function buildAndPrint() {
   if (state.multisig === 'ja') {
     h += '<h2 class="pdf-h2">Multisignatur-Wallet</h2>';
     h += '<p class="pdf-text">Ein Multisignatur-Wallet (Multisig) erfordert mehrere unabh&auml;ngige Schl&uuml;ssel, um eine Transaktion zu autorisieren. Das macht es sicherer, erfordert aber im Erbfall die Zusammenarbeit mehrerer Personen. Bitte kontaktiert alle unten aufgef&uuml;hrten Personen, bevor ihr Massnahmen ergreift.</p>';
+    var msObj = getMs(state.multisigWallet || '');
     h += eRow('Minimale Anzahl der Schl&uuml;ssel, die gebraucht wird (z.&thinsp;B. 2 von 3):');
-    h += eRow('Verwendetes Multisig-Wallet (Marke, Typ):');
+    h += fRow('Verwendetes Multisig-Wallet (Marke, Typ):', msObj.label || null);
+    h += fRow('Website:', msObj.url || null);
     h += '<div class="pdf-field-label" style="font-size:8.5pt;margin-bottom:4pt;">Dein pers&ouml;nlicher Teilschl&uuml;ssel (Seed-Phrase deiner Wallet):</div>';
     h += seedGrid();
-    h += '<h3 class="pdf-h3">Personen mit weiteren Teilschl&uuml;sseln (Name, Adresse, E-Mail, Telefonnummer, XPUB):</h3>';
-    for (var i=1; i<=4; i++) {
-      h += eRow('Person '+i+':');
-      h += eRow('Person '+i+' (XPUB dessen Wallet):');
+    if (state.multisigCosigners > 0) {
+      h += '<h3 class="pdf-h3">Personen mit weiteren Teilschl&uuml;sseln (Name, Adresse, E-Mail, Telefonnummer, XPUB):</h3>';
+      for (var i=1; i<=state.multisigCosigners; i++) {
+        h += eRow('Person '+i+':');
+        h += eRow('Person '+i+' (XPUB dessen Wallet):');
+      }
     }
   }
 
@@ -884,7 +1159,7 @@ function buildAndPrint() {
     h += '<p class="pdf-text">Das nachfolgende Raster dient zur handschriftlichen Eintragung deines Teilgeheimnisses.</p>';
     h += seedGrid();
     h += '<h3 class="pdf-h3">Personen mit einem weiteren Teilgeheimnis (Secret) (Name, Adresse, E-Mail, Telefonnummer):</h3>';
-    for (var i=1; i<=4; i++) { h += eRow('Person '+i+':'); }
+    for (var i=1; i<=state.ssssPersons; i++) { h += eRow('Person '+i+':'); }
   }
 
   // ---- ABSCHNITT 9: Poor Man's SSSS ----
@@ -901,9 +1176,10 @@ function buildAndPrint() {
     h += shamirBox('LISTE A');
     h += shamirBox('LISTE B');
     h += shamirBox('LISTE C');
-    h += '<h3 class="pdf-h3">Personen mit einem weiteren Teilgeheimnis (Secret) (Name, Adresse, E-Mail, Telefonnummer):</h3>';
-    h += eRow('Person 1:');
-    h += eRow('Person 2:');
+    if (state.poorPersons > 0) {
+      h += '<h3 class="pdf-h3">Personen mit einem weiteren Teilgeheimnis (Secret) (Name, Adresse, E-Mail, Telefonnummer):</h3>';
+      for (var i=1; i<=state.poorPersons; i++) { h += eRow('Person '+i+':'); }
+    }
   }
 
   // ---- ABSCHNITT 10: Liquidieren ----
