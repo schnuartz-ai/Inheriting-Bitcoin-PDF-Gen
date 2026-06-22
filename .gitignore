@@ -1,0 +1,10 @@
+# OS / editor artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+*~
+.vscode/
+.idea/
+
+# Build / temp helper (logo data-uri is embedded into index.html)
+assets/logo-datauri.txt
