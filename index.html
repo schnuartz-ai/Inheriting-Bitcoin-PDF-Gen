@@ -1532,6 +1532,7 @@ function msHwStatus(i){
 // 2. Eine Seed-Phrase ist "komplett descriptor-gebackupt" wenn ALLE ihre Backups descriptorWithBackup=true haben.
 // 3. Ohne externen Cosigner: min. m Seed-Phrasen muessen komplett sein.
 // 4. MIT externem Cosigner: jedes eigene Seedphrase-Backup MUSS den Descriptor haben.
+// 5. Keine positive Meldung mehr wenn alles ok - nur Fehlermeldungen anzeigen.
 function msDescStatus(i){
   var ms=state.multisigs[i]; ensureMsDb(ms);
   var m=ms.m||1, n=ms.n||1;
@@ -1561,55 +1562,50 @@ function msDescStatus(i){
       for(var k=0;k<incompleteSeeds.length;k++){ incompleteLabels.push(seedName(incompleteSeeds[k])); }
       return {
         level:"err", covered:completeSeeds.length, need:n,
-        msg:'<strong>Pflicht nicht erf&uumll;llt:</strong> Diese Multisig-Wallet hat einen externen Mitunterzeichner (Cosigner). '+
-          '<strong>Jedes einzelne Backup jeder eigenen Seed-Phrase muss den Wallet-Descriptor enthalten.</strong> '+
-          'Bei '+incompleteLabels.join(', ')+' fehlen Descriptor-Backups. '+
-          'Der Descriptor beim Cosigner, im Passwort-Manager oder auf einer Hardware-Wallet ersetzt diese Pflicht nicht.'
+        msg:'<strong>Wallet-Descriptor wird ungen&uuml;gend abgesichert.</strong> Empfehlung dazu am Ende unter &bdquo;Tipps zur Bitcoin-Sicherheit&ldquo;.'
       };
     }
-    return {level:"ok", covered:completeSeeds.length, need:m,
-      msg:'Der Wallet-Descriptor ist ausreichend gesichert: <strong>'+completeSeeds.length+' von '+n+'</strong> Seed-Phrasen vollst&auml;ndig (alle Backups) abgedeckt. Achtung: bei einem externen Cosigner MUSS jedes eigene Backup den Descriptor haben.</strong>'};
+    // Alles ok bei Cosigner - keine Warnung anzeigen
+    return {level:"ok", covered:completeSeeds.length, need:m, msg:''};
   }
 
   // Normale m-of-n-Regel (ohne externen Cosigner).
   var requiredCompleteSeeds = m;
 
   if(completeSeeds.length < requiredCompleteSeeds){
+    // gar kein oder zu wenig Descriptor
     var none=!msAnyDescriptor(i);
+    var noBackupAtAll=completeSeeds.length===0 && (!ms.dbDevices.length && !ms.dbBackups.length && !ms.dbPwm && !ms.dbBook && !ms.companionPc);
     return {level:"err", covered:completeSeeds.length, need:requiredCompleteSeeds,
-      msg:none
-        ? 'F&uumr dieses Multisig ist <strong>kein Wallet-Descriptor-Backup</strong> erfasst. Bei Verlust des Descriptors sind die Bitcoin <strong>nicht wiederherstellbar</strong> &ndash; auch nicht mit allen Seed-Phrasen.'
-        : '<strong>Pflicht nicht erf&uumll;llt:</strong> Erst <strong>'+completeSeeds.length+' von '+requiredCompleteSeeds+'</strong> nötigen Seed-Phrasen sind vollständig (alle Backups) mit Wallet-Descriptor gesichert. Bei '+m+'-von-'+n+' '+
-          'm&uumssen es mindestens '+requiredCompleteSeeds+' sein. Lege jedem Backup dieser Seed-Phrasen einen Wallet-Descriptor bei.'};
+      msg:noBackupAtAll
+        ? 'Wallet-Descriptor wird ungen&uuml;gend abgesichert. Empfehlung dazu am Ende unter &bdquo;Tipps zur Bitcoin-Sicherheit&ldquo;.'
+        : 'Wallet-Descriptor wird mangelhaft abgesichert. Empfehlung dazu am Ende unter &bdquo;Tipps zur Bitcoin-Sicherheit&ldquo;.'};
   }
 
-  // Genug komplette Seeds vorhanden.
+  // Genug komplette Seeds vorhanden, aber nicht alle.
   if(incompleteSeeds.length>0){
-    if(incompleteSeeds.length>1){
-      var inLbl=[]; for(var k=0;k<incompleteSeeds.length;k++) inLbl.push(seedName(incompleteSeeds[k]));
-      return {level:"warn", covered:completeSeeds.length, need:requiredCompleteSeeds,
-        msg:'Die Mindest-bedingung ist erfüllt ('+completeSeeds.length+' von '+n+' Seed-Phrasen vollständig gesichert), aber '+inLbl.join(' und ')+(inLbl.length>1?' haben ':(' hat '))+' unvollständige Descriptor-Backups.'};
-    }
-    // Genau eine unvollständige: pruefe Fallback.
-    if(!ms.descriptorInPasswordManager){
-      var seedIdx=incompleteSeeds[0], hasHwDesc=false;
-      var sd2=state.seeds[seedIdx];
+    // Pruefe ob es einen Fallback-Ort gibt (Passwortmanager oder HW-Descriptor)
+    var hasPwm=m.descriptorInPasswordManager;
+    var hasHwDesc=false;
+    for(var k=0;k<incompleteSeeds.length;k++){
+      var si2=incompleteSeeds[k];
+      var sd2=state.seeds[si2];
       if(sd2 && sd2.devices && ms.descriptorLoadedOnHardwareWallets){
         for(var d=0;d<sd2.devices.length;d++){ if(ms.descriptorLoadedOnHardwareWallets[sd2.devices[d]]) hasHwDesc=true; }
       }
-      if(!hasHwDesc){
-        return {level:"warn", covered:completeSeeds.length, need:requiredCompleteSeeds,
-          msg:'Die Mindest-bedingung ist erfüllt ('+completeSeeds.length+' von '+n+' Seed-Phrasen vollständig gesichert), aber Seed &bdquo;'+seedName(seedIdx)+'&ldquo; hat nicht bei jedem Backup einen Wallet-Descriptor. '+
-            'Empfehlung: Lege jedem Backup einen Descriptor bei, oder sichere ihn im Passwort-Manager oder auf der zugehörigen Hardware-Wallet.'};
-      }
     }
+    // Wenn nur Hardware + Passwortmanager aber keine richtigen Backup-Backups
+    if((hasPwm || hasHwDesc) && !ms.dbBackups.length){
+      return {level:"err", covered:completeSeeds.length, need:requiredCompleteSeeds,
+        msg:'Wallet-Descriptor wird mangelhaft abgesichert. Empfehlung dazu am Ende unter &bdquo;Tipps zur Bitcoin-Sicherheit&ldquo;.'};
+    }
+    // Grenzwertig - fast genug
     return {level:"warn", covered:completeSeeds.length, need:requiredCompleteSeeds,
-      msg:'Die Mindest-bedingung ist erfüllt ('+completeSeeds.length+' von '+n+' Seed-Phrasen vollständig gesichert). Seed &bdquo;'+seedName(incompleteSeeds[0])+'&ldquo; hat nicht bei jedem Backup einen Descriptor, aber ein Fallback-Ort ist vorhanden. '+
-        '<strong>Empfehlung:</strong> trotzdem jedem Backup einen Wallet-Descriptor beilegen für maximale Sicherheit.'};
+      msg:'Wallet-Descriptor wird grenzwertig redundant abgesichert. Empfehlung dazu am Ende unter &bdquo;Tipps zur Bitcoin-Sicherheit&ldquo;.'};
   }
 
-  return {level:"ok", covered:completeSeeds.length, need:m,
-    msg:'Der Wallet-Descriptor ist ausreichend gesichert: <strong>'+completeSeeds.length+' von '+n+'</strong> Seed-Phrasen vollständig abgedeckt'+(ms.dbPwm?' + Kopie im Passwort-Manager':'')+'. Das ist sichergestellt.'};
+  // Alles perfekt - keine Meldung mehr
+  return {level:"ok", covered:completeSeeds.length, need:m, msg:''};
 }
 
 // UI-Funktionen für Descriptor-Backup-Tracking
@@ -1662,13 +1658,12 @@ function descriptorBackupSection(i){
 
   // Bestaetigung
   var st=msDescStatus(i);
-  if(st.level==="ok"){
-    h+='<div style="margin-top:10px;color:#3a9a5a;font-size:0.8rem;">&#10004; Wallet-Descriptor ausreichend gesichert ('+st.covered+' von '+state.multisigs[i].n+' Seed-Phrasen vollständig). Das ist sichergestellt.</div>';
-  } else if(st.level==="err"){
-    h+='<div style="margin-top:10px;color:#c98b8b;font-size:0.76rem;">Pflicht noch nicht erfüllt: erst '+st.covered+' von '+st.need+' nötigen Seed-Phrasen vollständig gesichert. Details am Ende unter &bdquo;Tipps zur Bitcoin-Sicherheit&ldquo;.</div>';
-  } else {
-    h+='<div style="margin-top:10px;color:#9aa7b2;font-size:0.76rem;">Pflicht erfüllt, aber nicht jedes Backup hat einen Wallet-Descriptor. Empfehlung dazu am Ende unter &bdquo;Tipps zur Bitcoin-Sicherheit&ldquo;.</div>';
+  if(st.level==="err"){
+    h+='<div style="margin-top:10px;color:#c98b8b;font-size:0.76rem;">'+st.msg+'</div>';
+  } else if(st.level==="warn"){
+    h+='<div style="margin-top:10px;color:#9aa7b2;font-size:0.76rem;">'+st.msg+'</div>';
   }
+  // Bei "ok" keine positive Meldung anzeigen
   h+='<p class="mini-note" style="margin-top:8px;"><strong>Bei Verlust des Wallet-Descriptors sind die Bitcoin nicht wiederherstellbar</strong> &ndash; sichere ihn an mehreren Orten.</p>';
   h+='</div>';
   return h;
