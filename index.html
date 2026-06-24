@@ -758,8 +758,6 @@ function renderBackup(idx,b){
       h+='<p class="mini-note">Im PDF erscheint eine leere Zeile f&#252;r den Aufbewahrungsort der Bag (handschriftlich).</p>';
     }
   }
-  h+='<label class="chk-row" style="margin-top:8px;"><input type="checkbox" '+(bk.descriptorWithBackup?"checked":"")+' onchange="toggleBackupDescriptor('+idx+','+b+')"> Wallet-Descriptor liegt diesem Backup bei</label>';
-  h+='<p class="mini-note">F&#252;r Multisig-Wallets ist es zwingend empfohlen, jedem Backup eine Kopie des Wallet-Descriptors beizulegen. Der Descriptor wird zur Wiederherstellung des Multisig-Wallets ben&#246;tigt.</p>';
   h+='</div>';
   return h;
 }
@@ -1585,7 +1583,7 @@ function msDescStatus(i){
   // Genug komplette Seeds vorhanden, aber nicht alle.
   if(incompleteSeeds.length>0){
     // Pruefe ob es einen Fallback-Ort gibt (Passwortmanager oder HW-Descriptor)
-    var hasPwm=m.descriptorInPasswordManager;
+    var hasPwm=ms.descriptorInPasswordManager;
     var hasHwDesc=false;
     for(var k=0;k<incompleteSeeds.length;k++){
       var si2=incompleteSeeds[k];
@@ -1594,12 +1592,11 @@ function msDescStatus(i){
         for(var d=0;d<sd2.devices.length;d++){ if(ms.descriptorLoadedOnHardwareWallets[sd2.devices[d]]) hasHwDesc=true; }
       }
     }
-    // Wenn nur Hardware + Passwortmanager aber keine richtigen Backup-Backups
-    if((hasPwm || hasHwDesc) && !ms.dbBackups.length){
-      return {level:"err", covered:completeSeeds.length, need:requiredCompleteSeeds,
-        msg:'Wallet-Descriptor wird mangelhaft abgesichert. Empfehlung dazu am Ende unter &bdquo;Tipps zur Bitcoin-Sicherheit&ldquo;.'};
+    // Wenn Fallback (PW-Manager oder HW) vorhanden: OK, keine Warnung
+    if(hasPwm || hasHwDesc){
+      return {level:"ok", covered:completeSeeds.length, need:requiredCompleteSeeds, msg:''};
     }
-    // Grenzwertig - fast genug
+    // Kein Fallback: Warnung grenzwertig
     return {level:"warn", covered:completeSeeds.length, need:requiredCompleteSeeds,
       msg:'Wallet-Descriptor wird grenzwertig redundant abgesichert. Empfehlung dazu am Ende unter &bdquo;Tipps zur Bitcoin-Sicherheit&ldquo;.'};
   }
@@ -1617,7 +1614,8 @@ function toggleMsDbBook(i){ var ms=ensureMsDb(state.multisigs[i]); ms.dbBook=!ms
 function setMsCompanion(i,v){ ensureMsDb(state.multisigs[i]).companion=v; render(); }
 function toggleMsCompanionPc(i){ var ms=ensureMsDb(state.multisigs[i]); ms.companionPc=!ms.companionPc; render(); }
 function toggleMsDescriptorInPwmDirect(i){ var ms=ensureMsDb(state.multisigs[i]); ms.descriptorInPasswordManager=!ms.descriptorInPasswordManager; render(); }
-function toggleMsDescriptorOnHwDirect(i,deviceId){ var ms=ensureMsDb(state.multisigs[i]); var map=ms.descriptorLoadedOnHardwareWallets; if(!map) map=ms.descriptorLoadedOnHardwareWallets={}; if(map[deviceId]) delete map[deviceId]; else map[String(deviceId)]=true; render(); }
+function toggleMsDescriptorOnHwDirect(i,deviceId){ var ms=ensureMsDb(state.multisigs[i]); var map=ms.descriptorLoadedOnHardwareWallets; if(!map) map=ms.descriptorLoadedOnHardwareWallets={}; if(map[deviceId]) delete map[deviceId]; else map[String(deviceId)]=true; var a=ms.dbDevices; if(map[deviceId]){ var idx=a.indexOf(deviceId); if(idx<0)a.push(deviceId); } else { var idx2=a.indexOf(deviceId); if(idx2>=0)a.splice(idx2,1); } render(); }
+function handleHwDescriptorClick(i,deviceId,checked){ if(!checked){ var ms=ensureMsDb(state.multisigs[i]); var a=ms.dbDevices; var k=a.indexOf(deviceId); if(k>=0)a.splice(k,1); } render(); }
 
 // Descriptor-Backup Sektion (UI)
 function descriptorBackupSection(i){
@@ -1626,12 +1624,13 @@ function descriptorBackupSection(i){
   if(!ms.dbExp){ h+='</div>'; return h; }
   if(ms.seeds.length===0){ h+='<p class="mini-note">Ordne diesem Multisig zuerst oben Seed-Phrasen zu – dann erscheinen hier die passenden Hardware-Wallets und Backups.</p></div>'; return h; }
 
-  // 1) Hardware-Wallets
-  var devs=msDeviceIdxs(i);
-  h+='<div style="margin-top:8px;"><label class="form-label">Auf welchen Hardware-Wallets ist der Wallet-Descriptor registriert / gebackupt?</label>';
-  h+='<p class="mini-note">Es werden nur Geräte angezeigt, die mit den Seed-Phrasen dieses Multisigs verknüpft sind.</p>';
-  if(devs.length===0){ h+='<p class="mini-note">Keine Hardware-Wallets mit den Seeds dieses Multisigs verknüpft.</p>'; }
-  for(var d=0;d<devs.length;d++){ var di=devs[d]; var on=ms.dbDevices.indexOf(di)>=0; h+='<label class="chk-row"><input type="checkbox" '+(on?"checked":"")+' onchange="toggleMsDbDevice('+i+','+di+')"> '+deviceLabel(di)+'</label>'; }
+  // 1) Hardware-Wallets (alle Devices, Seed-Devices + sonstige)
+  h+='<div style="margin-top:8px;"><label class="form-label">Wallet-Descriptor auf Hardware-Wallets registriert (auch gegen Blind-Signing)?</label>';
+  h+='<p class="mini-note">Alle Hardware-Wallets die Sie nutzen.</p>';
+  for(var dd=0;dd<state.devices.length;dd++){
+    var di=state.devices[dd]; var isChecked=ms.dbDevices.indexOf(dd)>=0 || ms.descriptorLoadedOnHardwareWallets[dd]; h+='<label class="chk-row"><input type="checkbox" '+(isChecked?"checked":"")+' onclick="handleHwDescriptorClick('+i+','+dd+',this.checked)">'+deviceLabel(di)+'</label>';
+  }
+  if(state.devices.length===0){ h+='<p class="mini-note">Keine Hardware-Wallets erfasst.</p>'; }
   h+='</div>';
 
   // 2) Seed-Phrase-Backups
@@ -1646,15 +1645,6 @@ function descriptorBackupSection(i){
   h+='<label class="chk-row"><input type="checkbox" '+(ms.dbPwm?"checked":"")+' onchange="toggleMsDbPwm('+i+')"> Im Passwort-Manager'+((state.pwm&&state.pwm.app)?(" ("+state.pwm.app+")"):"")+'</label>';
   h+='<label class="chk-row"><input type="checkbox" '+(ms.dbBook?"checked":"")+' onchange="toggleMsDbBook('+i+')"> Im Passwort-Heft / Notizbuch</label>';
   h+='<label class="chk-row"><input type="checkbox" '+(ms.descriptorInPasswordManager?"checked":"")+' onchange="toggleMsDescriptorInPwmDirect('+i+')"> Wallet-Descriptor selbst im Passwort-Manager gespeichert (z. B. alsPasswort-Anmerkung &bdquo;Multisig-Descriptor&ldquo;)</label>';
-
-  // 3b) Hardware-Wallet Descriptor-Registerungs-Status
-  var allDevLabels=[];
-  for(var dd=0;dd<state.devices.length;dd++){ allDevLabels.push({id:dd,label:deviceLabel(dd)}); }
-  if(allDevLabels.length){
-    h+='<div style="margin-top:8px;"><label class="form-label">Zus&auml;tzlich: Wallet-Descriptor auf Hardware-Wallet registriert (gegen Blind-Signing)?</label>';
-    for(var h2=0;h2<allDevLabels.length;h2++){ h+='<label class="chk-row"><input type="checkbox" '+(ms.descriptorLoadedOnHardwareWallets[allDevLabels[h2].id]?"checked":"")+' onchange="toggleMsDescriptorOnHwDirect('+i+',\''+allDevLabels[h2].id+'\')"> '+allDevLabels[h2].label+'</label>'; }
-  }
-  h+='</div>';
 
   // Bestaetigung
   var st=msDescStatus(i);
