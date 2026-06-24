@@ -204,6 +204,11 @@ select.form-control option { background: var(--specter-dark-accent); }
 .sec-tip.warn { background: rgba(227,54,48,0.04); }
 .sec-recs-section-label { padding: 10px 20px 6px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--specter-light-secondary); border-top: 2px solid #2a3a4a; background: rgba(0,0,0,0.2); }
 .sec-tip-adv-badge { display: inline-block; font-size: 0.63rem; font-weight: 700; background: rgba(139,160,180,0.12); color: var(--specter-light-secondary); border: 1px solid rgba(139,160,180,0.25); border-radius: 3px; padding: 1px 5px; text-transform: uppercase; letter-spacing: 0.3px; margin-left: 6px; vertical-align: middle; position: relative; top: -1px; }
+.sec-recs-disclaimer { padding: 16px 20px; border-top: 1px solid #2a3a4a; background: rgba(0,0,0,0.15); }
+.sec-recs-disclaimer-title { font-size: 0.78rem; font-weight: 700; color: var(--specter-light-secondary); margin-bottom: 6px; letter-spacing: 0.3px; }
+.sec-recs-disclaimer p { font-size: 0.82rem; color: var(--specter-light-secondary); line-height: 1.55; margin: 0 0 10px; }
+.sec-recs-consult-link { display: inline-block; font-size: 0.85rem; font-weight: 700; color: var(--specter-primary); text-decoration: none; padding: 8px 16px; border: 1px solid var(--specter-primary); border-radius: var(--radius); transition: background 0.2s, color 0.2s; }
+.sec-recs-consult-link:hover { background: var(--specter-primary); color: #fff; }
 </style>
 </head>
 <body>
@@ -1417,6 +1422,61 @@ function buildRecommendations() {
     }
   }
 
+  // 11. Seed ohne Backup oder nur SD-Karten-Backup → kritische Warnung
+  (function() {
+    for (var si = 0; si < state.seeds.length; si++) {
+      var sd = state.seeds[si];
+      var bks = sd.backups || [];
+      if (bks.length === 0) {
+        tips.push({
+          title: 'Seed-Phrase ohne Backup – akutes Verlustrisiko',
+          body: (sd.name ? '<strong>' + esc(sd.name) + '</strong> hat ' : 'Mindestens eine Seed-Phrase hat ') + '<strong>kein einziges Backup</strong>. Bei Verlust oder Zerstörung des Hardware-Wallets ist die Seed-Phrase unwiederbringlich verloren – und damit auch alle darauf liegenden Bitcoin. Ein Backup ist kein Optional, sondern zwingend erforderlich. Mindestens ein physisches Backup (Papier, reißfestes Papier oder Metall) sofort anlegen und in einem Tamper-Evident-Bag aufbewahren.' + (hasMultisig() ? ' <strong>Besonders kritisch bei Multisig:</strong> Fehlt auch nur eine Seed-Phrase, kann das Multisig-Wallet nicht mehr vollständig wiederhergestellt werden.' : ''),
+          warn: true,
+          links: [
+            {text: 'Backup Stack (inkl. TerraPhrase + Bags)', url: 'https://clavastack.com/de/products/backup-stack'},
+            {text: 'Seedor Starter Set (Metall)', url: 'https://clavastack.com/de/products/seedor-starter-set'}
+          ]
+        });
+        return;
+      }
+      var onlySd = bks.every(function(bk) { return bk.type === 'sd'; });
+      if (onlySd && bks.length > 0) {
+        tips.push({
+          title: 'Backup ausschliesslich auf SD-Karte – unverschlüsselt und unsicher',
+          body: (sd.name ? '<strong>' + esc(sd.name) + '</strong>: ' : '') + 'Dein aktuelles Backup liegt unverschlüsselt auf einer SD-Karte. Wer die Karte findet, kann potenziell die Seed-Phrase auslesen. Ein SD-Karten-Backup bietet weder physischen Schutz (Feuer, Wasser) noch kryptografische Sicherheit (Verschlüsselung, PIN-Schutz). Sicherer ist ein verschlüsseltes oder PIN-geschütztes Backup, z. B. über eine Smartcard/Secure-Element-Lösung. Eine mögliche Umsetzung ist Specter Shield Lite. Ergänzend sollte mindestens ein physisches Backup (Metall oder reißfestes Papier) in einem Tamper-Evident-Bag aufbewahrt werden.' + (hasMultisig() ? ' <strong>Beachtung bei Multisig:</strong> Ein kompromittiertes Backup bedeutet, dass ein Angreifer eine der benötigten Schlüssel erhalten kann – das senkt die Sicherheit des gesamten Multisig-Setups.' : ''),
+          warn: true,
+          links: [
+            {text: 'Specter Shield Lite', url: 'https://clavastack.com/de/products/specter-shield-lite'},
+            {text: 'Specter Shield', url: 'https://clavastack.com/de/products/specter-shield'},
+            {text: 'Backup Stack', url: 'https://clavastack.com/de/products/backup-stack'}
+          ]
+        });
+        return;
+      }
+    }
+  })();
+
+  // 12. Alte Adressformate (Nested SegWit / Legacy) → Hinweis
+  (function() {
+    var oldFormats = [];
+    for (var ai = 0; ai < state.addrTypes.length; ai++) {
+      var at = state.addrTypes[ai];
+      if (at.indexOf('Nested SegWit') >= 0 || at.indexOf('Legacy') >= 0) {
+        oldFormats.push(at);
+      }
+    }
+    if (oldFormats.length > 0) {
+      var fmtNames = oldFormats.map(function(f) { return f.replace(/\s*\(.*\)/, ''); });
+      tips.push({
+        title: 'Veraltete Adressformate erkannt: ' + esc(fmtNames.join(' und ')),
+        body: 'Du verwendest ' + esc(fmtNames.join(' und ')) + '-Adressen. Diese Adressformate sind technisch funktionstüchtig, gelten jedoch als veraltet: Sie verursachen höhere Transaktionsgebühren als Native SegWit und bieten eine geringere Datenschutzqualität (Input-Werte sind auf der Blockchain sichtbar). Für die Vererbung bedeutet dies zusätzlich: Dein Erbe muss beim Wiederherstellen genau den richtigen Adresstyp auswählen – ein falscher Adresstyp führt dazu, dass das Guthaben nicht angezeigt wird. Ein Wechsel auf Native SegWit (bc1q) oder Taproot (bc1p) reduziert die Gebühren, verbessert den Datenschutz und vereinfacht das Setup für die Erben erheblich. Ein Wechsel erfordert eine Transaktion auf die neuen Adressen.',
+        links: [
+          {text: 'Beratung zum Adressformat-Wechsel', url: 'https://clavastack.com/de/security-talk'}
+        ]
+      });
+    }
+  })();
+
   // ── Erweiterte Tipps ──────────────────────────────────────────────────
 
   // A1. Specter DIY Snapcase mit Seed-Speicherung → Upgrade auf Specter Shield Lite (Secure Element)
@@ -1461,7 +1521,7 @@ function buildRecommendations() {
   if (anyBackupType('sd')) {
     tips.push({
       title: 'SD-Karte: Unverschlüsseltes Backup durch Secure-Element-Backup ersetzen',
-      body: 'Mindestens ein Backup liegt auf einer SD-Karte. SD-Karten-Backups sind in der Regel unverschlüsselt gespeichert – wer die Karte findet, hat direkten Zugriff auf die Seed-Phrase. Mit einem Specter Shield Lite oder Specter Shield lässt sich die Seed-Phrase stattdessen verschlüsselt auf dem Secure Element (Smartcard) sichern. Das Backup ist dann PIN-geschützt und selbst bei physischem Zugriff auf die Karte nicht auslesbar.',
+      body: 'Dein aktuelles Backup liegt unverschlüsselt auf einer SD-Karte. Wer die Karte findet, kann potenziell die Seed-Phrase auslesen. Sicherer ist ein verschlüsseltes oder PIN-geschütztes Backup, z. B. über eine Smartcard/Secure-Element-Lösung. Eine mögliche Umsetzung ist Specter Shield Lite – dort wird die Seed-Phrase verschlüsselt im Secure Element der Smartcard gespeichert und ist nur nach PIN-Eingabe zugänglich. Selbst bei physischem Zugriff auf die Karte bleibt das Backup geschützt.',
       links: [
         {text: 'Specter Shield Lite', url: 'https://clavastack.com/de/products/specter-shield-lite'},
         {text: 'Specter Shield', url: 'https://clavastack.com/de/products/specter-shield'}
@@ -1714,6 +1774,11 @@ function renderSecurityRecs() {
       }
     }
   }
+  h += '<div class="sec-recs-disclaimer">';
+  h += '<div class="sec-recs-disclaimer-title">Hinweis</div>';
+  h += '<p>Die oben angezeigten Empfehlungen sind Basis-Tipps, die sich aus deiner aktuellen Wallet-Struktur ergeben. Sie ersetzen keine umfassende Sicherheitsanalyse. Je nach Umfang deiner Bitcoin-Haltung und Komplexität deines Setups kann es Sinn machen, sich <strong>professionelle Beratung</strong> einzuholen, um die Sicherheit und Vererbbarkeit deiner Konfiguration gezielt zu verbessern.</p>';
+  h += '<a class="sec-recs-consult-link" href="https://clavastack.com/de/security-talk" target="_blank" rel="noopener">Professionelle Beratung bei ClavaStack &rarr;</a>';
+  h += '</div>';
   h += '</div></div>';
   return h;
 }
