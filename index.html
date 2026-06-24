@@ -1326,7 +1326,7 @@ function buildRecommendations() {
         if (msBrands[0] !== 'Passport') altRecs.push('Passport');
         tips.push({
           title: 'Multisig: verschiedene Hersteller einbinden (Multi-Vendor)',
-          body: esc(ms.name || ('Multisig ' + (mi + 1))) + ' verwendet ausschließlich ' + esc(msBrands[0]) + '-Geräte. Bei einem Single-Vendor-Multisig können herstellerspezifische Sicherheitslücken oder Firmware-Bugs alle Schlüssel gleichzeitig gefährden. Empfehlung: mindestens ein Gerät eines anderen Herstellers einbinden, z. B. ' + esc(altRecs.slice(0, 2).join(' oder ')) + '.',
+          body: esc(ms.name || ('Multisig ' + (mi + 1))) + ' verwendet ausschließlich ' + esc(msBrands[0]) + '-Geräte. Bei einem Single-Vendor-Multisig können herstellerspezifische Sicherheitslücken oder Firmware-Bugs alle Schlüssel gleichzeitig gefährden. Empfehlung: unterschiedliche Hersteller verwenden.',
           links: [
             {text: 'Alle Hardware-Wallets bei ClavaStack', url: 'https://clavastack.com/de/products'}
           ]
@@ -1421,20 +1421,37 @@ function buildRecommendations() {
 
   // ── Erweiterte Tipps ──────────────────────────────────────────────────
 
-  // A1. USB-/Touchscreen-HW → Upgrade auf Specter Shield Lite (Secure Element, tauschbar)
-  var upgradeableBrands = [];
+  // A1. Specter DIY Snapcase mit Seed-Speicherung → Upgrade auf Specter Shield Lite (Secure Element)
+  var showsShieldLiteRec = false;
   for (var i = 0; i < state.devices.length; i++) {
-    var mA1 = state.devices[i].model || '';
-    var brA1 = hwBrand(mA1);
-    if ((brA1 === 'BitBox' || brA1 === 'Ledger' || brA1 === 'Trezor' || brA1 === 'Keepkey') && upgradeableBrands.indexOf(brA1) < 0) {
-      upgradeableBrands.push(brA1);
+    if (state.devices[i].model === 'Specter DIY Snapcase') {
+      var dv = state.devices[i];
+      var sd = dv.model && dv.model.indexOf('Specter DIY') >= 0;
+      // Zeige Empfehlung wenn: Seed auf diesem Gerät mit SD-Karte verschlüsselt ODER als Smartcard gespeichert
+      if (dv.companions && dv.companions.length) {
+        showsShieldLiteRec = true;
+        break;
+      }
+      // ODER: Wenn irgendwo im Seed-Speicher dieses Gerät mit SD-Karte oder Smartcard verknüpft ist
+      for (var si = 0; si < state.seeds.length; si++) {
+        var sd2 = state.seeds[si];
+        if (sd2 && sd2.devices && sd2.devices.indexOf(i) >= 0) {
+          var opts = sd2.deviceOpts && sd2.deviceOpts[i];
+          if (opts && (opts.sdCard || opts.withSc)) {
+            showsShieldLiteRec = true;
+            break;
+          }
+        }
+      }
     }
+    if (showsShieldLiteRec) break;
   }
-  if (upgradeableBrands.length > 0) {
+  if (showsShieldLiteRec) {
     tips.push({
       title: 'Upgrade auf Specter Shield Lite: austauschbares Secure Element',
-      body: 'Du nutzt ' + esc(upgradeableBrands.join(' / ')) + '. Der Specter Shield Lite bietet ein wichtiges Extra: Das Secure Element steckt auf einer austauschbaren Smartcard. Das heißt, du kannst die Karte separat aufbewahren, bei Bedarf tauschen oder mehrere Karten (z. B. eine je Standort) anlegen – ohne das Gerät selbst zu tauschen. Außerdem ermöglicht der Shield Lite verschlüsselte Seed-Phrase-Backups direkt auf dem Chip, sodass kein unverschlüsseltes Papier-Backup mehr nötig ist.',
+      body: 'Du nutzt einen Specter DIY Snapcase. Ohne Shield speichert das Gerät die Seed-Phrase im internen Flash-Speicher – ohne PIN-Schutz auf Hardware-Ebene. Mit dem Upgrade Kit rüstest du einen Secure Element per Smartcard nach: Die Seed-Phrase wird dann PIN-geschützt auf der Karte gespeichert und ist deutlich sicherer gegen physischen Zugriff.',
       links: [
+        {text: 'Specter Shield Lite Upgrade Kit', url: 'https://clavastack.com/de/products/specter-shield-lite-upgrade-kit'},
         {text: 'Specter Shield Lite', url: 'https://clavastack.com/de/products/specter-shield-lite'},
         {text: 'Specter Shield', url: 'https://clavastack.com/de/products/specter-shield'}
       ],
