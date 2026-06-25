@@ -14,12 +14,20 @@ Marc-Steiner-Nachlassplan-Tools, gestaltet im **Specter**-Branding mit **ClavaSt
 ## Funktionen
 
 - **Modularer Wizard** – nur ausgewählte Abschnitte/Geräte landen im PDF:
-  - Allgemeine Informationen + bis zu 2 Vertrauenskontakte
+  - Allgemeine Informationen + bis zu 2 Vertrauenskontakte (Kontaktdaten und ein Hinweis zur
+    Beziehung werden direkt im Wizard erfasst; leere Felder bleiben als Handschrift-Linie im PDF)
   - Hardware-Wallets (dynamisch, mit 24-Wort-Seed-Gitter je Gerät)
   - Software-Wallets (Computer & Smartphone)
   - Online-Exchanges (Börsen) inkl. 2FA-Gerät
   - Passwortmanager-App
   - Multisignatur-Wallet (mit Mitunterzeichnern)
+- **Passwortgeschütztes Speichern & Laden** – die Wizard-Eingaben lassen sich am Ende als
+  **verschlüsselte** Datei speichern und am Anfang wieder laden, um später weiterzuarbeiten.
+  Die Verschlüsselung erfolgt mit **AES-256-GCM** (Schlüsselableitung per PBKDF2-SHA256 aus einem
+  selbst gewählten Passwort, über die Web Crypto API). Das Passwort wird beim Speichern (mit
+  Bestätigung) und beim Laden abgefragt; ein falsches Passwort schlägt sauber fehl. Ältere,
+  unverschlüsselte Plandateien lassen sich weiterhin laden. *Ohne das Passwort gibt es keine
+  Wiederherstellung – Datei und Passwort sicher/offline aufbewahren.*
 - **Vordefinierte Geräte-/Börsenlisten** mit automatischem Ausfüllen der offiziellen URLs.
 - **Automatische Schnellübersicht**-Tabelle aus allen erfassten Einträgen.
 - **Druckoptimiertes PDF-Layout**: laufender Header (farbiges ClavaStack-Logo + URL) und Footer
