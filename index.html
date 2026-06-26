@@ -524,16 +524,17 @@ function scOptionsFor(seedIdx,curVal,deviceOnly){ var used=usedScExcept(seedIdx)
 // ===== WIZARD ENGINE =====
 var pos = 0;
 function screens(){
-  var arr=[{k:"intro"},{k:"offline"},{k:"pwm"},{k:"book"},{k:"addr"},{k:"devcount"}];
+  var arr=[{k:"intro"},{k:"offline"},{k:"book"},{k:"pwm"},{k:"devcount"}];
   for (var i=0;i<state.devices.length;i++) arr.push({k:"dev",i:i});
+  arr.push({k:"addr"});
   arr.push({k:"seedcount"});
   for (var j=0;j<state.seeds.length;j++) arr.push({k:"seed",i:j});
   arr.push({k:"bip85"});
   arr.push({k:"sw"});
   arr.push({k:"ex"});
   arr.push({k:"multisig"});
-  arr.push({k:"dig"});
   arr.push({k:"timelock"});
+  arr.push({k:"dig"});
   arr.push({k:"contacts"});
   arr.push({k:"summary"});
   return arr;
