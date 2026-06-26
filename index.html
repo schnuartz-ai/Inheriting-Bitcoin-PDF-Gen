@@ -59,7 +59,24 @@ select.form-control option { background: var(--specter-dark-accent); }
 .device-block-title { font-size: 0.78rem; font-weight: 700; color: var(--specter-primary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.4px; }
 /* ===== Passwort-Modal / Toast ===== */
 .modal-overlay { position: fixed; inset: 0; background: rgba(2,5,9,0.72); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 20px; }
-.modal-box { background: var(--specter-dark-secondary); border: 1px solid #2a3a4a; border-radius: var(--radius); padding: 26px 24px; width: 100%; max-width: 420px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+.modal-box { background: var(--specter-dark-secondary); border: 1px solid #2a3a4a; border-radius: var(--radius); padding: 26px 24px; width: 100%; max-width: 420px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); transform: translateY(30px) scale(0.97); opacity: 0; transition: transform 0.28s cubic-bezier(.22,.8,.35,1), opacity 0.22s; }
+.modal-box.modal-visible { transform: translateY(0) scale(1); opacity: 1; }
+/* ===== Lade-Modal (Drag & Drop) ===== */
+.load-modal-box { max-width: 520px; }
+.load-dropzone { border: 2px dashed #2a3a4a; border-radius: var(--radius); padding: 36px 24px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; margin-bottom: 16px; }
+.load-dropzone:hover, .load-dropzone.dragover { border-color: var(--specter-primary); background: rgba(79,172,117,0.06); }
+.load-dropzone svg { display: block; margin: 0 auto 12px; opacity: 0.55; }
+.load-dropzone-label { font-size: 0.9rem; color: var(--specter-light-secondary); line-height: 1.5; }
+.load-dropzone-label strong { color: var(--specter-light); }
+.load-dropzone.has-file { border-color: var(--specter-primary); background: rgba(79,172,117,0.08); }
+.load-dropzone.has-file .load-dropzone-label { color: var(--specter-primary); }
+.load-pw-section { margin-bottom: 8px; }
+/* Subtiler sekundärer Button-Stil */
+.btn-subtle { background: rgba(255,255,255,0.04); color: var(--specter-light-secondary); border: 1px solid rgba(255,255,255,0.1); font-size: 0.82rem; padding: 9px 20px; }
+.btn-subtle:hover { background: rgba(255,255,255,0.08); color: var(--specter-light); border-color: rgba(255,255,255,0.18); }
+/* Speichern-Infobox */
+.save-info-box { background: var(--specter-dark-accent); border: 1px solid #2a3a4a; border-radius: var(--radius); padding: 14px 16px; margin-top: 10px; font-size: 0.8rem; color: var(--specter-light-secondary); line-height: 1.6; display: none; }
+.save-info-box.visible { display: block; }
 .modal-box h3 { font-size: 1.05rem; font-weight: 800; color: var(--specter-light); margin-bottom: 8px; }
 .modal-box p { font-size: 0.82rem; color: var(--specter-light-secondary); line-height: 1.55; margin-bottom: 16px; }
 .modal-box input[type="password"] { width: 100%; padding: 11px 13px; margin-bottom: 12px; background: var(--specter-dark-accent); border: 1px solid #2a3a4a; border-radius: var(--radius); color: var(--specter-light); font-family: inherit; font-size: 0.92rem; }
@@ -585,12 +602,10 @@ function swOpts(sel){ var h=""; for(var i=0;i<SOFTWARE_WALLETS.length;i++){ var 
 function renderIntro(){
   return '<div class="section-card"><div class="section-card-body start-screen">'
     +'<h1>Dein pers&#246;nlicher Bitcoin-Nachlassplan</h1>'
-    +'<p>Wir gehen <strong>Seed-Phrase f&#252;r Seed-Phrase</strong> durch und erfassen alles, was deine Erben brauchen. Zuerst nennst du kurz deine Hardware-Wallets, danach jede Seed-Phrase einzeln. Geheimnisse tippst du nie ein &#8211; das fertige PDF f&#252;llst du handschriftlich aus.</p>'
+    +'<p>Wir gehen dein gesamtes <strong>Sicherheitssetup</strong> durch und erfassen alle Informationen, die deine Erben brauchen. Zuerst nennst du kurz deine Hardware-Wallets, danach wie du sie genau verwendest. Geheimnisse wie Seed-Phrasen tippst du nie ein &#8211; das fertige PDF f&#252;llst du handschriftlich aus.</p>'
     +'<button class="btn btn-primary" onclick="go(1)">START</button>'
     +'<div style="margin-top:18px;">'
-    +'<input type="file" id="load-file" accept="application/json,.json" style="display:none" onclick="this.value=null" onchange="loadPlan(this)">'
-    +'<button class="btn" onclick="document.getElementById(\'load-file\').click()">Gespeicherten Plan laden</button>'
-    +'<p class="wizard-hint" style="margin-top:8px;">Zuvor gespeicherte Plan-Datei laden, um dort weiterzumachen. Bei verschl&#252;sselten Dateien wird das Passwort abgefragt.</p>'
+    +'<button class="btn btn-subtle" onclick="openLoadModal()">Gespeicherten Plan laden</button>'
     +'</div>'
     +'</div></div>';
 }
@@ -1180,8 +1195,19 @@ function renderSummary(){
   h+='<li><span>Timelock / Wallet Recovery</span><span>'+(state.timelock.use?(state.timelock.ritrek?"Ja (mit RITREK App)":"Ja"):"Nein")+'</span></li>';
   h+='</ul>';
   h+='<button class="btn btn-pdf" onclick="buildAndPrint()" style="margin-top:28px;">PDF ERSTELLEN &amp; DRUCKEN</button>';
-  h+='<button class="btn" onclick="savePlan()" style="margin-top:12px;">Plan verschl&#252;sselt speichern</button>';
-  h+='<p class="wizard-hint" style="margin-top:8px;">Speichert deine Angaben <strong>passwortgesch&#252;tzt (AES-256)</strong> als Datei, um sp&#228;ter weiterzuarbeiten. <strong>Ohne das Passwort gibt es keine Wiederherstellung</strong> &#8211; merke es dir gut und bewahre die Datei sicher/offline auf.</p>';
+  h+='<div style="text-align:center;margin-top:20px;">';
+  h+='<button class="btn btn-subtle" onclick="toggleSaveInfo(this)">Plan verschl&#252;sselt speichern</button>';
+  h+='<div class="save-info-box" style="text-align:left;">';
+  h+='<p style="margin:0 0 10px;">Speichert deinen aktuellen Stand als verschl&#252;sselte <strong>.json</strong>-Datei, damit du sp&#228;ter weitermachen kannst.</p>';
+  h+='<ul style="margin:0 0 12px;padding-left:18px;">';
+  h+='<li>Verschl&#252;sselung: <strong>AES-256-GCM</strong></li>';
+  h+='<li>Schl&#252;sselableitung: <strong>PBKDF2-SHA256</strong> (210.000 Iterationen)</li>';
+  h+='<li><strong>Ohne das Passwort gibt es keine Wiederherstellung</strong> &#8211; kein Reset, kein Support</li>';
+  h+='<li>Datei sicher/offline aufbewahren (nicht in der Cloud)</li>';
+  h+='</ul>';
+  h+='<div style="text-align:center;"><button class="btn btn-primary" onclick="savePlan()" style="font-size:0.88rem;padding:10px 28px;">Jetzt speichern</button></div>';
+  h+='</div>'
+  h+='</div>';
   h+=renderSecurityRecs();
   h+='<div class="wizard-nav" style="margin-top:16px;"><button class="btn btn-back" onclick="go(-1)">&#8592; Zur&#252;ck</button></div>';
   h+='</div></div>';
@@ -1192,6 +1218,12 @@ function renderSummary(){
 function toggleSecRecs(btn) {
   btn.classList.toggle('open');
   btn.nextElementSibling.classList.toggle('visible');
+}
+
+function toggleSaveInfo(btn) {
+  var box = btn.nextElementSibling;
+  var open = box.classList.toggle('visible');
+  box.style.display = open ? 'block' : 'none';
 }
 
 function buildRecommendations() {
@@ -1917,7 +1949,7 @@ function decryptState(password, env){
 function askPassword(opts){
   opts = opts || {};
   return new Promise(function(resolve){
-    var ov = document.createElement("div"); ov.className = "modal-overlay";
+    var ov = document.createElement("div"); ov.className = "modal-overlay modal-center";
     var confirmField = opts.confirm
       ? '<input type="password" id="pw-confirm" placeholder="Passwort wiederholen" autocomplete="new-password">' : '';
     ov.innerHTML =
@@ -1932,6 +1964,7 @@ function askPassword(opts){
       +'<button class="btn btn-primary" id="pw-ok">'+esc(opts.okLabel||"OK")+'</button>'
       +'</div></div>';
     document.body.appendChild(ov);
+    setTimeout(function(){ ov.querySelector(".modal-box").classList.add("modal-visible"); }, 16);
     var inp = ov.querySelector("#pw-input");
     var conf = ov.querySelector("#pw-confirm");
     var err = ov.querySelector("#pw-err");
@@ -1992,8 +2025,115 @@ function savePlan(){
 
 function applyLoadedState(loaded){
   state = Object.assign(defaultState(), loaded);
-  pos = 0; render(); window.scrollTo(0,0);
-  showToast("Laden erfolgreich");
+  pos = screens().length - 1; render(); window.scrollTo(0,0);
+  showToast("Plan geladen");
+}
+
+function openLoadModal(){
+  var ov = document.createElement("div"); ov.className = "modal-overlay";
+  var pwFieldStyle = 'width:100%;padding:11px 13px;margin-bottom:4px;background:var(--specter-dark-accent);border:1px solid #2a3a4a;border-radius:var(--radius);color:var(--specter-light);font-family:inherit;font-size:0.92rem;box-sizing:border-box;';
+  ov.innerHTML =
+    '<div class="modal-box load-modal-box" id="load-modal-box">'
+    +'<h3>Gespeicherten Plan laden</h3>'
+    +'<p>Ziehe deine Plan-Datei in das Feld oder klicke, um sie auszuw&#228;hlen.</p>'
+    +'<div class="load-dropzone" id="load-dz" onclick="document.getElementById(\'load-modal-file\').click()">'
+    +'<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>'
+    +'<div class="load-dropzone-label"><strong>Datei hier ablegen</strong><br>oder klicken zum Ausw&#228;hlen &nbsp;&#183;&nbsp; .json</div>'
+    +'</div>'
+    +'<input type="file" id="load-modal-file" accept="application/json,.json" style="display:none">'
+    +'<div class="load-pw-section" id="load-pw-section" style="display:none">'
+    +'<label style="font-size:0.82rem;color:var(--specter-light-secondary);display:block;margin-bottom:6px;">&#128274; Passwort eingeben</label>'
+    +'<input type="password" id="load-pw-input" placeholder="Passwort" autocomplete="current-password" style="'+pwFieldStyle+'">'
+    +'</div>'
+    +'<div class="modal-err" id="load-modal-err"></div>'
+    +'<div class="modal-actions">'
+    +'<button class="btn btn-ghost" id="load-cancel">Abbrechen</button>'
+    +'<button class="btn btn-primary" id="load-ok" disabled>Laden</button>'
+    +'</div></div>';
+  document.body.appendChild(ov);
+  setTimeout(function(){ ov.querySelector("#load-modal-box").classList.add("modal-visible"); }, 16);
+
+  var dz = ov.querySelector("#load-dz");
+  var fileInput = ov.querySelector("#load-modal-file");
+  var pwSection = ov.querySelector("#load-pw-section");
+  var pwInput = ov.querySelector("#load-pw-input");
+  var errEl = ov.querySelector("#load-modal-err");
+  var okBtn = ov.querySelector("#load-ok");
+  var selectedFile = null;
+  var isEncrypted = false;
+
+  function close(){ document.body.removeChild(ov); }
+
+  function peekFile(file){
+    var r = new FileReader();
+    r.onload = function(){
+      try{
+        var p = JSON.parse(r.result);
+        isEncrypted = !!(p && p.enc === "AES-GCM");
+      } catch(e){ isEncrypted = false; }
+      if(isEncrypted){
+        pwSection.style.display = "";
+        setTimeout(function(){ pwInput.focus(); }, 30);
+      } else {
+        pwSection.style.display = "none";
+      }
+    };
+    r.readAsText(file);
+  }
+
+  function setFile(file){
+    selectedFile = file;
+    dz.classList.add("has-file");
+    dz.querySelector(".load-dropzone-label").innerHTML = '<strong>'+esc(file.name)+'</strong><br><span style="font-size:0.78rem;opacity:0.7;">'+Math.round(file.size/1024*10)/10+' KB</span>';
+    okBtn.disabled = false;
+    errEl.textContent = "";
+    peekFile(file);
+  }
+
+  dz.addEventListener("dragover", function(e){ e.preventDefault(); dz.classList.add("dragover"); });
+  dz.addEventListener("dragleave", function(){ dz.classList.remove("dragover"); });
+  dz.addEventListener("drop", function(e){
+    e.preventDefault(); dz.classList.remove("dragover");
+    var f = e.dataTransfer.files[0];
+    if(f) setFile(f);
+  });
+  fileInput.addEventListener("change", function(){
+    if(fileInput.files[0]) setFile(fileInput.files[0]);
+    fileInput.value = "";
+  });
+
+  ov.querySelector("#load-cancel").onclick = close;
+  ov.addEventListener("mousedown", function(e){ if(e.target===ov) close(); });
+  ov.addEventListener("keydown", function(e){ if(e.key==="Escape") close(); });
+
+  function doLoad(parsed){
+    if(parsed && parsed.enc === "AES-GCM"){
+      if(!cryptoOK()){ alert("Diese Datei ist verschl&#252;sselt, aber crypto.subtle ist hier nicht verf&#252;gbar."); return; }
+      var pw = pwInput.value;
+      if(!pw){ errEl.textContent = "Bitte Passwort eingeben."; pwInput.focus(); return; }
+      decryptState(pw, parsed).then(function(loaded){
+        if(!loaded || typeof loaded !== "object") throw new Error("leer");
+        close(); applyLoadedState(loaded);
+      }).catch(function(){
+        errEl.textContent = "Falsches Passwort."; pwInput.select(); pwInput.focus();
+      });
+    } else {
+      close(); applyLoadedState(parsed);
+    }
+  }
+
+  okBtn.onclick = function(){
+    if(!selectedFile) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      var parsed;
+      try{ parsed = JSON.parse(reader.result); }
+      catch(e){ errEl.textContent = "Keine g&#252;ltige Plan-Datei."; return; }
+      doLoad(parsed);
+    };
+    reader.readAsText(selectedFile);
+  };
+  pwInput.addEventListener("keydown", function(e){ if(e.key==="Enter") okBtn.click(); });
 }
 
 function loadPlan(input){
