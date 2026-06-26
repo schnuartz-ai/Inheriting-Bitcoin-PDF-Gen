@@ -955,6 +955,11 @@ function renderContacts(){
   var h='<div class="section-card"><div class="section-card-body">';
   h+='<div class="wizard-question">Vertrauensw&#252;rdige Kontakte</div>';
   h+='<p class="wizard-hint">Falls deine Erben Unterst&#252;tzung ben&#246;tigen, k&#246;nnen sie sich an diese Personen wenden. Pro Kontakt eine Zeile mit Name, Telefon, E-Mail, Webseite usw. &#8211; und ein kurzer Hinweis, wer die Person ist bzw. wie du zu ihr stehst. Beide Felder sind optional; leer bleibt im PDF eine Linie zum handschriftlichen Ausf&#252;llen.</p>';
+  var schnuartzAdded = state.contacts.some(function(c){ return c._schnuartz === true; });
+  h+='<label class="chk-row" style="margin-bottom:20px;cursor:pointer;">'
+    +'<input type="checkbox" '+(schnuartzAdded?'checked':'')+' onchange="toggleSchnuartzContact(this.checked)">'
+    +' <span>Schnuartz, den Gr&#252;nder von ClavaStack, als Kontakt hinzuf&#252;gen</span>'
+    +'</label>';
   for(var i=0;i<state.contacts.length;i++){
     var c=state.contacts[i];
     h+='<div class="device-block">';
@@ -971,6 +976,29 @@ function renderContacts(){
 }
 function setContactInfo(i,v){ state.contacts[i].info=v; }
 function setContactNote(i,v){ state.contacts[i].note=v; }
+
+var SCHNUARTZ_CONTACT = {
+  _schnuartz: true,
+  info: "Schnuartz, ClavaStack, +491774839220, Telegram (@schnuartz), Signal: schnuartz.21, info@clavastack.com",
+  note: "Schnuartz ist Gründer von ClavaStack und technischer Ansprechpartner für Fragen zur Bitcoin-Verwahrung und Bitcoin-Vererbung. Bei Unsicherheiten kann er unterstützen oder weitere geeignete Ansprechpartner nennen."
+};
+
+function toggleSchnuartzContact(add){
+  var idx = state.contacts.findIndex(function(c){ return c._schnuartz === true; });
+  if(add){
+    if(idx >= 0) return; // schon vorhanden
+    // nächsten freien Slot finden (info und note leer)
+    var freeIdx = state.contacts.findIndex(function(c){ return !c._schnuartz && !c.info.trim() && !c.note.trim(); });
+    if(freeIdx >= 0){
+      state.contacts[freeIdx] = Object.assign({}, SCHNUARTZ_CONTACT);
+    } else {
+      state.contacts.push(Object.assign({}, SCHNUARTZ_CONTACT));
+    }
+  } else {
+    if(idx >= 0) state.contacts[idx] = {info:"", note:""};
+  }
+  render();
+}
 
 function renderAddr(){
   var h='<div class="section-card"><div class="section-card-body">';
