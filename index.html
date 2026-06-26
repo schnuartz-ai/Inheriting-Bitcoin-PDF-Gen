@@ -970,12 +970,14 @@ function renderContacts(){
       +'<textarea class="form-control" rows="2" oninput="setContactNote('+i+',this.value)" placeholder="z.&#8201;B. Mein Bruder, kennt sich mit Bitcoin aus / mein Anwalt / Steuerberater">'+esc(c.note)+'</textarea></div>';
     h+='</div>';
   }
+  h+='<button class="btn btn-subtle" style="width:100%;margin-bottom:16px;" onclick="addContact()">+ Weiteren Kontakt hinzuf&#252;gen</button>';
   h+=nav();
   h+='</div></div>';
   return h;
 }
 function setContactInfo(i,v){ state.contacts[i].info=v; }
 function setContactNote(i,v){ state.contacts[i].note=v; }
+function addContact(){ state.contacts.push({info:"",note:""}); render(); }
 
 var SCHNUARTZ_CONTACT = {
   _schnuartz: true,
