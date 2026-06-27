@@ -1086,6 +1086,8 @@ function updateHeaderLang(){
   if(book) book.textContent=L('bookBtn');
   var home=document.getElementById('btn-home');
   if(home){ home.textContent=L('homeBtn'); home.href=LANG==='de'?'/de/':'/'; }
+  var ll=document.getElementById('logo-link');
+  if(ll) ll.href=LANG==='de'?'/de/':'/';
   document.title=L('pageTitle');
   var rh=document.getElementById('pdf-rh-title');
   if(rh) rh.textContent=L('pdfRhTitle');
@@ -2957,6 +2959,16 @@ document.addEventListener("DOMContentLoaded", function(){
     var sw=document.getElementById('lang-switch');
     if(sw && !sw.contains(e.target)) sw.classList.remove('is-open');
   });
+  var logoImg=document.querySelector('.app-header > img');
+  if(logoImg){
+    var logoLink=document.createElement('a');
+    logoLink.id='logo-link';
+    logoLink.href=LANG==='de'?'/de/':'/';
+    logoLink.target='_top';
+    logoLink.style.cssText='display:flex;align-items:center;flex-shrink:0;line-height:0;';
+    logoImg.parentNode.insertBefore(logoLink,logoImg);
+    logoLink.appendChild(logoImg);
+  }
 });
 </script>
 <div class="github-footer"><a id="github-footer-link" href="https://github.com/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen" target="_blank" rel="noopener">View on GitHub</a></div>
