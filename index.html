@@ -275,6 +275,11 @@ select.form-control option { background: var(--specter-dark-accent); }
 .sec-tip.warn { background: rgba(227,54,48,0.04); }
 .sec-recs-section-label { padding: 10px 20px 6px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--specter-light-secondary); border-top: 2px solid #2a3a4a; background: rgba(0,0,0,0.2); }
 .sec-tip-adv-badge { display: inline-block; font-size: 0.63rem; font-weight: 700; background: rgba(139,160,180,0.12); color: var(--specter-light-secondary); border: 1px solid rgba(139,160,180,0.25); border-radius: 3px; padding: 1px 5px; text-transform: uppercase; letter-spacing: 0.3px; margin-left: 6px; vertical-align: middle; position: relative; top: -1px; }
+.sec-tip-cta { border-top: 2px solid #1F99E5; padding: 22px 20px 20px; background: rgba(31,153,229,0.06); }
+.sec-tip-cta-title { font-size: 0.88rem; font-weight: 700; color: var(--specter-primary); margin-bottom: 8px; }
+.sec-tip-cta-body { font-size: 0.82rem; color: var(--specter-light-secondary); line-height: 1.65; margin-bottom: 16px; }
+.sec-tip-cta-btn { display: inline-block; background: #1F99E5; color: #fff !important; text-decoration: none; padding: 10px 22px; border-radius: var(--radius); font-size: 0.85rem; font-weight: 700; letter-spacing: 0.2px; transition: background 0.2s, box-shadow 0.2s; }
+.sec-tip-cta-btn:hover { background: #1680c0; box-shadow: 0 4px 14px rgba(31,153,229,0.35); }
 </style>
 </head>
 <body>
@@ -696,6 +701,9 @@ var STRINGS = {
     secBody11fn:function(brands){ return 'You are using '+brands+'. The Specter Shield Lite offers an important extra: the Secure Element is on a replaceable smartcard. You can store the card separately, replace it when needed, or create multiple cards (e.g. one per location) – without replacing the device. The Shield Lite also enables encrypted seed phrase backups directly on the chip, eliminating the need for an unencrypted paper backup.'; },
     secTitle12:'SD card: replace unencrypted backup with Secure Element backup',
     secBody12:'At least one backup is on an SD card. SD card backups are usually stored unencrypted – anyone who finds the card has direct access to the seed phrase. With a Specter Shield Lite or Specter Shield, the seed phrase can be stored encrypted on the Secure Element (smartcard) instead. The backup is then PIN-protected and cannot be read even with physical access to the card.',
+    ctaTitle:'Get personalised professional advice',
+    ctaBody:'Book a free 15-minute call in which we analyse your Bitcoin security setup and discuss how you can strategically improve both your inheritance plan and overall Bitcoin security.',
+    ctaBtn:'Book Free Initial Consulting',
   },
   de:{
     pageTitle:'Bitcoin-Nachlassplan – ClavaStack',
@@ -1044,6 +1052,9 @@ var STRINGS = {
     secBody11fn:function(brands){ return 'Du nutzt '+brands+'. Der Specter Shield Lite bietet ein wichtiges Extra: Das Secure Element steckt auf einer austauschbaren Smartcard. Das hei&szlig;t, du kannst die Karte separat aufbewahren, bei Bedarf tauschen oder mehrere Karten (z. B. eine je Standort) anlegen &ndash; ohne das Ger&auml;t selbst zu tauschen. Au&szlig;erdem erm&ouml;glicht der Shield Lite verschl&uuml;sselte Seed-Phrase-Backups direkt auf dem Chip, sodass kein unverschl&uuml;sseltes Papier-Backup mehr n&ouml;tig ist.'; },
     secTitle12:'SD-Karte: Unverschl&uuml;sseltes Backup durch Secure-Element-Backup ersetzen',
     secBody12:'Mindestens ein Backup liegt auf einer SD-Karte. SD-Karten-Backups sind in der Regel unverschl&uuml;sselt gespeichert &ndash; wer die Karte findet, hat direkten Zugriff auf die Seed-Phrase. Mit einem Specter Shield Lite oder Specter Shield l&auml;sst sich die Seed-Phrase stattdessen verschl&uuml;sselt auf dem Secure Element (Smartcard) sichern. Das Backup ist dann PIN-gesch&uuml;tzt und selbst bei physischem Zugriff auf die Karte nicht auslesbar.',
+    ctaTitle:'Hol dir auf dich zugeschnittene professionelle Beratung',
+    ctaBody:'Buche ein kostenloses 15-min&uuml;tiges Gespr&auml;ch, in dem wir deine Bitcoin-Sicherheit analysieren und strategisch besprechen, wie du deine Vererbungsl&ouml;sung und deinen Bitcoin-Schutz gezielt verbessern kannst.',
+    ctaBtn:'Kostenloses Erstgespr&auml;ch buchen',
   }
 };
 
@@ -2309,6 +2320,11 @@ function renderSecurityRecs() {
       }
     }
   }
+  h += '<div class="sec-tip-cta">';
+  h += '<div class="sec-tip-cta-title">' + L('ctaTitle') + '</div>';
+  h += '<div class="sec-tip-cta-body">' + L('ctaBody') + '</div>';
+  h += '<a class="sec-tip-cta-btn" href="https://clavastack.com/security-talk" target="_blank" rel="noopener">' + L('ctaBtn') + '</a>';
+  h += '</div>';
   h += '</div></div>';
   return h;
 }
