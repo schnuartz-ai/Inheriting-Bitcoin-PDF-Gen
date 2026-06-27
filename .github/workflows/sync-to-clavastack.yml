@@ -1,0 +1,31 @@
+name: Sync index.html to ClavaStack website
+
+on:
+  push:
+    paths:
+      - index.html
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tool repo
+        uses: actions/checkout@v4
+
+      - name: Clone ClavaStack website repo
+        run: |
+          git clone https://x-access-token:${{ secrets.CLAVASTACK_WEBSITE_TOKEN }}@github.com/Schnuartz/next-clavastack.git
+
+      - name: Copy index.html
+        run: |
+          cp index.html next-clavastack/public/inheritance-planner/index.html
+
+      - name: Commit and push if changed
+        run: |
+          cd next-clavastack
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add public/inheritance-planner/index.html
+          git diff --staged --quiet && echo "No changes" && exit 0
+          git commit -m "sync: update inheritance-planner from tool repo"
+          git push
