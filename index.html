@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bitcoin Inheritance Plan &#8211; ClavaStack</title>
 <link rel="icon" href="assets/clavastack-logo.png" type="image/png">
+<meta name="theme-color" content="#04070B">
+<link rel="manifest" href="site.webmanifest">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 
@@ -114,17 +116,17 @@ select.form-control option { background: var(--specter-dark-accent); }
 #pdf-body { padding: 0 1.8cm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .pdf-h1 { font-size: 16pt; font-weight: 800; color: #0C1A27; margin-bottom: 6pt; margin-top: 8pt; font-family: 'Montserrat', system-ui, sans-serif; }
 .pdf-h2 { font-size: 11pt; font-weight: 700; color: #1F99E5; margin-bottom: 5pt; margin-top: 14pt; font-family: 'Montserrat', system-ui, sans-serif; border-bottom: 1.5px solid #1F99E5; padding-bottom: 3pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.pdf-h3 { font-size: 9.5pt; font-weight: 700; color: #0C1A27; margin-bottom: 4pt; margin-top: 10pt; font-family: 'Montserrat', system-ui, sans-serif; }
+.pdf-h3 { font-size: 9.5pt; font-weight: 700; color: #0C1A27; margin-bottom: 4pt; margin-top: 10pt; font-family: 'Montserrat', system-ui, sans-serif; break-after: avoid-page; page-break-after: avoid; }
 .pdf-text { font-size: 8.5pt; line-height: 1.65; color: #2a2a2a; margin-bottom: 6pt; font-family: 'Montserrat', system-ui, sans-serif; }
 .pdf-field-row { font-size: 8.5pt; color: #2a2a2a; margin-bottom: 8pt; display: flex; align-items: flex-end; gap: 4pt; font-family: 'Montserrat', system-ui, sans-serif; }
 .pdf-field-label { font-weight: 700; color: #0C1A27; white-space: nowrap; flex-shrink: 0; }
 .pdf-field-line { flex: 1; border-bottom: 1px solid #444; min-height: 14pt; }
 .pdf-field-line-wide { display: block; border-bottom: 1px solid #555; width: 100%; min-height: 14pt; margin-top: 2pt; margin-bottom: 6pt; }
-.pdf-contact-box { background: #f4f8fc; border: 1px solid #c8dff0; border-left: 4px solid #1F99E5; border-radius: 4px; padding: 8pt 10pt; margin-bottom: 8pt; font-size: 8.5pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.pdf-contact-box { background: #f4f8fc; border: 1px solid #c8dff0; border-left: 4px solid #1F99E5; border-radius: 4px; padding: 8pt 10pt; margin-bottom: 8pt; font-size: 8.5pt; break-inside: avoid-page; page-break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .pdf-contact-box strong { color: #1F99E5; font-size: 9pt; display: block; margin-bottom: 5pt; }
 .pdf-contact-box .c-val { color: #111; }
 .pdf-contact-box .c-label { color: #555; font-style: normal; }
-.pdf-seed-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4pt; margin-top: 6pt; margin-bottom: 8pt; }
+.pdf-seed-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4pt; margin-top: 6pt; margin-bottom: 8pt; break-inside: avoid-page; page-break-inside: avoid; }
 .pdf-seed-cell { border: 1px solid #ccc; border-radius: 3px; padding: 3pt 5pt; background: #fff; min-height: 22pt; font-size: 7pt; display: flex; align-items: flex-start; }
 .pdf-seed-n { color: #1F99E5; font-weight: 700; min-width: 14pt; font-size: 7pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .pdf-overview-table { width: 100%; border-collapse: collapse; font-size: 7.5pt; margin-top: 6pt; font-family: 'Montserrat', system-ui, sans-serif; }
@@ -132,12 +134,12 @@ select.form-control option { background: var(--specter-dark-accent); }
 .pdf-overview-table td { padding: 4pt 5pt; border-bottom: 1px solid #e0e0e0; vertical-align: middle; }
 .pdf-overview-table tr:nth-child(even) td { background: #f7f9fb; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .pdf-overview-table .td-empty { border-bottom: 1px solid #aaa; min-width: 40pt; }
-.pdf-wallet-block { border: 1px solid #9fc3e0; border-radius: 4px; padding: 0 10pt 8pt; margin-bottom: 8pt; background: #eef5fb; page-break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.pdf-wallet-block { border: 1px solid #9fc3e0; border-radius: 4px; padding: 0 10pt 8pt; margin-bottom: 8pt; background: #eef5fb; break-inside: avoid-page; page-break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .pdf-wallet-block-title { font-size: 9pt; font-weight: 700; color: #fff; background: #1F99E5; margin: 0 -10pt 7pt; padding: 4pt 10pt; border-radius: 4px 4px 0 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.pdf-gloss dt { font-weight: 700; color: #1F99E5; margin-top: 5pt; font-size: 8.5pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.pdf-gloss dt { font-weight: 700; color: #1F99E5; margin-top: 5pt; font-size: 8.5pt; break-after: avoid-page; page-break-after: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .pdf-gloss dd { margin-left: 12pt; font-size: 8pt; color: #333; line-height: 1.5; margin-bottom: 3pt; }
 .pdf-info-hint { background: #fff8f0; border: 1px solid #ffba7a; border-left: 4px solid #ff7a1a; border-radius: 4px; padding: 7pt 10pt; margin: 8pt 0; font-size: 8pt; color: #7a4000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.pdf-shamir-box { border: 2px dashed #aaa; border-radius: 4px; padding: 8pt 10pt; margin-bottom: 8pt; page-break-inside: avoid; }
+.pdf-shamir-box { border: 2px dashed #aaa; border-radius: 4px; padding: 8pt 10pt; margin-bottom: 8pt; break-inside: avoid-page; page-break-inside: avoid; }
 .pdf-shamir-box-title { font-size: 9pt; font-weight: 800; color: #0C1A27; margin-bottom: 6pt; text-align: center; letter-spacing: 1px; }
 .pdf-shamir-word-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3pt 6pt; }
 .pdf-shamir-word-row { font-size: 7.5pt; display: flex; align-items: flex-end; gap: 3pt; margin-bottom: 3pt; }
@@ -373,7 +375,7 @@ var STRINGS = {
     smartcardNamePh:'optional, e.g. Main Seed card',
     specterDiyNote:'Specter DIY (without Shield) cannot use smartcards – the seed phrase is stored directly on the device instead.',
     companionLabel:'Which companion app(s) do you use with this device?',
-    companionNote:'Software for operating the hardware wallet (Sparrow recommended). Multiple possible, per app on PC or phone.',
+    companionNote:'Software for operating the hardware wallet. Multiple possible, per app on PC or phone.',
     companionApp:function(n){ return 'Companion App '+n; },
     appLabel:'App', selectSmall:'-- select --', onWhichDevice:'On which device?',
     deviceModelLabel:'Device model (optional)',
@@ -409,7 +411,7 @@ var STRINGS = {
     bagNoPdfNote:'The PDF will show 5 dated lines so you can cross out and re-enter the bag number when renewing.',
     noBagNote:'The PDF will show an empty line for the storage location of the bag (handwritten).',
     fpLabel:function(pp){ return 'Fingerprint '+(pp<0?'of this seed phrase':'(Seed + Passphrase)')+' (optional)'; },
-    fpPh:'e.g. 1A2B3C4D',
+    fpPh:'e.g. 1A2B3C4D', fpWarnInvalid:'Invalid fingerprint: enter 8 hex characters (e.g. 1A2B3C4D).',
     addrFormatNote:'Choose the address formats of this wallet (default: Native SegWit). Per format you choose the accounts.',
     accCount:'How many accounts? (starting at #0)',
     accPurpose:function(n){ return 'Purpose Account #'+n; },
@@ -419,7 +421,7 @@ var STRINGS = {
     bip85Derived:'Derived via BIP-85?', bip85FromSeed:'From which seed phrase?', bip85Index:'BIP-85 index',
     swQ:'Software Wallets on Computer or Smartphone',
     swHint:'Apps on PC or phone.',
-    swBip85Hint:' Per wallet you can specify if it was derived via BIP-85.',
+    swBip85Hint:' Per wallet you can specify if it was derived via BIP-85.', swWordsQ:'How many seed words does this wallet have?',
     swPcCount:'How many wallet apps on the computer?',
     swPcWallet:function(n){ return 'Computer Wallet '+n; },
     swPhoneCount:'How many wallet apps on the smartphone?',
@@ -450,6 +452,12 @@ var STRINGS = {
     addrDefault:'Default (Native SegWit only)',
     offlineQ:'Offline mode for sensitive data',
     offlineHint:"By default you don't type in sensitive data. If you use this tool <strong>completely offline</strong> (no internet), you can additionally type in data like fingerprint, derivation path, xPubs and wallet descriptor – they'll appear in the PDF.",
+    offlineReadyHint:"Open the page once while online and it will cache the page shell, images and fonts so it can keep working without Wi-Fi.",
+    offlinePreloadBtn:"Make available offline",
+    offlinePreloadStart:"Preparing offline cache...",
+    offlinePreloadDone:"This page is now cached for offline use.",
+    offlineReadyToast:"Die Website ist bereit für offline usage.",
+    offlinePreloadUnsupported:"Offline caching is not supported in this browser.",
     offlineWarningStrong:'Best to enter only offline',
     offlineWarningText:"These are <b>not</b> seed phrases or PINs. They are data (e.g. xPub or wallet descriptor) with which one can <b>see how much Bitcoin</b> is on your wallet – but nobody can spend anything with this. Ideally enter only on a device without internet.",
     offlineNo:'No (Default)', offlineYes:'Yes, I am offline',
@@ -532,7 +540,7 @@ var STRINGS = {
     pdfTitle:'My Bitcoin Inheritance Plan',
     pdfRhTitle:'BITCOIN INHERITANCE PLAN',
     pdfIntro1:"This document describes how my Bitcoin assets are secured and how they can be recovered. It is intended for my heirs and trusted persons in the event of my death or incapacity.",
-    pdfImportantNote:'Important: This document does NOT contain my seed phrases, PINs or passphrases. These are stored separately and handwritten.',
+    pdfImportantNote:'Important: The generated PDF contains no secret access data. Once PINs, passphrases, or other secrets are added by hand, the printed copy becomes a highly sensitive document.',
     pdfOverview:'Overview',
     pdfDevices:'Hardware Devices',
     pdfSeeds:'Seed Phrases',
@@ -558,7 +566,7 @@ var STRINGS = {
     // PDF detail strings
     pdfGeneralInfo:'General Information', pdfDearHeirs:'Dear Heirs',
     pdfDearHeirsText:'When you read this letter, I am no longer able to manage my digital assets myself. I own Bitcoin and possibly other cryptocurrencies. Read this document completely and carefully before acting – Bitcoin transactions are irreversible.',
-    pdfNoPlaintext:'This plan contains <strong>no secrets in plain text</strong>. Seed phrases, PINs, passphrases and anti-phishing words are exclusively added by hand. Follow the instructions in each section step by step.',
+    pdfNoPlaintext:'The generated PDF contains no secret access data. Once PINs, passphrases, or other secrets are added by hand, the printed copy becomes a highly sensitive document.',
     pdfTrustedContacts:'Trusted Contacts', pdfContactsHelp:'If you need support, you will find trusted contacts here who can help you.',
     pdfContactLabel:function(n){ return 'Contact '+(n+1); },
     pdfContactInfoLabel:'Name, Company, Phone, Email, Website:',
@@ -596,7 +604,7 @@ var STRINGS = {
     pdfBagNumber:'Bag number:',
     pdfHiddenWallet:function(n,name){ return 'Hidden Wallet '+(n+1)+' (Seed phrase “'+name+'” + Passphrase '+(n+1)+')'; },
     pdfSeedMultisigNote:'This seed phrase is part of a multisig wallet – see section "Multisig".',
-    pdfSwDetail:function(bip85){ return 'Apps on computer or smartphone. Self-custodial wallets can be recovered with the seed phrase'+(bip85?' or were derived via BIP85':'')+'. Custodial wallets run via account login.'; },
+    pdfSwDetail:function(bip85){ return 'Apps on computer or smartphone. Self-custodial wallets can be recovered with a 12- or 24-word seed phrase'+(bip85?' derived via BIP85':'')+'. Custodial wallets run via account login.'; },
     pdfSwTitle:function(kind,n,label){ return (kind==='pc'?'Computer':'Smartphone')+' Wallet '+(n+1)+(label?' – '+label:''); },
     pdfCustodialLabel:'ℹ Custodial Wallet:', pdfNoSeedLabel:'⚠ No Standard BIP39 Seed:',
     pdfDevicePC:'Device / Computer:', pdfDevicePhone:'Smartphone:',
@@ -656,8 +664,8 @@ var STRINGS = {
     pdfPpEnter:'Passphrase &ndash; write by hand OR note storage location only:',
     pdfPpLocation:'Additional storage location of passphrase (if multiple):',
     pdfPpNoted:'Passphrase noted (check):',
-    pdfFingerprintFull:'Fingerprint (Master Key Fingerprint):',
-    pdfFingerprintEmpty:'Fingerprint (Master Key Fingerprint, e.g. 1A2B3C4D):',
+    pdfFingerprintFull:'Fingerprint (Master Key Fingerprint, 8 hex characters):',
+    pdfFingerprintEmpty:'Fingerprint (Master Key Fingerprint, 8 hex characters, e.g. 1A2B3C4D):',
     pdfAddrFormatRow:function(f){ return 'Address format: '+f; },
     pdfAccountRow:function(ac){ return 'Account #'+ac+' (purpose):'; },
     pdfDeviceLabel:function(n,m){ return 'Device '+(n+1)+(m?' – '+m:' (no model)'); },
@@ -725,7 +733,7 @@ var STRINGS = {
     smartcardNamePh:'optional, z. B. Karte Haupt-Seed',
     specterDiyNote:'Specter DIY (ohne Shield) kann keine Smartcards verwenden – die Seed-Phrase wird stattdessen direkt auf dem Gerät gespeichert.',
     companionLabel:'Welche Companion-App(s) nutzt du mit diesem Gerät?',
-    companionNote:'Software zur Bedienung des Hardware-Wallets (Sparrow empfohlen). Mehrere möglich, je App auf PC oder Handy.',
+    companionNote:'Software zur Bedienung des Hardware-Wallets. Mehrere möglich, je App auf PC oder Handy.',
     companionApp:function(n){ return 'Companion-App '+n; },
     appLabel:'App', selectSmall:'-- wählen --', onWhichDevice:'Auf welchem Gerät?',
     deviceModelLabel:'Geräte-Modell (optional)',
@@ -761,7 +769,7 @@ var STRINGS = {
     bagNoPdfNote:'Im PDF erscheinen 5 datierte Zeilen, damit du die Bag beim Erneuern durchstreichen und neu eintragen kannst.',
     noBagNote:'Im PDF erscheint eine leere Zeile für den Aufbewahrungsort der Bag (handschriftlich).',
     fpLabel:function(pp){ return 'Fingerprint '+(pp<0?'dieser Seed-Phrase':'(Seed + Passphrase)')+' (optional)'; },
-    fpPh:'z. B. 1A2B3C4D',
+    fpPh:'z. B. 1A2B3C4D', fpWarnInvalid:'Ungültiger Fingerprint: Bitte 8 Hex-Zeichen eintragen (z. B. 1A2B3C4D).',
     addrFormatNote:'Wähle die Adressformate dieses Wallets (Standard: Native SegWit). Pro Format wählst du die Accounts.',
     accCount:'Wie viele Accounts? (ab #0)',
     accPurpose:function(n){ return 'Zweck Account #'+n; },
@@ -771,7 +779,7 @@ var STRINGS = {
     bip85Derived:'Mit BIP85 abgeleitet?', bip85FromSeed:'Aus welcher Seed-Phrase?', bip85Index:'BIP85-Index',
     swQ:'Software-Wallets auf Computer oder Smartphone',
     swHint:'Apps auf PC oder Handy.',
-    swBip85Hint:' Pro Wallet kannst du angeben, ob sie per BIP85 abgeleitet wurde.',
+    swBip85Hint:' Pro Wallet kannst du angeben, ob sie per BIP85 abgeleitet wurde.', swWordsQ:'Wie viele Seed-Wörter hat dieses Wallet?',
     swPcCount:'Wie viele Wallet-Apps auf dem Computer?',
     swPcWallet:function(n){ return 'Computer-Wallet '+n; },
     swPhoneCount:'Wie viele Wallet-Apps auf dem Smartphone?',
@@ -801,7 +809,13 @@ var STRINGS = {
     addrHint:'Wähle alle Typen, die du verwendest. Diese erscheinen später pro Wallet zum Ankreuzen. Standard ist Native SegWit.',
     addrDefault:'Default (nur Native SegWit)',
     offlineQ:'Offline-Modus für sensible Daten',
-    offlineHint:'Standardmäßig tippst du keine sensiblen Daten ein. Wenn du diesen Dienst <strong>komplett offline</strong> nutzt (kein Internet), kannst du zusätzlich Angaben wie Fingerprint, Derivation Path, xPubs und den Wallet-Descriptor direkt eintippen – sie landen dann fertig im PDF.',
+    offlineHint:'Standardmäßig tippst du keine sensiblen Daten ein. Wenn du diese App einmal online öffnest, cached sie die Seite, Bilder und Schriftarten, sodass sie danach offline weiterarbeitet. Wenn du diesen Dienst <strong>komplett offline</strong> nutzt (kein Internet), kannst du zusätzlich Angaben wie Fingerprint, Derivation Path, xPubs und den Wallet-Descriptor direkt eintippen – sie landen dann fertig im PDF.',
+    offlineReadyHint:'Öffne die Seite einmal online, dann cached sie die komplette Oberfläche inklusive Bilder und Schriftarten, sodass sie danach auch ohne WLAN weiterläuft.',
+    offlinePreloadBtn:'Offline verfügbar machen',
+    offlinePreloadStart:'Offline-Cache wird vorbereitet ...',
+    offlinePreloadDone:'Diese Seite ist jetzt für Offline-Nutzung zwischengespeichert.',
+    offlineReadyToast:'Die Website ist bereit für offline usage.',
+    offlinePreloadUnsupported:'Offline-Caching wird von diesem Browser nicht unterstützt.',
     offlineWarningStrong:'Am besten nur offline eingeben',
     offlineWarningText:'Das sind <b>keine</b> Seed-Phrasen oder PINs. Es sind Daten (z. B. xPub oder Wallet-Descriptor), mit denen man <b>sehen kann, wie viel Bitcoin</b> auf deiner Wallet liegt – allein damit kann aber niemand etwas ausgeben. Gib sie idealerweise nur auf einem Gerät ohne Internet ein.',
     offlineNo:'Nein (Standard)', offlineYes:'Ja, ich bin offline',
@@ -854,7 +868,7 @@ var STRINGS = {
     timelockRitrek:'Ja (mit RITREK App)',
     createPDF:'PDF ERSTELLEN &amp; DRUCKEN',
     savePlanBtn:'Plan verschlüsselt speichern',
-    savePlanInfo:'Speichert deinen aktuellen Stand als verschlüsselte <strong>.json</strong>-Datei, damit du später weitermachen kannst.',
+    savePlanInfo:'Speichert deinen aktuellen Stand als <strong>.json</strong>-Datei. Mit Passwort verschlüsselt, ohne Passwort unverschlüsselt.',
     encryptionLabel:'Verschlüsselung: <strong>AES-256-GCM</strong>',
     keyDerivation:'Schlüsselableitung: <strong>PBKDF2-SHA256</strong> (210.000 Iterationen)',
     noRecovery:'<strong>Ohne das Passwort gibt es keine Wiederherstellung</strong> – kein Reset, kein Support',
@@ -866,7 +880,7 @@ var STRINGS = {
     passwordMismatch:'Die Passwörter stimmen nicht überein.',
     wrongPassword:'Falsches Passwort',
     savePlanTitle:'Plan verschlüsselt speichern',
-    savePlanText:'Lege ein Passwort fest. Du brauchst es später zum Laden. Es gibt keine Wiederherstellung – ohne Passwort sind die Daten verloren.',
+    savePlanText:'Lege ein Passwort fest. Wenn du nichts eingibst, wird der Plan unverschlüsselt gespeichert.',
     saveLabel:'Speichern',
     decryptTitle:'Plan entschlüsseln',
     decryptText:'Gib das Passwort ein, mit dem dieser Plan gespeichert wurde.',
@@ -883,7 +897,7 @@ var STRINGS = {
     pdfTitle:'Mein Bitcoin-Nachlassplan',
     pdfRhTitle:'BITCOIN-NACHLASSPLAN',
     pdfIntro1:'Dieses Dokument beschreibt, wie meine Bitcoin-Vermögenswerte gesichert sind und wie sie im Ernstfall wiederhergestellt werden können. Es ist für meine Erben und Vertrauenspersonen im Fall meines Todes oder meiner Geschäftsunfähigkeit bestimmt.',
-    pdfImportantNote:'Wichtig: Dieses Dokument enthält KEINE Seed-Phrasen, PINs oder Passphrasen. Diese sind separat hinterlegt und werden handschriftlich eingetragen.',
+    pdfImportantNote:'Wichtig: Die digital erzeugte PDF-Datei enthält keine geheimen Zugangsdaten. Sobald PINs, Passphrasen oder andere Geheimnisse handschriftlich ergänzt werden, ist die ausgedruckte Kopie ein hochsensibles Geheimdokument.',
     pdfOverview:'Übersicht',
     pdfDevices:'Hardware-Geräte',
     pdfSeeds:'Seed-Phrasen',
@@ -909,7 +923,7 @@ var STRINGS = {
     // PDF Detailstrings
     pdfGeneralInfo:'Allgemeine Informationen', pdfDearHeirs:'Liebe Erben',
     pdfDearHeirsText:'Wenn ihr diesen Brief lest, kann ich meine digitalen Vermögenswerte nicht mehr selbst verwalten. Ich besitze Bitcoin und möglicherweise weitere Kryptowährungen. Lest dieses Dokument vollständig und in Ruhe durch, bevor ihr handelt – Bitcoin-Transaktionen sind unwiderruflich.',
-    pdfNoPlaintext:'Dieser Plan enthält <strong>keine Geheimnisse im Klartext</strong>. Seed-Phrasen, PINs, Passphrasen und Anti-Phishing-Wörter sind ausschliesslich handschriftlich ergänzt. Folgt den Anweisungen in jedem Abschnitt Schritt für Schritt.',
+    pdfNoPlaintext:'Die digital erzeugte PDF-Datei enthält keine geheimen Zugangsdaten. Sobald PINs, Passphrasen oder andere Geheimnisse handschriftlich ergänzt werden, ist die ausgedruckte Kopie ein hochsensibles Geheimdokument.',
     pdfTrustedContacts:'Vertrauenswürdige Kontakte', pdfContactsHelp:'Falls ihr Unterstützung benötigt, findet ihr hier vertrauenswürdige Kontakte, die euch unterstützen können.',
     pdfContactLabel:function(n){ return 'Kontakt '+(n+1); },
     pdfContactInfoLabel:'Name, Firma, Tel, E-Mail, Webseite:',
@@ -947,7 +961,7 @@ var STRINGS = {
     pdfBagNumber:'Bag-Nummer:',
     pdfHiddenWallet:function(n,name){ return 'Verstecktes Wallet '+(n+1)+' (Seed-Phrase „'+name+'" + Passphrase '+(n+1)+')'; },
     pdfSeedMultisigNote:'Diese Seed-Phrase ist Teil eines Multisig-Wallets – siehe Abschnitt „Multisignatur".',
-    pdfSwDetail:function(bip85){ return 'Apps auf Computer oder Smartphone. Self-custodial Wallets können mit der Seedphrase wiederhergestellt werden'+(bip85?' oder wurden per BIP85 abgeleitet':'')+'. Custodiale Wallets laufen über Account-Login.'; },
+    pdfSwDetail:function(bip85){ return 'Apps auf Computer oder Smartphone. Self-custodial Wallets können mit einer 12- oder 24-Wort-Seedphrase wiederhergestellt werden'+(bip85?' oder wurden per BIP85 abgeleitet':'')+'. Custodiale Wallets laufen über Account-Login.'; },
     pdfSwTitle:function(kind,n,label){ return (kind==='pc'?'Computer':'Smartphone')+'-Wallet '+(n+1)+(label?' – '+label:''); },
     pdfCustodialLabel:'ℹ Custodial Wallet:', pdfNoSeedLabel:'⚠ Kein Standard-BIP39-Seed:',
     pdfDevicePC:'Gerät / Computer:', pdfDevicePhone:'Smartphone:',
@@ -1007,8 +1021,8 @@ var STRINGS = {
     pdfPpEnter:'Passphrase &ndash; handschriftlich ODER nur Aufbewahrungsort eintragen:',
     pdfPpLocation:'Weiterer Aufbewahrungsort der Passphrase (falls mehrfach):',
     pdfPpNoted:'Passphrase gespeichert (ankreuzen):',
-    pdfFingerprintFull:'Fingerprint (Master Key Fingerprint):',
-    pdfFingerprintEmpty:'Fingerprint (Master Key Fingerprint, z.&thinsp;B. 1A2B3C4D):',
+    pdfFingerprintFull:'Fingerprint (Master Key Fingerprint, 8 hex characters):',
+    pdfFingerprintEmpty:'Fingerprint (Master Key Fingerprint, 8 Hex-Zeichen, z.&thinsp;B. 1A2B3C4D):',
     pdfAddrFormatRow:function(f){ return 'Adressformat: '+f; },
     pdfAccountRow:function(ac){ return 'Account #'+ac+' (Zweck):'; },
     pdfDeviceLabel:function(n,m){ return 'Gerät '+(n+1)+(m?' – '+m:' (kein Modell)'); },
@@ -1174,9 +1188,9 @@ var EXCHANGES = [
     custodial:true, recovery:"Custodial Exchange. Kein Seed. Recovery über E-Mail + Passwort + 2FA. BTC auf eigene Wallet auszahlen für echte Self-Custody."},
    {label:"Andere",         url:"",                           kyc:false}
 ];
-// Companion-Apps zur Bedienung von Hardware-Wallets. Sparrow empfohlen.
+// Companion-Apps zur Bedienung von Hardware-Wallets.
 var COMPANION_APPS = [
-  {label:"Sparrow Wallet",  url:"https://sparrowwallet.com",   img:"assets/apps/sparrow.png",         recommended:true},
+  {label:"Sparrow Wallet",  url:"https://sparrowwallet.com",   img:"assets/apps/sparrow.png"},
   {label:"Specter Desktop", url:"https://specter.solutions",   img:"assets/apps/specter-desktop.png"},
   {label:"Bitcoin Safe",    url:"https://bitcoin-safe.org",    img:"assets/apps/bitcoin-safe.png"},
   {label:"Liana",           url:"https://wizardsardine.com/liana", img:"assets/apps/liana-wallet.jpg"},
@@ -1220,8 +1234,8 @@ var SOFTWARE_WALLETS = [
    {label:"Muun",              url:"https://muun.com",              img:"assets/apps/muun.png",
     noSeed:true, recovery:"Kein BIP39-Seed. Recovery via Cold Recovery Code ODER E-Mail + Passwort + Recovery Code. Emergency Kit (PDF mit Keys/Output Descriptors) sichern – ermöglicht unabhängigen Sweep ohne Muun-Dienst."},
   // ── Custodial / Account-basiert ───────────────────────────────────────────
-  {label:"Blink",             url:"https://www.blink.sv",          img:"assets/apps/blink.png",
-   custodial:true, recovery:"Custodial. KEIN Seed. Recovery über Telefonnummer + OTP per SMS/WhatsApp, optional 2FA via Authenticator-App. Trial-Accounts ohne Telefonnummer können bei Geräteverlust laut Blink NICHT wiederhergestellt werden."},
+  {label:"Blink",             url:"https://www.blink.sv",          img:"assets/apps/blink.png", dualMode:true,
+   custodial:true, recovery:"Custodial. KEIN Seed. Recovery über Telefonnummer + OTP per SMS/WhatsApp, optional 2FA via Authenticator-App. Trial-Accounts ohne Telefonnummer können bei Geräteverlust laut Blink NICHT wiederhergestellt werden.", recoveryNC:"Non-custodial. Recovery über die Seedphrase; wenn du BIP85 nutzt, notiere zusätzlich die Quell-Seedphrase und den Index."},
   {label:"Wallet of Satoshi", url:"https://walletofsatoshi.com",   img:"assets/apps/wallet-of-satoshi.svg",
    custodial:true, recovery:"Classic/Custodial: WoS hält die Keys – Recovery über E-Mail-Login (kein Seed). Self-Custody-Modus: 12/24-Wort-Seedphrase ODER Google-Drive-Backup + Backup-Passwort. Ohne Backup/Seed/Passwort kein Restore möglich."},
   {label:"Fedi",              url:"https://www.fedi.xyz",          img:"assets/apps/fedi.png",
@@ -1270,7 +1284,7 @@ function defaultState(){ return {
   devices: [],
   seeds: [],
   addrTypes: [ADDR_DEFAULT],
-  sw: {pc:0, phone:0, pcModels:[], phoneModels:[], pcB85:[], pcSeed:[], pcIdx:[], phoneB85:[], phoneSeed:[], phoneIdx:[]},
+  sw: {pc:0, phone:0, pcModels:[], phoneModels:[], pcB85:[], pcSeed:[], pcIdx:[], pcWords:[], phoneB85:[], phoneSeed:[], phoneIdx:[], phoneWords:[]},
   ex: {count:0, names:[]},
   multisigs: [],
   pwm: {use:null, app:""},
@@ -1279,7 +1293,35 @@ function defaultState(){ return {
   timelock: {use:false, ritrek:false, fromW:"", toW:"", toCustom:"", store:{ritrek:false, pwm:false, other:""}}
 }; }
 var state = defaultState();
-function newMultisig(){ return {name:"", m:2, n:3, seeds:[], hot:[], custom:"", cosigners:[], descriptor:"", exp:false}; }
+
+function ensureArrayLen(arr, len, fill) {
+ if (!Array.isArray(arr)) arr = [];
+ while (arr.length < len) arr.push(fill);
+ if (arr.length > len) arr.length = len;
+ return arr;
+}
+function isValidFingerprint(v){ return /^[0-9A-Fa-f]{8}$/.test((v || '').trim()); }
+function syncSwKind(kind, len) {
+ state.sw[kind + 'Models'] = ensureArrayLen(state.sw[kind + 'Models'], len, '');
+ state.sw[kind + 'B85'] = ensureArrayLen(state.sw[kind + 'B85'], len, false);
+ state.sw[kind + 'Seed'] = ensureArrayLen(state.sw[kind + 'Seed'], len, '');
+ state.sw[kind + 'Idx'] = ensureArrayLen(state.sw[kind + 'Idx'], len, '');
+ state.sw[kind + 'Words'] = ensureArrayLen(state.sw[kind + 'Words'], len, 12);
+ state.sw[kind + 'Mode'] = ensureArrayLen(state.sw[kind + 'Mode'], len, '');
+ state.sw[kind + 'RecoveryType'] = ensureArrayLen(state.sw[kind + 'RecoveryType'], len, '');
+ state.sw[kind + 'RecoveryValue'] = ensureArrayLen(state.sw[kind + 'RecoveryValue'], len, '');
+}
+function swMeta(kind, i) {
+ return {
+ mode: (state.sw[kind + 'Mode'] || [])[i] || '',
+ recoveryType: (state.sw[kind + 'RecoveryType'] || [])[i] || '',
+ recoveryValue: (state.sw[kind + 'RecoveryValue'] || [])[i] || '',
+ b85: !!((state.sw[kind + 'B85'] || [])[i]),
+ seed: (state.sw[kind + 'Seed'] || [])[i] || '',
+ idx: (state.sw[kind + 'Idx'] || [])[i] || '',
+ words: (state.sw[kind + 'Words'] || [])[i] || 12
+ };
+}
 function hotWalletList(){ var out=[]; for(var i=0;i<state.sw.pc;i++){ out.push({id:"pc-"+i, label:(state.sw.pcModels[i]||("Computer-Wallet "+(i+1)))+" (PC)"}); } for(var j=0;j<state.sw.phone;j++){ out.push({id:"phone-"+j, label:(state.sw.phoneModels[j]||("Smartphone-Wallet "+(j+1)))+" (Handy)"}); } return out; }
 function hotLabelById(id){ var l=hotWalletList(); for(var i=0;i<l.length;i++){ if(l[i].id===id) return l[i].label; } return id; }
 function seedName(i){ var s=state.seeds[i]; return s ? (s.name||("Seed #"+(i+1))) : ("Seed #"+(i+1)); }
@@ -1341,6 +1383,73 @@ function allScPairs(){ var out=[]; for(var d=0;d<state.devices.length;d++){ var 
 function usedScExcept(seedIdx){ var u={}; for(var i=0;i<state.seeds.length;i++){ if(i===seedIdx) continue; var sd=state.seeds[i]; if(sd.deviceOpts){ for(var k in sd.deviceOpts){ if(sd.deviceOpts[k].sc) u[sd.deviceOpts[k].sc]=1; } } for(var b=0;b<sd.backups.length;b++){ if(sd.backups[b].type==="smartcard"&&sd.backups[b].smartcard) u[sd.backups[b].smartcard]=1; } } return u; }
 function scOptionsFor(seedIdx,curVal,deviceOnly){ var used=usedScExcept(seedIdx),pairs=allScPairs(),h=""; for(var i=0;i<pairs.length;i++){ var p=pairs[i]; if(deviceOnly!=null && parseInt(p.v.split("-")[0])!==deviceOnly) continue; if(used[p.v] && p.v!==curVal) continue; h+='<option value="'+p.v+'"'+(p.v===curVal?" selected":"")+'>'+esc(p.l)+'</option>'; } return h; }
 
+
+function preloadAllImages(){
+ var seen = {};
+ function add(src){ if(!src || seen[src]) return; seen[src]=true; var img = new Image(); img.decoding = 'async'; img.src = src; }
+ [HW_MODELS, COMPANION_APPS, SOFTWARE_WALLETS, EXCHANGES].forEach(function(arr){
+ for(var i=0;i<arr.length;i++){ add(arr[i].img); }
+ });
+ add(RITREK_LOGO_URL);
+ add(TIMELOCK_LOGO_URL);
+ add('assets/products/smartcard.png');
+}
+var OFFLINE_CACHE_NAME = 'bitcoin-inheritance-offline-v1';
+var OFFLINE_FONT_CSS_URL = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap';
+function collectOfflineAssetUrls(){
+ var seen = {};
+ var out = [];
+ function add(src){
+  if(!src || seen[src]) return;
+  seen[src] = true;
+  out.push(src);
+ }
+ add('./');
+ add('./index.html');
+ add('./sw.js');
+ add('./site.webmanifest');
+ add('assets/clavastack-logo.png');
+ add('assets/products/smartcard.png');
+ add(RITREK_LOGO_URL);
+ add(TIMELOCK_LOGO_URL);
+ [HW_MODELS, COMPANION_APPS, SOFTWARE_WALLETS, EXCHANGES].forEach(function(arr){
+  for(var i=0;i<arr.length;i++) add(arr[i].img);
+ });
+ if(document && document.documentElement){
+  var html = document.documentElement.outerHTML || '';
+  var re = /(?:\.\/)?assets\/[A-Za-z0-9_./-]+\.(?:png|jpe?g|webp|svg|gif|ico|avif)/gi;
+  var m;
+  while((m = re.exec(html))) add(m[0].replace(/^\.\//, ''));
+ }
+ return out;
+}
+function cacheRequest(cache, url){ return fetch(url, {cache:'no-store'}).then(function(res){ if(!res || (!res.ok && res.type!=='opaque')) return; return cache.put(url, res.clone()); }).catch(function(){}); }
+function primeOfflineCache(){ if(!('caches' in window)) return Promise.resolve(); return caches.open(OFFLINE_CACHE_NAME).then(function(cache){ var urls = collectOfflineAssetUrls(); urls.push(OFFLINE_FONT_CSS_URL); var jobs = urls.map(function(url){ return cacheRequest(cache, url); }); return Promise.all(jobs).then(function(){ return fetch(OFFLINE_FONT_CSS_URL, {cache:'no-store'}).then(function(cssRes){ if(!cssRes || !cssRes.ok) return; var clone = cssRes.clone(); return cssRes.text().then(function(cssText){ return cache.put(OFFLINE_FONT_CSS_URL, clone).then(function(){ var fontUrls = []; var re = /url\((['"]?)(https:[^)]+)\1\)/g; var m; while((m = re.exec(cssText))){ fontUrls.push(m[2]); } return Promise.all(fontUrls.map(function(url){ return cacheRequest(cache, url); })); }); }); }).catch(function(){}); }); }); }
+function registerOfflineSupport(){ if(!('serviceWorker' in navigator)) return; window.addEventListener('load', function(){ navigator.serviceWorker.register('./sw.js').then(function(){ return primeOfflineCache(); }).then(function(){ showToast(L('offlineReadyToast')); }).catch(function(){}); }); }
+function prepareOfflineNow(){ if(!('serviceWorker' in navigator) || !('caches' in window)){ showToast(L('offlinePreloadUnsupported'), 'err'); return; } showToast(L('offlinePreloadStart')); primeOfflineCache().then(function(){ showToast(L('offlinePreloadDone')); }).catch(function(){ showToast(L('offlinePreloadDone')); }); }
+
+function waitForPdfImages(root){
+  var imgs = root.querySelectorAll('img');
+  var pending = [];
+  for(var i=0;i<imgs.length;i++){
+    (function(img){
+      if(img.complete && img.naturalWidth>0) return;
+      pending.push(new Promise(function(resolve){
+        var done = false;
+        function finish(){ if(done) return; done = true; resolve(); }
+        img.addEventListener('load', finish, {once:true});
+        img.addEventListener('error', finish, {once:true});
+        setTimeout(finish, 3000);
+      }));
+    })(imgs[i]);
+  }
+  return Promise.all(pending);
+}
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', preloadAllImages);
+} else {
+  preloadAllImages();
+}
 // ===== WIZARD ENGINE =====
 var pos = 0;
 function screens(){
@@ -1422,14 +1531,16 @@ function swOpts(sel){ var h=""; for(var i=0;i<SOFTWARE_WALLETS.length;i++){ var 
 
 // ---- Screens ----
 function renderIntro(){
-  return '<div class="section-card"><div class="section-card-body start-screen">'
-    +'<h1>'+L('introH1')+'</h1>'
-    +'<p>'+L('introP')+'</p>'
-    +'<button class="btn btn-primary" onclick="go(1)">'+L('start')+'</button>'
-    +'<div style="margin-top:18px;">'
-    +'<button class="btn btn-subtle" onclick="openLoadModal()">'+L('loadPlan')+'</button>'
-    +'</div>'
-    +'</div></div>';
+ return '<div class="section-card"><div class="section-card-body start-screen">'
+ +'<h1>'+L('introH1')+'</h1>'
+ +'<p>'+L('introP')+'</p>'
+ +'<p class="wizard-hint" style="margin-top:-8px;margin-bottom:18px;">'+L('offlineReadyHint')+'</p>'
+ +'<button class="btn btn-primary" onclick="go(1)">'+L('start')+'</button>'
+ +'<div style="margin-top:18px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">'
+ +'<button class="btn btn-subtle" onclick="prepareOfflineNow()">'+L('offlinePreloadBtn')+'</button>'
+ +'<button class="btn btn-subtle" onclick="openLoadModal()">'+L('loadPlan')+'</button>'
+ +'</div>'
+ +'</div></div>';
 }
 function renderDevCount(){
   var h='<div class="section-card"><div class="section-card-body">';
@@ -1488,7 +1599,7 @@ function renderDev(i){
   h+='</div></div>';
   return h;
 }
-function compOpts(sel){ var h=""; for(var i=0;i<COMPANION_APPS.length;i++){ var l=COMPANION_APPS[i].label+(COMPANION_APPS[i].recommended?" "+L('recommended'):""); h+='<option value="'+esc(COMPANION_APPS[i].label)+'"'+(COMPANION_APPS[i].label===sel?" selected":"")+'>'+esc(l)+'</option>'; } return h; }
+function compOpts(sel){ var h=""; for(var i=0;i<COMPANION_APPS.length;i++){ var l=COMPANION_APPS[i].label; h+='<option value="'+esc(COMPANION_APPS[i].label)+'"'+(COMPANION_APPS[i].label===sel?" selected":"")+'>'+esc(l)+'</option>'; } return h; }
 function setDevModel(i,v){ state.devices[i].model=v; var m=getModel(v); if(!(m&&m.shield)) state.devices[i].smartcards=0; render(); }
 function setDevSmartcards(i,n){ state.devices[i].smartcards=n; render(); }
 function setSmartcardName(i,sc,v){ var dv=state.devices[i]; if(!dv.smartcardNames)dv.smartcardNames=[]; dv.smartcardNames[sc]=v; }
@@ -1512,23 +1623,27 @@ function setSeedCount(n){
   render();
 }
 
+
 function renderSeed(idx){
   var s=state.seeds[idx];
-  var h='<div class="section-card"><div class="section-card-body">';
+  var smartcardLabel = LANG==='de' ? 'Mit Smartcard verschlüsselt' : 'Encrypted with smartcard';
+ var smartcardInfo = LANG==='de' ? 'Zum Entschlüsseln der Seedphrase sind Smartcard, Gerät und Smartcard-PIN notwendig.' : 'To decrypt the seed phrase, you need the smartcard, the device, and the smartcard PIN.';
+ var devicePinInfo = LANG==='de' ? 'Seedphrase ist mit Geräte-PIN auf dem Gerät selbst verschlüsselt. Es kann technisch möglich sein, die Seedphrase ohne den PIN mit viel Aufwand zu extrahieren. Diese Option wird für größere Beträge nicht empfohlen.' : 'The seed phrase is encrypted on the device itself with the device PIN. It may be technically possible to extract the seed phrase without the PIN, but only with significant effort. This option is not recommended for large amounts.';
+ var sdCardInfo = LANG==='de' ? 'Seedphrase ist mit SD-Karte auf dem Gerät selbst verschlüsselt. Diese Option wird für größere Beträge nicht empfohlen.' : 'The seed phrase is encrypted on the device itself with an SD card. This option is not recommended for large amounts.';
+ var lessSecureInfo = LANG==='de' ? 'Geräte-PIN und SD-Karte sind weniger sicher als eine Smartcard und werden für größere Beträge nicht empfohlen.' : 'Device PIN and SD card are less secure than a smartcard and are not recommended for large amounts.';
+var h='<div class="section-card"><div class="section-card-body">';
   h+='<div class="wizard-question">'+Lf('seedPhrase',idx+1,state.seeds.length)+'</div>';
   h+='<p class="wizard-hint">'+L('seedHint')+'</p>';
   h+='<div class="seed-card">';
   h+='<div class="form-group"><label class="form-label">'+L('seedNameLabel')+'</label>'
     +'<input class="form-control" type="text" value="'+esc(s.name)+'" placeholder="'+L('seedNamePh')+'" oninput="setSeedName('+idx+',this.value)"></div>';
 
-  // backups
   h+='<div class="sub-block"><label class="form-label">'+L('backupCountLabel')+'</label>';
   h+='<p class="mini-note">'+L('backupNote')+'</p>';
   h+=pills(s.backups.length,0,5,"setBackupCount("+idx+",");
   for(var b=0;b<s.backups.length;b++){ h+=renderBackup(idx,b); }
   h+='</div>';
 
-  // devices
   if(state.devices.length>0){
     h+='<div class="sub-block"><label class="form-label">'+L('onWhichHW')+'</label>';
     for(var d=0;d<state.devices.length;d++){
@@ -1540,7 +1655,7 @@ function renderSeed(idx){
           h+='<div style="margin:2px 0 8px 28px;">';
           if(m2.shield){
             var cards=deviceSmartcards(d);
-            h+='<label class="chk-row"><input type="checkbox" '+(op.withSc?"checked":"")+' onchange="toggleDevSc('+idx+','+d+')"> '+L('onSmartcardLabel')+' <span style="color:var(--specter-primary);font-size:0.78rem;">'+L('recommended')+'</span></label>';
+            h+='<label class="chk-row"><input type="checkbox" '+(op.withSc?"checked":"")+' onchange="toggleDevSc('+idx+','+d+')"> '+smartcardLabel+'</label>';
             if(op.withSc){
               if(cards.length){
                 h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+L('whichSmartcardLabel')+'</label>'
@@ -1548,11 +1663,14 @@ function renderSeed(idx){
               } else {
                 h+='<p class="mini-note">'+L('noScForDevice')+'</p>';
               }
+              h+='<p class="mini-note">'+esc(smartcardInfo)+'</p>';
             }
           }
           h+='<label class="chk-row"><input type="checkbox" '+(op.pin?"checked":"")+' onchange="toggleDevPin('+idx+','+d+')"> '+L('onDevicePIN')+'</label>';
+          if(op.pin){ h+='<p class="mini-note">'+esc(devicePinInfo)+'</p>'; }
           h+='<label class="chk-row"><input type="checkbox" '+(op.sdCard?"checked":"")+' onchange="toggleDevSd('+idx+','+d+')"> '+L('onSDCard')+'</label>';
-          h+='<p class="mini-note">'+L('pinSdNote')+'</p>';
+          if(op.sdCard){ h+='<p class="mini-note">'+esc(sdCardInfo)+'</p>'; }
+          if(op.pin || op.sdCard){ h+='<p class="mini-note">'+esc(lessSecureInfo)+'</p>'; }
           h+='</div>';
         }
       }
@@ -1560,12 +1678,10 @@ function renderSeed(idx){
     h+='</div>';
   }
 
-  // Standard-Wallet
   h+='<div class="sub-block"><label class="form-label">'+L('standardWallet')+'</label>';
   h+=renderWalletAcc(idx,-1);
   h+='</div>';
 
-  // passphrases
   h+='<div class="sub-block"><label class="form-label">'+L('ppCount')+'</label>';
   h+='<p class="mini-note">'+L('ppNote')+'</p>';
   h+=pills(s.passphrases,0,4,"setSeedPassphrases("+idx+",");
@@ -1577,11 +1693,10 @@ function renderSeed(idx){
   }
   h+='</div>';
 
-  // multisig
   h+='<div class="sub-block"><label class="chk-row"><input type="checkbox" '+(s.multisig?"checked":"")+' onchange="toggleSeedMultisig('+idx+')"> '+L('inMultisigLabel')+'</label>';
   h+='<p class="mini-note">'+L('multisigNoteSmall')+'</p></div>';
 
-  h+='</div>'; // seed-card
+  h+='</div>';
   h+=nav();
   h+='</div></div>';
   return h;
@@ -1631,6 +1746,9 @@ function renderWalletAcc(i,p){
   var h='';
   h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+Lf('fpLabel',p)+'</label>'
     +'<input class="form-control" type="text" value="'+esc(w.fp||"")+'" placeholder="'+L('fpPh')+'" oninput="setWFp('+i+','+p+',this.value)"></div>';
+  if((w.fp||'').trim() && !isValidFingerprint(w.fp)){
+    h+='<div class="mini-note" style="color:#f5b41e;">'+L('fpWarnInvalid')+'</div>';
+  }
   if(avail.length>=2){
     h+='<p class="mini-note">'+L('addrFormatNote')+'</p>';
     h+='<div class="chip-group">';
@@ -1652,7 +1770,7 @@ function renderWalletAcc(i,p){
 function toggleWFmt(i,p,f){ var w=walletOf(i,p); var k=w.fmts.indexOf(f); if(k>=0){ if(w.fmts.length>1){ w.fmts.splice(k,1); } } else { w.fmts.push(f); if(!w.acc[f]){ w.acc[f]=1; w.pur[f]=[]; } } render(); }
 function setWAcc(i,p,f,n){ var w=walletOf(i,p); w.acc[f]=n; if(!w.pur[f])w.pur[f]=[]; w.pur[f].length=n; render(); }
 function setWPur(i,p,f,a,v){ var w=walletOf(i,p); if(!w.pur[f])w.pur[f]=[]; w.pur[f][a]=v; }
-function setWFp(i,p,v){ walletOf(i,p).fp=v; }
+function setWFp(i,p,v){ walletOf(i,p).fp=(v||'').trim().toUpperCase(); render(); }
 function setSeedName(i,v){ state.seeds[i].name=v; }
 function setBackupCount(i,n){ var s=state.seeds[i]; while(s.backups.length<n)s.backups.push(newBackup()); while(s.backups.length>n)s.backups.pop(); render(); }
 function setBackupType(i,b,t){ state.seeds[i].backups[b].type=t; render(); }
@@ -1680,40 +1798,107 @@ function bip85Block(kind,i){
   }
   return h;
 }
+
 function renderSw(){
   var h='<div class="section-card"><div class="section-card-body">';
+  var blinkModeLabel = LANG==='de' ? 'Blink-Modus' : 'Blink mode';
+  var custodialMode = LANG==='de' ? 'Custodial' : 'Custodial';
+  var nonCustodialMode = LANG==='de' ? 'Non-Custodial' : 'Non-Custodial';
+  var chooseModeNote = LANG==='de' ? 'Bitte Custodial oder Non-Custodial wählen.' : 'Please choose custodial or non-custodial.';
+  var emailLabel = LANG==='de' ? 'E-Mail' : 'Email';
+  var phoneLabel = LANG==='de' ? 'Telefonnummer' : 'Phone number';
+  var recoveryValueLabel = LANG==='de' ? 'E-Mail-Adresse oder Telefonnummer' : 'Email address or phone number';
   h+='<div class="wizard-question">'+L('swQ')+'</div>';
   h+='<p class="wizard-hint">'+L('swHint')+(state.bip85?L('swBip85Hint'):'')+'</p>';
   h+='<label class="form-label">'+L('swPcCount')+'</label>'+pills(state.sw.pc,0,5,"setSwPc(");
   for(var i=0;i<state.sw.pc;i++){
+    var _swpc=getSwWallet(state.sw.pcModels[i]||"");
+    var meta=swMeta('pc',i);
     h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+Lf('swPcWallet',i+1)+'</label>'
       +'<select class="form-control" onchange="setSwPcModel('+i+',this.value)"><option value="">'+L('pleaseSelectSmall')+'</option>'+swOpts(state.sw.pcModels[i]||"")+'</select></div>';
-    var _swpc=getSwWallet(state.sw.pcModels[i]||"");
     if(_swpc && _swpc.img){ h+='<div class="wizard-device-preview"><img src="'+_swpc.img+'" alt="'+esc(_swpc.label)+'" style="height:48px;"></div>'; }
-    if(_swpc && _swpc.custodial) h+='<p class="mini-note">'+L('custodialNote')+'</p>'; else if(_swpc && _swpc.noSeed) h+='<p class="mini-note" style="color:#f5b41e;">'+L('noSeedNote')+esc(_swpc.recovery||"")+'</p>';
-    if(state.bip85 && _swpc && _swpc.seed) h+=bip85Block("pc",i);
+    if(_swpc && _swpc.dualMode){
+      h+='<div class="sub-block">';
+      h+='<label class="form-label">'+blinkModeLabel+'</label>';
+      h+='<div class="chip-group">';
+      h+='<span class="chip '+(meta.mode==="custodial"?"selected":"")+'" onclick="setSwMode(\'pc\','+i+',\'custodial\')">'+custodialMode+'</span>';
+      h+='<span class="chip '+(meta.mode==="noncustodial"?"selected":"")+'" onclick="setSwMode(\'pc\','+i+',\'noncustodial\')">'+nonCustodialMode+'</span>';
+      h+='</div>';
+      if(meta.mode==="custodial"){
+        h+='<p class="mini-note">'+(LANG==='de' ? 'Bei Blink im Custodial-Modus kannst du hier die Recovery-E-Mail-Adresse oder Telefonnummer hinterlegen.' : 'For Blink in custodial mode, enter the recovery email address or phone number here.')+'</p>';
+        h+='<div class="chip-group" style="margin-top:8px;">';
+        h+='<span class="chip '+(meta.recoveryType==="email"?"selected":"")+'" onclick="setSwRecoveryType(\'pc\','+i+',\'email\')">'+emailLabel+'</span>';
+        h+='<span class="chip '+(meta.recoveryType==="phone"?"selected":"")+'" onclick="setSwRecoveryType(\'pc\','+i+',\'phone\')">'+phoneLabel+'</span>';
+        h+='</div>';
+        h+='<div class="form-group" style="margin-top:8px;"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+recoveryValueLabel+'</label>'
+          +'<input class="form-control" type="text" value="'+esc(meta.recoveryValue||"")+'" placeholder="'+(LANG==='de' ? 'z. B. name@domain.de oder +49...' : 'e.g. name@domain.com or +49...')+'" oninput="setSwRecoveryValue(\'pc\','+i+',this.value)"></div>';
+      } else if(meta.mode==="noncustodial"){
+        h+='<p class="mini-note">'+esc(_swpc.recoveryNC || (LANG==='de' ? 'Non-Custodial: Wiederherstellung über Seedphrase. Falls per BIP85 abgeleitet, hier Quell-Seedphrase und Index notieren.' : 'Non-custodial: recover via seed phrase. If derived with BIP85, note the source seed phrase and index here.'))+'</p>';
+        h+=bip85Block('pc',i);
+        h+='<div class="form-group" style="margin-top:8px;"><label class="form-label">'+L('swWordsQ')+'</label><div class="chip-group">';
+        h+='<span class="chip '+(Number(meta.words)===12?"selected":"")+'" onclick="setSwWords(\'pc\','+i+',12)">12</span>';
+        h+='<span class="chip '+(Number(meta.words)===24?"selected":"")+'" onclick="setSwWords(\'pc\','+i+',24)">24</span>';
+        h+='</div></div>';
+      } else {
+        h+='<p class="mini-note">'+chooseModeNote+'</p>';
+      }
+    } else {
+      if(_swpc && _swpc.custodial) h+='<p class="mini-note">'+L('custodialNote')+'</p>'; else if(_swpc && _swpc.noSeed) h+='<p class="mini-note" style="color:#f5b41e;">'+L('noSeedNote')+esc(_swpc.recovery||"")+'</p>';
+      if(state.bip85 && _swpc && _swpc.seed) h+=bip85Block('pc',i);
+    }
   }
   h+='<label class="form-label" style="margin-top:14px;">'+L('swPhoneCount')+'</label>'+pills(state.sw.phone,0,5,"setSwPhone(");
   for(var j=0;j<state.sw.phone;j++){
+    var _swph=getSwWallet(state.sw.phoneModels[j]||"");
+    var meta2=swMeta('phone',j);
     h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+Lf('swPhoneWallet',j+1)+'</label>'
       +'<select class="form-control" onchange="setSwPhoneModel('+j+',this.value)"><option value="">'+L('pleaseSelectSmall')+'</option>'+swOpts(state.sw.phoneModels[j]||"")+'</select></div>';
-    var _swph=getSwWallet(state.sw.phoneModels[j]||"");
     if(_swph && _swph.img){ h+='<div class="wizard-device-preview"><img src="'+_swph.img+'" alt="'+esc(_swph.label)+'" style="height:48px;"></div>'; }
-    if(_swph && _swph.custodial) h+='<p class="mini-note">'+L('custodialNote')+'</p>'; else if(_swph && _swph.noSeed) h+='<p class="mini-note" style="color:#f5b41e;">'+L('noSeedNote')+esc(_swph.recovery||"")+'</p>';
-    if(state.bip85 && _swph && _swph.seed) h+=bip85Block("phone",j);
+    if(_swph && _swph.dualMode){
+      h+='<div class="sub-block">';
+      h+='<label class="form-label">'+blinkModeLabel+'</label>';
+      h+='<div class="chip-group">';
+      h+='<span class="chip '+(meta2.mode==="custodial"?"selected":"")+'" onclick="setSwMode(\'phone\','+j+',\'custodial\')">'+custodialMode+'</span>';
+      h+='<span class="chip '+(meta2.mode==="noncustodial"?"selected":"")+'" onclick="setSwMode(\'phone\','+j+',\'noncustodial\')">'+nonCustodialMode+'</span>';
+      h+='</div>';
+      if(meta2.mode==="custodial"){
+        h+='<p class="mini-note">'+(LANG==='de' ? 'Bei Blink im Custodial-Modus kannst du hier die Recovery-E-Mail-Adresse oder Telefonnummer hinterlegen.' : 'For Blink in custodial mode, enter the recovery email address or phone number here.')+'</p>';
+        h+='<div class="chip-group" style="margin-top:8px;">';
+        h+='<span class="chip '+(meta2.recoveryType==="email"?"selected":"")+'" onclick="setSwRecoveryType(\'phone\','+j+',\'email\')">'+emailLabel+'</span>';
+        h+='<span class="chip '+(meta2.recoveryType==="phone"?"selected":"")+'" onclick="setSwRecoveryType(\'phone\','+j+',\'phone\')">'+phoneLabel+'</span>';
+        h+='</div>';
+        h+='<div class="form-group" style="margin-top:8px;"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+recoveryValueLabel+'</label>'
+          +'<input class="form-control" type="text" value="'+esc(meta2.recoveryValue||"")+'" placeholder="'+(LANG==='de' ? 'z. B. name@domain.de oder +49...' : 'e.g. name@domain.com or +49...')+'" oninput="setSwRecoveryValue(\'phone\','+j+',this.value)"></div>';
+      } else if(meta2.mode==="noncustodial"){
+        h+='<p class="mini-note">'+esc(_swph.recoveryNC || (LANG==='de' ? 'Non-Custodial: Wiederherstellung über Seedphrase. Falls per BIP85 abgeleitet, hier Quell-Seedphrase und Index notieren.' : 'Non-custodial: recover via seed phrase. If derived with BIP85, note the source seed phrase and index here.'))+'</p>';
+        h+=bip85Block('phone',j);
+        h+='<div class="form-group" style="margin-top:8px;"><label class="form-label">'+L('swWordsQ')+'</label><div class="chip-group">';
+        h+='<span class="chip '+(Number(meta2.words)===12?"selected":"")+'" onclick="setSwWords(\'phone\','+j+',12)">12</span>';
+        h+='<span class="chip '+(Number(meta2.words)===24?"selected":"")+'" onclick="setSwWords(\'phone\','+j+',24)">24</span>';
+        h+='</div></div>';
+      } else {
+        h+='<p class="mini-note">'+chooseModeNote+'</p>';
+      }
+    } else {
+      if(_swph && _swph.custodial) h+='<p class="mini-note">'+L('custodialNote')+'</p>'; else if(_swph && _swph.noSeed) h+='<p class="mini-note" style="color:#f5b41e;">'+L('noSeedNote')+esc(_swph.recovery||"")+'</p>';
+      if(state.bip85 && _swph && _swph.seed) h+=bip85Block('phone',j);
+    }
   }
   h+=nav();
   h+='</div></div>';
   return h;
 }
-function setSwPc(n){ state.sw.pc=n; state.sw.pcModels.length=n; render(); }
-function setSwPhone(n){ state.sw.phone=n; state.sw.phoneModels.length=n; render(); }
+function setSwPc(n){ state.sw.pc=n; syncSwKind("pc",n); render(); }
+function setSwPhone(n){ state.sw.phone=n; syncSwKind("phone",n); render(); }
 function setSwPcModel(i,v){ state.sw.pcModels[i]=v; render(); }
 function setSwPhoneModel(i,v){ state.sw.phoneModels[i]=v; render(); }
+function setSwMode(k,i,v){ syncSwKind(k,k==="pc"?state.sw.pc:state.sw.phone); state.sw[k+"Mode"][i]=v; render(); }
+function setSwWords(k,i,v){ syncSwKind(k,k==="pc"?state.sw.pc:state.sw.phone); state.sw[k+"Words"][i]=parseInt(v,10)||12; render(); }
+function setSwRecoveryType(k,i,v){ syncSwKind(k,k==="pc"?state.sw.pc:state.sw.phone); state.sw[k+"RecoveryType"][i]=v; render(); }
+function setSwRecoveryValue(k,i,v){ syncSwKind(k,k==="pc"?state.sw.pc:state.sw.phone); state.sw[k+"RecoveryValue"][i]=v; }
 function toggleSwB85(k,i){ var a=state.sw[k+"B85"]; a[i]=!a[i]; render(); }
 function setSwB85Seed(k,i,v){ state.sw[k+"Seed"][i]=v; }
 function setSwB85Idx(k,i,v){ state.sw[k+"Idx"][i]=v; }
-
 function renderEx(){
   var h='<div class="section-card"><div class="section-card-body">';
   h+='<div class="wizard-question">'+L('exQ')+'</div>';
@@ -2415,7 +2600,7 @@ function buildAndPrint(){
     h+='<dt>Passphrase</dt><dd>Zus&auml;tzliches Wort/Satz zur Seed-Phrase. Erzeugt ein separates, verstecktes Wallet.</dd>';
     h+='<dt>Account</dt><dd>Unterkonto innerhalb eines Wallets, oft mit eigenem Zweck (z.&thinsp;B. Sparen, NoKYC). Die Nummerierung beginnt bei #0.</dd>';
     h+='<dt>Adresstyp (Adressformat)</dt><dd>Format der Empfangsadressen eines Wallets. H&auml;ufig: Native SegWit (beginnt mit bc1q), Taproot (bc1p), Nested SegWit (3) und Legacy (1). Zum Wiederherstellen muss der richtige Adresstyp gew&auml;hlt werden, sonst erscheint das Guthaben nicht.</dd>';
-    h+='<dt>Fingerprint (Master Key Fingerprint)</dt><dd>Kurzes Erkennungsk&uuml;rzel einer Seed-Phrase (z.&thinsp;B. 1A2B3C4D). Kein Geheimnis &ndash; es hilft nur, die richtige Seed-Phrase bzw. das richtige Wallet eindeutig zuzuordnen. Mit Passphrase entsteht ein anderer Fingerprint.</dd>';
+    h+='<dt>Fingerprint (Master Key Fingerprint)</dt><dd>Kurzes Erkennungsk&uuml;rzel einer Seed-Phrase aus 8 Hex-Zeichen (z.&thinsp;B. 1A2B3C4D). Kein Geheimnis &ndash; es hilft nur, die richtige Seed-Phrase bzw. das richtige Wallet eindeutig zuzuordnen. Mit Passphrase entsteht ein anderer Fingerprint.</dd>';
     h+='<dt>Wallet-Descriptor</dt><dd>Technische Beschreibung, wie ein Wallet aufgebaut ist (Schl&uuml;ssel, Adresstyp, bei Multisig die Kombination). <strong>Ohne den Descriptor l&auml;sst sich besonders ein Multisig-Wallet nicht wiederherstellen</strong> &ndash; auch nicht mit allen Seed-Phrasen. Daher mehrfach sichern.</dd>';
     h+='<dt>Multisig</dt><dd>Wallet, das mehrere Schl&uuml;ssel zum Senden ben&ouml;tigt (z.&thinsp;B. 2 von 3). Erfordert die Zusammenarbeit mehrerer Schl&uuml;sselhalter.</dd>';
     h+='<dt>Zwei-Faktor-Authentifizierung (2FA)</dt><dd>Zus&auml;tzliche Login-Sicherung neben dem Passwort. Arten: Authenticator-App/TOTP (z.&thinsp;B. Google Authenticator), SMS, E-Mail oder ein Hardware-Key (z.&thinsp;B. YubiKey). Ohne den zweiten Faktor ist kein Login m&ouml;glich.</dd>';
@@ -2502,7 +2687,7 @@ function buildAndPrint(){
         var dn=[]; for(var k=0;k<sd.devices.length;k++){
           var di=sd.devices[k]; if(state.devices[di]){
             var op=(sd.deviceOpts||{})[di]||{}; var tags=[];
-            if(op.withSc)tags.push((LANG==='de'?"auf ":"on ")+esc(op.sc?scLabelById(op.sc):"Smartcard"));
+            if(op.withSc)tags.push(LANG==='de'?"mit Smartcard verschlüsselt":"encrypted with smartcard");
             if(op.pin)tags.push(LANG==='de'?"PIN-verschlüsselt auf Gerät":"PIN-encrypted on device");
             if(op.sdCard)tags.push(LANG==='de'?"mit SD-Karte verschlüsselt":"SD card encrypted");
             dn.push(deviceLabel(di)+(tags.length?" ["+tags.join("; ")+"]":""));
@@ -2542,50 +2727,9 @@ function buildAndPrint(){
     }
   }
 
-  // 5. Software-Wallets
-  if(state.sw.pc>0 || state.sw.phone>0){
-    h+='<h2 class="pdf-h2">Software-Wallets</h2>';
-    h+='<p class="pdf-text">Apps auf Computer oder Smartphone. Self-custodial Wallets k&ouml;nnen mit der Seedphrase wiederhergestellt werden'+(state.bip85?' oder wurden per BIP85 abgeleitet':'')+'. Custodiale Wallets laufen &uuml;ber Account-Login.</p>';
-    function swBlock(label, idx, kind){
-      var sw=getSwWallet(label);
-      var t='<div class="pdf-wallet-block">';
-      t+='<div class="pdf-wallet-block-title">'+Lf('pdfSwTitle',kind,idx,label)+'</div>';
-      if(sw && sw.recovery){
-        if(sw.custodial){
-          t+='<div style="font-size:7.5pt;background:#f5f5f5;border-left:3px solid #999;padding:4pt 6pt;margin:4pt 0 5pt;color:#444;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+L('pdfCustodialLabel')+'</strong> '+esc(sw.recovery)+'</div>';
-        } else if(sw.noSeed){
-          t+='<div style="font-size:7.5pt;background:#fff3cd;border-left:3px solid #f5b41e;padding:4pt 6pt;margin:4pt 0 5pt;color:#5a4000;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+L('pdfNoSeedLabel')+'</strong> '+esc(sw.recovery)+'</div>';
-        } else {
-          t+='<div style="font-size:7.5pt;background:#e8f4fd;border-left:3px solid #1F99E5;padding:4pt 6pt;margin:4pt 0 5pt;color:#0c3d6b;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>Recovery:</strong> '+esc(sw.recovery)+'</div>';
-        }
-      }
-      if(sw && sw.custodial){
-        t+=eRow(kind==="pc"?L('pdfDevicePC'):L('pdfDevicePhone'));
-        t+=eRow(L('pdfLoginEmail'));
-        t+=eRow(L('pdfPassword2'));
-        t+=eRow(L('pdfTwoFAQ'));
-        t+=twofaChecks();
-        t+=eRow(L('pdfTwoFABackup'));
-      } else if(sw && sw.noSeed){
-        t+=eRow(kind==="pc"?L('pdfDevicePC'):L('pdfDevicePhone'));
-        t+=eRow(L('pdfRecoveryCode'));
-        t+=eRow(L('pdfEmergencyKit'));
-        t+=eRow(L('pdfEmailRecovery'));
-      } else {
-        t+=eRow(kind==="pc"?L('pdfDevicePC'):L('pdfDevicePhone'));
-        t+=eRow(L('pdfAddrFormat'));
-        t+=eRow(L('pdfWalletPass'));
-        t+=bip85Row(kind,idx);
-      }
-      t+='<div style="font-size:8pt;font-weight:700;color:#0C1A27;margin:3pt 0 1pt;">'+L('pdfCredsNoted')+'</div>'+storageChecks();
-      t+='</div>';
-      return t;
-    }
-    for(var pc=0;pc<state.sw.pc;pc++){ h+=swBlock(state.sw.pcModels[pc]||"",pc,"pc"); }
-    for(var ph=0;ph<state.sw.phone;ph++){ h+=swBlock(state.sw.phoneModels[ph]||"",ph,"phone"); }
-  }
-
-  // 6. Exchanges
+  
+// 5. Software-Wallets if(state.sw.pc>0 || state.sw.phone>0){ h+='<h2 class="pdf-h2">Software-Wallets</h2>'; h+='<p class="pdf-text">Apps auf Computer oder Smartphone. Self-custodial Wallets können mit der Seedphrase wiederhergestellt werden'+(state.bip85?' oder wurden per BIP85 abgeleitet':'')+'. Custodiale Wallets laufen über Account-Login.</p>'; function swBlock(label, idx, kind){ var sw=getSwWallet(label); var meta=swMeta(kind,idx); var t='<div class="pdf-wallet-block">'; t+='<div class="pdf-wallet-block-title">'+Lf('pdfSwTitle',kind,idx,label)+'</div>'; if(sw){ if(sw.dualMode){ if(meta.mode==='custodial'){ t+='<div style="font-size:7.5pt;background:#f5f5f5;border-left:3px solid #999;padding:4pt 6pt;margin:4pt 0 5pt;color:#444;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+(LANG==='de'?'Custodial:':'Custodial:')+'</strong> '+esc(sw.recovery||'')+'</div>'; t+=fRow(LANG==='de'?'Wiederhergestellt per:':'Recovered via:', meta.recoveryType ? (meta.recoveryType==='email' ? (LANG==='de'?'E-Mail':'Email') : (LANG==='de'?'Telefonnummer':'Phone number')) : null); t+=meta.recoveryValue ? fRow(LANG==='de'?'E-Mail-Adresse / Telefonnummer:':'Email address or phone number:', meta.recoveryValue) : eRow(LANG==='de'?'E-Mail-Adresse / Telefonnummer:':'Email address or phone number:'); } else if(meta.mode==='noncustodial'){ t+='<div style="font-size:7.5pt;background:#e8f4fd;border-left:3px solid #1F99E5;padding:4pt 6pt;margin:4pt 0 5pt;color:#0c3d6b;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+(LANG==='de'?'Non-Custodial:':'Non-custodial:')+'</strong> '+esc(sw.recoveryNC||'')+'</div>'; if(meta.b85){ t+=fRow(L('pdfBip85Label'), Lf('pdfBip85Val', meta.seed, meta.idx)); } } else if(sw.recovery){ t+='<div style="font-size:7.5pt;background:#f5f5f5;border-left:3px solid #999;padding:4pt 6pt;margin:4pt 0 5pt;color:#444;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+L('pdfCustodialLabel')+'</strong> '+esc(sw.recovery)+'</div>'; } } else if(sw.custodial){ t+='<div style="font-size:7.5pt;background:#f5f5f5;border-left:3px solid #999;padding:4pt 6pt;margin:4pt 0 5pt;color:#444;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+L('pdfCustodialLabel')+'</strong> '+esc(sw.recovery)+'</div>'; } else if(sw.noSeed){ t+='<div style="font-size:7.5pt;background:#fff3cd;border-left:3px solid #f5b41e;padding:4pt 6pt;margin:4pt 0 5pt;color:#5a4000;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+L('pdfNoSeedLabel')+'</strong> '+esc(sw.recovery)+'</div>'; } else { t+='<div style="font-size:7.5pt;background:#e8f4fd;border-left:3px solid #1F99E5;padding:4pt 6pt;margin:4pt 0 5pt;color:#0c3d6b;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+L('pdfCustodialLabel')+'</strong> '+esc(sw.recovery)+'</div>'; } } if(sw && sw.seed && !sw.dualMode && state.bip85){ t+=fRow(L('pdfBip85Label'), Lf('pdfBip85Val', (state.sw[kind+"Seed"]||[])[idx]||'', (state.sw[kind+"Idx"]||[])[idx]||'')); } else if(sw && sw.seed && sw.dualMode && meta.mode==='noncustodial' && !meta.b85 && state.bip85){ t+=fRow(L('pdfBip85Label'), Lf('pdfBip85Val', meta.seed, meta.idx)); } t+='</div>'; return t; } for(var pi=0;pi<state.sw.pc.length;pi++){ h+=swBlock(state.sw.pcModels[pi]||'', pi, 'pc'); } for(var si=0;si<state.sw.phone.length;si++){ h+=swBlock(state.sw.phoneModels[si]||'', si, 'phone'); } }
+// 6. Exchanges
   if(state.ex.count>0){
     h+='<h2 class="pdf-h2">'+L('pdfEx')+'</h2>';
     h+='<p class="pdf-text">'+L('pdfExDetail')+'</p>';
@@ -2697,8 +2841,11 @@ function buildAndPrint(){
   h+='<p class="pdf-text">'+L('pdfNotesText')+'</p>';
   h+='<div class="pdf-notes-lines"></div>';
 
-  document.getElementById("pdf-body").innerHTML=h;
-  window.print();
+  var pdfBody=document.getElementById("pdf-body");
+
+pdfBody.innerHTML=h;
+
+  Promise.all([(document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve(), waitForPdfImages(pdfBody)]).then(function(){ requestAnimationFrame(function(){ window.print(); }); });
 }
 
 // ===== SPEICHERN / LADEN (JSON) =====
@@ -2740,6 +2887,7 @@ function decryptState(password, env){
 }
 
 // ---- Passwort-Modal: Promise<string|null> (null = Abbruch) ----
+
 function askPassword(opts){
   opts = opts || {};
   return new Promise(function(resolve){
@@ -2765,7 +2913,14 @@ function askPassword(opts){
     function close(val){ document.body.removeChild(ov); resolve(val); }
     function submit(){
       var v = inp.value;
-      if(!v){ err.textContent = L('enterPassword'); return; }
+      if(!v){
+        if(opts.allowEmpty){
+          if(opts.confirm && conf && conf.value){ err.textContent = L('passwordMismatch'); return; }
+          close(v);
+          return;
+        }
+        err.textContent = L('enterPassword'); return;
+      }
       if(opts.minLen && v.length < opts.minLen){ err.textContent = Lf('minLen',opts.minLen); return; }
       if(opts.confirm && v !== conf.value){ err.textContent = L('passwordMismatch'); return; }
       close(v);
@@ -2777,7 +2932,6 @@ function askPassword(opts){
     setTimeout(function(){ inp.focus(); }, 30);
   });
 }
-
 // ---- Kurzer Hinweis (Toast) ----
 function showToast(msg, kind){
   var t = document.createElement("div");
@@ -2800,23 +2954,30 @@ function triggerDownload(text, fname){
   setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
 }
 
+
+
 function savePlan(){
-  if(!cryptoOK()){ alert(L('cryptoMissingSave')); return; }
   askPassword({
     title:L('savePlanTitle'),
-    text:L('savePlanText'),
-    confirm:true, minLen:6, okLabel:L('saveLabel')
+    text:LANG==='de' ? 'Lege ein Passwort fest. Wenn du nichts eingibst, wird der Plan unverschlüsselt gespeichert.' : 'Set a password. If you leave it blank, the plan will be saved unencrypted.',
+    confirm:true, allowEmpty:true, okLabel:L('saveLabel')
   }).then(function(pw){
     if(pw===null) return;
+    var d = new Date(), p = function(n){ return (n<10?"0":"")+n; };
+    var fname = "clavastack-inheritance-plan-"+d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+".json";
+    if(pw===""){
+      if(!window.confirm(LANG==='de' ? 'Möchtest du es unverschlüsselt speichern?' : 'Do you want to save it unencrypted?')) return;
+      triggerDownload(JSON.stringify(state, null, 2), fname);
+      showToast(LANG==='de' ? 'Plan unverschlüsselt gespeichert' : 'Plan saved unencrypted');
+      return;
+    }
+    if(!cryptoOK()){ alert(L('cryptoMissingSave')); return; }
     return encryptState(pw).then(function(env){
-      var d = new Date(), p = function(n){ return (n<10?"0":"")+n; };
-      var fname = "clavastack-inheritance-plan-"+d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+".json";
       triggerDownload(JSON.stringify(env, null, 2), fname);
-      showToast(L('savePlanBtn'));
+      showToast(LANG==='de' ? 'Plan verschlüsselt gespeichert' : 'Plan saved encrypted');
     });
   }).catch(function(e){ alert("Save failed: "+e.message); });
 }
-
 function applyLoadedState(loaded){
   state = Object.assign(defaultState(), loaded);
   pos = screens().length - 1; render(); window.scrollTo(0,0);
@@ -2984,6 +3145,7 @@ document.addEventListener("DOMContentLoaded", function(){
     logoImg.parentNode.insertBefore(logoLink,logoImg);
     logoLink.appendChild(logoImg);
   }
+ registerOfflineSupport();
 });
 </script>
 <div class="github-footer"><a id="github-footer-link" href="https://github.com/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen" target="_blank" rel="noopener">View on GitHub</a></div>

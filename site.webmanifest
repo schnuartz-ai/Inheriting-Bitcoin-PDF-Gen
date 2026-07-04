@@ -1,0 +1,16 @@
+{
+  "name": "Bitcoin Inheritance Plan",
+  "short_name": "Bitcoin Plan",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#04070B",
+  "theme_color": "#1F99E5",
+  "icons": [
+    {
+      "src": "assets/clavastack-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
