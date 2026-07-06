@@ -716,6 +716,10 @@ var STRINGS = {
     secBody3:'At least one plaintext backup (paper, metal or SD card) is recorded without a tamper-evident bag. These tamper-evident security bags show immediately if someone has had unauthorized access – indispensable for safe storage. The bag number serves as proof of integrity.',
     secTitle4:'Add a passphrase as a second security factor',
     secBody4:'At least one seed phrase has no passphrase. A passphrase is an additional secret word (or phrase) that generates a completely new wallet. Anyone who finds only the seed phrase cannot access the Bitcoin without the passphrase. It also enables “plausible deniability”: a small amount of Bitcoin in the wallet without a passphrase deceives an attacker, while the actual funds are safely hidden behind it. Recommended: at least 12 characters, upper and lower case, numbers and special characters, no spaces.',
+    secTitle4b:'Consider a multisig for extra robustness',
+    secBody4b:'You already protect at least one seed phrase with a passphrase. A multisig wallet can make your setup even more robust: instead of relying on a single hardware wallet, you spread trust across multiple keys – and you no longer need to combine a seed phrase and its passphrase to sign a single transaction.',
+    secTitle4c:'Consider a passphrase or a multisig wallet',
+    secBody4c:'None of your seed phrases currently has a passphrase, and you don&rsquo;t use a multisig wallet either. Both are ways to add an extra layer of protection beyond a single seed phrase – a passphrase creates a hidden second wallet, while a multisig spreads trust across multiple keys/devices. Either is a reasonable next step, depending on your setup.',
     secTitle5:'Specter DIY: Add Secure Element via Upgrade Kit',
     secBody5:'You are using a Specter DIY Snapcase. Without a Shield, the device stores the seed phrase in internal flash memory – without hardware-level PIN protection. With the Upgrade Kit you add a Secure Element via smartcard: the seed phrase is then stored PIN-protected on the card and is significantly more secure against physical access.',
     secTitle6:'Enter a longer passphrase more easily with Specter',
@@ -1077,6 +1081,10 @@ var STRINGS = {
     secBody3:'Mindestens ein Klartext-Backup (Papier, Metall oder SD-Karte) ist ohne Tamper-Evident-Bag erfasst. Diese manipulationssicheren Sicherheitst&uuml;ten zeigen sofort, ob jemand unbefugt Zugriff hatte &ndash; unverzichtbar f&uuml;r die sichere Aufbewahrung. Die Bag-Nummer dient als Nachweis der Unversehrtheit.',
     secTitle4:'Passphrase als zweiten Schutzfaktor hinzuf&uuml;gen',
     secBody4:'Mindestens eine Seed-Phrase hat keine Passphrase. Eine Passphrase ist ein zus&auml;tzliches geheimes Wort (oder Satz), das ein komplett neues Wallet erzeugt. Wer nur die Seed-Phrase findet, kommt ohne die Passphrase nicht an die Bitcoin. Au&szlig;erdem erm&ouml;glicht sie &bdquo;Plausible Deniability&ldquo;: Eine kleine Menge Bitcoin auf dem Wallet ohne Passphrase t&auml;uscht einen Angreifer, w&auml;hrend die eigentlichen Mittel dahinter sicher sind. Empfohlen: mindestens 12 Zeichen, Gro&szlig;- und Kleinbuchstaben, Zahlen und Sonderzeichen, kein Leerzeichen.',
+    secTitle4b:'Multisig für mehr Robustheit in Betracht ziehen',
+    secBody4b:'Du sch&uuml;tzt bereits mindestens eine Seed-Phrase mit einer Passphrase. Mit einer Multisig-Wallet kannst du dein Setup noch robuster machen: Du verl&auml;sst dich dann nicht mehr auf eine einzige Hardware-Wallet, und musst Seed-Phrase und Passphrase nicht mehr zusammenf&uuml;hren, um eine Transaktion zu signieren.',
+    secTitle4c:'Passphrase oder Multisig in Betracht ziehen',
+    secBody4c:'Aktuell hat keine deiner Seed-Phrasen eine Passphrase, und du nutzt auch kein Multisig-Wallet. Beides sind Wege, eine zus&auml;tzliche Schutzebene &uuml;ber eine einzelne Seed-Phrase hinaus einzubauen &ndash; eine Passphrase erzeugt ein verstecktes zweites Wallet, ein Multisig verteilt das Vertrauen auf mehrere Schl&uuml;ssel/Ger&auml;te. Je nach deinem Setup ist beides ein sinnvoller n&auml;chster Schritt.',
     secTitle5:'Specter DIY: Secure Element per Upgrade Kit nachr&uuml;sten',
     secBody5:'Du verwendest einen Specter DIY Snapcase. Ohne Shield speichert das Ger&auml;t die Seed-Phrase im internen Flash-Speicher &ndash; ohne PIN-Schutz auf Hardware-Ebene. Mit dem Upgrade Kit r&uuml;stest du einen Secure Element per Smartcard nach: Die Seed-Phrase wird dann PIN-gesch&uuml;tzt auf der Karte gespeichert und ist deutlich sicherer gegen physischen Zugriff.',
     secTitle6:'L&auml;ngere Passphrase mit Specter einfacher eingeben',
@@ -2852,6 +2860,14 @@ function buildRecommendations() {
 
   if (state.seeds.length > 0 && anyNoPassphrase()) {
     tips.push({ title:L('secTitle4'), body:L('secBody4'), links:[] });
+  }
+
+  if (state.seeds.length > 0 && !hasMultisig()) {
+    if (anyPassphrase()) {
+      tips.push({ title:L('secTitle4b'), body:L('secBody4b'), links:[] });
+    } else {
+      tips.push({ title:L('secTitle4c'), body:L('secBody4c'), links:[] });
+    }
   }
 
   var hasSpecterDIY = false;
