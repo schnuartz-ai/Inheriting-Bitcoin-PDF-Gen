@@ -532,6 +532,18 @@ var STRINGS = {
     passwordManager:'Password Manager', timelockRecovery:'Timelock / Wallet Recovery',
     timelockRitrek:'Yes (with RITREK App)',
     createPDF:'CREATE &amp; PRINT PDF',
+    postPdfBtn:'&#8505; Store inheritance plan',
+    postPdfTitle:'Five ways to securely store the inheritance plan:',
+    postPdfStep1Title:'Personal handover during your lifetime',
+    postPdfStep1Body:'Hand the inheritance plan directly to your heirs, or at least explain to them the secure location where it is kept.',
+    postPdfStep2Title:'Deposit in a bank safe-deposit box',
+    postPdfStep2Body:'Keep the plan sealed in a safe-deposit box and reference the box in your will or estate documents.',
+    postPdfStep3Title:'Storage in a home safe',
+    postPdfStep3Body:'Store the plan in a high-quality, fire- and water-resistant safe. Your heirs need to know how to get access after your passing.',
+    postPdfStep4Title:'Handover via an executor or notary',
+    postPdfStep4Body:'Deposit the sealed plan there and specify that it is only released to the rightful heirs once the inheritance case has occurred.',
+    postPdfStep5Title:'Encrypted digital storage',
+    postPdfStep5Body:'Store the plan encrypted on a USB stick, an offline storage medium, or a digital estate service. Keep the password and the storage location separate from each other.',
     savePlanBtn:'Save plan encrypted',
     savePlanInfo:'Saves your current state as an encrypted <strong>.json</strong> file so you can continue later.',
     encryptionLabel:'Encryption: <strong>AES-256-GCM</strong>',
@@ -898,6 +910,18 @@ var STRINGS = {
     passwordManager:'Passwortmanager', timelockRecovery:'Timelock / Wallet Recovery',
     timelockRitrek:'Ja (mit RITREK App)',
     createPDF:'PDF ERSTELLEN &amp; DRUCKEN',
+    postPdfBtn:'&#8505; Vererbungsplan hinterlegen',
+    postPdfTitle:'Fünf Möglichkeiten, den Vererbungsplan sicher zu hinterlegen:',
+    postPdfStep1Title:'Persönliche Übergabe zu Lebzeiten',
+    postPdfStep1Body:'Den Erben den Vererbungsplan direkt aushändigen oder ihnen zumindest den sicheren Aufbewahrungsort erklären.',
+    postPdfStep2Title:'Hinterlegung im Bankschließfach',
+    postPdfStep2Body:'Den Plan versiegelt in einem Schließfach verwahren und im Testament oder in den Nachlassunterlagen auf das Schließfach hinweisen.',
+    postPdfStep3Title:'Aufbewahrung im heimischen Tresor',
+    postPdfStep3Body:'Den Plan in einem hochwertigen, feuer- und wassergeschützten Tresor lagern. Die Erben müssen wissen, wie sie nach dem Todesfall Zugang erhalten.',
+    postPdfStep4Title:'Übergabe über den Testamentsvollstrecker oder Notar',
+    postPdfStep4Body:'Den versiegelten Plan dort hinterlegen und festlegen, dass er erst nach Eintritt des Erbfalls an die berechtigten Erben ausgegeben wird.',
+    postPdfStep5Title:'Verschlüsselte digitale Hinterlegung',
+    postPdfStep5Body:'Den Plan verschlüsselt auf einem USB-Stick, Offline-Datenträger oder in einem digitalen Nachlassdienst speichern. Passwort und Speicherort sollten getrennt voneinander hinterlegt werden.',
     savePlanBtn:'Plan verschlüsselt speichern',
     savePlanInfo:'Speichert deinen aktuellen Stand als <strong>.json</strong>-Datei. Mit Passwort verschlüsselt, ohne Passwort unverschlüsselt.',
     encryptionLabel:'Verschlüsselung: <strong>AES-256-GCM</strong>',
@@ -1340,7 +1364,8 @@ function defaultState(){ return {
   pwm: {use:null, app:""},
   book: {use:null},
   dig: {use:null, enc:null},
-  timelock: {use:false, ritrek:false, fromW:"", toW:"", toCustom:"", store:{ritrek:false, pwm:false, other:""}}
+  timelock: {use:false, ritrek:false, fromW:"", toW:"", toCustom:"", store:{ritrek:false, pwm:false, other:""}},
+  postPdfStorageVisible: false
 }; }
 var state = defaultState();
 // newMultisig() ist im fix/multisig-descriptor-backup-rules-Branch entstanden (Deskriptor-Backup-Pflicht-Tracking);
@@ -2742,6 +2767,7 @@ function renderSummary(){
   h+='<li><span>Liana Wallets</span><span>'+(anyLianaCompanion()?(state.lianaWallets.length+(state.lianaMode?" ("+(state.lianaMode==="multi"?"Multi-Sig":"Single-Sig")+")":"")):L('no'))+'</span></li>';
   h+='</ul>';
   h+='<button class="btn btn-pdf" onclick="buildAndPrint()" style="margin-top:28px;">'+L('createPDF')+'</button>';
+  h+=renderPostPdfStorageBlock();
   h+='<div style="text-align:center;margin-top:20px;">';
   h+='<button class="btn btn-subtle" onclick="toggleSaveInfo(this)">'+L('savePlanBtn')+'</button>';
   h+='<div class="save-info-box" style="text-align:left;">';
@@ -2771,6 +2797,22 @@ function toggleSaveInfo(btn) {
   var box = btn.nextElementSibling;
   var open = box.classList.toggle('visible');
   box.style.display = open ? 'block' : 'none';
+}
+
+// Erscheint erst NACH dem ersten Drucken (siehe "afterprint"-Listener in buildAndPrint) - ein
+// Info-Button, der fuenf Wege zeigt, den fertigen Plan sicher zu hinterlegen.
+function togglePostPdfStorage(btn){ var box=btn.nextElementSibling; if(!box) return; box.style.display = box.style.display === "block" ? "none" : "block"; }
+function renderPostPdfStorageBlock(){
+  if(!state.postPdfStorageVisible) return '';
+  var h='<div id="post-pdf-storage" style="text-align:center;margin-top:20px;">';
+  h+='<button class="btn btn-subtle" type="button" onclick="togglePostPdfStorage(this)">'+L('postPdfBtn')+'</button>';
+  h+='<div class="post-pdf-storage-box" style="display:none;text-align:left;background:#f7f9fb;border:1px solid #d8e2ec;border-radius:12px;padding:14px 16px;margin-top:10px;color:#2a2a2a;line-height:1.6;font-size:0.8rem;">';
+  h+='<p style="margin:0 0 10px;font-weight:700;color:#0C1A27;">'+L('postPdfTitle')+'</p>';
+  h+='<ul style="margin:0 0 12px;padding-left:18px;">';
+  for(var s=1;s<=5;s++){ h+='<li><strong>'+L('postPdfStep'+s+'Title')+'</strong><br>'+L('postPdfStep'+s+'Body')+'</li>'; }
+  h+='</ul>';
+  h+='</div></div>';
+  return h;
 }
 
 function buildRecommendations() {
@@ -3828,6 +3870,7 @@ function buildAndPrint(){
 
 pdfBody.innerHTML=h;
 
+  window.addEventListener("afterprint", function(){ if(!state.postPdfStorageVisible){ state.postPdfStorageVisible = true; render(); } }, {once:true});
   Promise.all([(document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve(), waitForPdfImages(pdfBody)]).then(function(){ requestAnimationFrame(function(){ window.print(); }); });
 }
 
