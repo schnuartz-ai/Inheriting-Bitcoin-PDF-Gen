@@ -3870,6 +3870,12 @@ function buildAndPrint(){
 
 pdfBody.innerHTML=h;
 
+  // Render the info card BEFORE window.print() (not just on "afterprint") - window.print() blocks
+  // the main thread on many browsers, so waiting for afterprint alone left the card invisible until
+  // the print dialog closed with no visible feedback in between. Rendering it first, then letting the
+  // requestAnimationFrame below flush the paint, means it's already there when the dialog appears.
+  state.postPdfStorageVisible = true;
+  render();
   window.addEventListener("afterprint", function(){ if(!state.postPdfStorageVisible){ state.postPdfStorageVisible = true; render(); } }, {once:true});
   Promise.all([(document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve(), waitForPdfImages(pdfBody)]).then(function(){ requestAnimationFrame(function(){ window.print(); }); });
 }
