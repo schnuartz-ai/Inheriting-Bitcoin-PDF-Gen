@@ -2416,11 +2416,11 @@ function renderLwPathBlock(i,ri,title,hintNote,isMulti){
     var cs=p.cosigners[ci];
     h+='<div class="form-group" style="margin-top:8px;"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+(isMulti?('Person '+(ci+1)+' (Name, Kontakt)'):'Name, Kontakt')+' &#8211; wem geh&#246;rt die Hardware-Wallet?</label>'
       +'<input class="form-control" type="text" value="'+esc(cs.name)+'" placeholder="Name, Telefon/E-Mail" oninput="setLwCosignerName('+i+','+ri+','+ci+',this.value)"></div>';
-    h+='<div class="form-group" style="margin-top:6px;"><label class="form-label" style="text-transform:none;font-size:0.72rem;">Welche Hardware-Wallet nutzt diese Person?</label>'
-      +'<select class="form-control" onchange="setLwCosignerHwModel('+i+','+ri+','+ci+',this.value)"><option value="">-- Bitte w&#228;hlen --</option>'+modelOpts(cs.hwModel)+'</select></div>';
+    h+='<div class="form-group" style="margin-top:6px;"><label class="form-label" style="text-transform:none;font-size:0.72rem;">Welche Hardware-Wallet nutzt diese Person? (optional, falls bekannt)</label>'
+      +'<select class="form-control" onchange="setLwCosignerHwModel('+i+','+ri+','+ci+',this.value)"><option value="">-- unbekannt / nicht relevant --</option>'+modelOpts(cs.hwModel)+'</select></div>';
     if(state.offline){
-      h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">xPub (nur offline)</label>'
-        +'<input class="form-control" type="text" value="'+esc(cs.xpub||"")+'" placeholder="xpub… / zpub…" oninput="setLwCosignerXpub('+i+','+ri+','+ci+',this.value)"></div>';
+      h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">xPub (nur offline, optional)</label>'
+        +'<input class="form-control" type="text" value="'+esc(cs.xpub||"")+'" placeholder="xpub… / zpub… (falls vorhanden)" oninput="setLwCosignerXpub('+i+','+ri+','+ci+',this.value)"></div>';
       h+='<label class="chk-row" style="margin-top:6px;"><input type="checkbox" '+(cs.descriptorStored?"checked":"")+' onchange="toggleLwCosignerDescriptorStored('+i+','+ri+','+ci+')"> Person hat den Wallet-Descriptor hinterlegt</label>';
       if(cs.descriptorStored||cs.descriptorLocation){
         h+='<div class="form-group" style="margin-top:6px;"><label class="form-label" style="text-transform:none;font-size:0.72rem;">Wo ist der Descriptor bei dieser Person hinterlegt?</label>'
@@ -3455,9 +3455,10 @@ function pdfLwPathRows(p){
   for(var ci=0;ci<p.cosigners.length;ci++){
     var cs=p.cosigners[ci];
     h+=fRow('Person '+(ci+1)+' (wem geh&ouml;rt die Hardware-Wallet):', cs.name||null);
-    h+=fRow('Person '+(ci+1)+' &ndash; Hardware-Wallet-Modell:', cs.hwModel||null);
+    // Hardware-Wallet-Modell und xPub sind optional (die Person verwaltet ihren eigenen Schl&uuml;ssel
+    // selbst) - keine leere Handschrift-Zeile drucken, wenn nichts eingetragen wurde.
+    if(cs.hwModel) h+=fRow('Person '+(ci+1)+' &ndash; Hardware-Wallet-Modell:', cs.hwModel);
     if(state.offline && cs.xpub) h+=fRow('Person '+(ci+1)+' xPub:', cs.xpub);
-    else h+=eRow('Person '+(ci+1)+' xPub:');
   }
   return h;
 }
