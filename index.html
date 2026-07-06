@@ -295,6 +295,11 @@ select.form-control option { background: var(--specter-dark-accent); }
 .sec-tip-cta-body { font-size: 0.82rem; color: var(--specter-light-secondary); line-height: 1.65; margin-bottom: 16px; }
 .sec-tip-cta-btn { display: inline-block; background: #1F99E5; color: #fff !important; text-decoration: none; padding: 10px 22px; border-radius: var(--radius); font-size: 0.85rem; font-weight: 700; letter-spacing: 0.2px; transition: background 0.2s, box-shadow 0.2s; }
 .sec-tip-cta-btn:hover { background: #1680c0; box-shadow: 0 4px 14px rgba(31,153,229,0.35); }
+.sec-recs-disclaimer { padding: 16px 20px; border-top: 1px solid #2a3a4a; background: rgba(0,0,0,0.15); }
+.sec-recs-disclaimer-title { font-size: 0.78rem; font-weight: 700; color: var(--specter-light-secondary); margin-bottom: 6px; letter-spacing: 0.3px; }
+.sec-recs-disclaimer p { font-size: 0.82rem; color: var(--specter-light-secondary); line-height: 1.55; margin: 0 0 10px; }
+.sec-recs-consult-link { display: inline-block; font-size: 0.85rem; font-weight: 700; color: var(--specter-primary); text-decoration: none; padding: 8px 16px; border: 1px solid var(--specter-primary); border-radius: var(--radius); transition: background 0.2s, color 0.2s; }
+.sec-recs-consult-link:hover { background: var(--specter-primary); color: #fff; }
 </style>
 </head>
 <body>
@@ -1318,6 +1323,9 @@ function defaultState(){ return {
   timelock: {use:false, ritrek:false, fromW:"", toW:"", toCustom:"", store:{ritrek:false, pwm:false, other:""}}
 }; }
 var state = defaultState();
+// newMultisig() ist im fix/multisig-descriptor-backup-rules-Branch entstanden (Deskriptor-Backup-Pflicht-Tracking);
+// im feature-Branch fehlte die Factory ganz (setMsCount/addMs riefen eine nicht existierende Funktion auf).
+function newMultisig(){ return {name:"", m:2, n:3, seeds:[], hot:[], custom:"", cosigners:[], descriptor:"", exp:false, dbExp:false, dbDevices:[], dbBackups:[], dbPwm:false, dbBook:false, companion:"", companionPc:false, descriptorInPasswordManager:false, descriptorLoadedOnHardwareWallets:{}}; }
 
 function ensureArrayLen(arr, len, fill) {
  if (!Array.isArray(arr)) arr = [];
@@ -1352,7 +1360,7 @@ function hotLabelById(id){ var l=hotWalletList(); for(var i=0;i<l.length;i++){ i
 function seedName(i){ var s=state.seeds[i]; return s ? (s.name||("Seed #"+(i+1))) : ("Seed #"+(i+1)); }
 function newDevice(){ return {model:"", smartcards:0, smartcardNames:[], companions:[]}; }
 function newCompanion(){ return {app:"", platform:"", model:""}; }
-function newBackup(){ return {type:"paper", brand:"", smartcard:"", bagDigital:true, bagNo:""}; }
+function newBackup(){ return {type:"paper", brand:"", smartcard:"", bagDigital:true, bagNo:"", descriptorWithBackup:false}; }
 // Jede Passphrase ist ein eigenes Wallet mit eigenen Accounts.
 // Adressformat-Index (0=Native,1=Taproot,2=Nested,3=Legacy). Accounts werden je Format gruppiert.
 function availIdx(){ var out=[]; for(var i=0;i<ADDR_TYPES.length;i++){ if(state.addrTypes.indexOf(ADDR_TYPES[i])>=0) out.push(i); } if(!out.length)out.push(0); return out; }
@@ -1879,6 +1887,7 @@ function setBackupBrand(i,b,v){ state.seeds[i].backups[b].brand=v; }
 function setBackupSmartcard(i,b,v){ state.seeds[i].backups[b].smartcard=v; }
 function toggleBackupDigital(i,b){ var bk=state.seeds[i].backups[b]; bk.bagDigital=!bk.bagDigital; render(); }
 function setBackupBagNo(i,b,v){ state.seeds[i].backups[b].bagNo=v; }
+function toggleBackupDescriptor(i,b){ var bk=state.seeds[i].backups[b]; bk.descriptorWithBackup=!bk.descriptorWithBackup; render(); }
 function toggleSeedDevice(i,d){ var s=state.seeds[i]; var k=s.devices.indexOf(d); if(k>=0){s.devices.splice(k,1); if(s.deviceOpts)delete s.deviceOpts[d];} else s.devices.push(d); render(); }
 function toggleDevPin(i,d){ var op=devOpt(state.seeds[i],d); op.pin=!op.pin; render(); }
 function toggleDevSc(i,d){ var op=devOpt(state.seeds[i],d); op.withSc=!op.withSc; if(!op.withSc)op.sc=""; render(); }
@@ -2211,6 +2220,14 @@ function renderMs(i){
     if(state.offline){
       h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+L('cosignerXpub')+'</label>'
         +'<input class="form-control" type="text" value="'+esc(cs.xpub||"")+'" placeholder="'+L('cosignerXpubPh')+'" oninput="setMsCosignerXpub('+i+','+ci+',this.value)"></div>';
+      h+='<label class="chk-row" style="margin-top:6px;"><input type="checkbox" '+(cs.descriptorStored?"checked":"")+' onchange="toggleMsCosignerDescriptorStored('+i+','+ci+')"> Cosigner hat den Wallet-Descriptor hinterlegt</label>';
+      if(cs.descriptorStored||cs.descriptorLocation){
+        h+='<div class="form-group" style="margin-top:6px;"><label class="form-label" style="text-transform:none;font-size:0.72rem;">Wo ist der Descriptor beim Cosigner hinterlegt?</label>'
+          +'<input class="form-control" type="text" value="'+esc(cs.descriptorLocation||"")+'" placeholder="z. B. Specter Desktop auf separatem PC, Coldcard, Tresor" oninput="setMsCosignerDescriptorLocation('+i+','+ci+',this.value)"></div>';
+      }
+      h+='<div class="form-group" style="margin-top:6px;"><label class="form-label" style="text-transform:none;font-size:0.72rem;">Wann wurde das zuletzt gepr&#252;ft?</label>'
+        +'<input class="form-control" type="date" value="'+esc(cs.lastChecked||"")+'" placeholder="JJJJ-MM-TT" oninput="setMsCosignerLastChecked('+i+','+ci+',this.value)"></div>';
+      h+='<p class="mini-note" style="margin-top:4px;">Diese Felder dienen nur der Dokumentation. Sie ersetzen niemals die Pflicht, jeden eigenen Seed-Phrase-Backup mit einem Wallet-Descriptor zu sichern.</p>';
     }
   }
   h+='</div>';
@@ -2218,6 +2235,7 @@ function renderMs(i){
     h+='<div class="sub-block"><label class="form-label">'+L('walletDescriptor')+'</label>'
       +'<textarea class="form-control" rows="3" placeholder="'+L('walletDescriptorPh')+'" oninput="setMsDescriptor('+i+',this.value)">'+esc(ms.descriptor||"")+'</textarea>'
       +'<p class="mini-note">'+L('descriptorWarning')+'</p></div>';
+    h+=descriptorBackupSection(i);
   } else {
     h+='<p class="mini-note">'+L('noDescriptorNote')+'</p>';
   }
@@ -2234,9 +2252,12 @@ function toggleMsSeed(i,s){ var a=state.multisigs[i].seeds; var k=a.indexOf(s); 
 function toggleMsExp(i){ state.multisigs[i].exp=!state.multisigs[i].exp; render(); }
 function toggleMsHot(i,id){ var a=state.multisigs[i].hot; var k=a.indexOf(id); if(k>=0)a.splice(k,1); else a.push(id); render(); }
 function setMsCustom(i,v){ state.multisigs[i].custom=v; }
-function setMsCosignerCount(i,n){ var a=state.multisigs[i].cosigners; while(a.length<n)a.push({name:"",xpub:""}); while(a.length>n)a.pop(); render(); }
+function setMsCosignerCount(i,n){ var a=state.multisigs[i].cosigners; while(a.length<n)a.push({name:"",xpub:"",descriptorStored:false,descriptorLocation:"",lastChecked:""}); while(a.length>n)a.pop(); render(); }
 function setMsCosignerName(i,ci,v){ state.multisigs[i].cosigners[ci].name=v; }
 function setMsCosignerXpub(i,ci,v){ state.multisigs[i].cosigners[ci].xpub=v; }
+function toggleMsCosignerDescriptorStored(i,ci){ var cs=state.multisigs[i].cosigners[ci]; cs.descriptorStored=!cs.descriptorStored; render(); }
+function setMsCosignerDescriptorLocation(i,ci,v){ state.multisigs[i].cosigners[ci].descriptorLocation=v; render(); }
+function setMsCosignerLastChecked(i,ci,v){ state.multisigs[i].cosigners[ci].lastChecked=v; render(); }
 function setMsDescriptor(i,v){ state.multisigs[i].descriptor=v; }
 
 // ===== Timelock Recovery + RITREK App (presigned Transaction) =====
@@ -2543,6 +2564,133 @@ function buildRecommendations() {
     ], advanced:true });
   }
 
+  // ── 7b. Multisig: Wallet-Descriptor-Backup-Abdeckung (nur Offline-Modus) ──
+  // WICHTIG: Diese Warnung erscheint AM ENDE unter "Tipps zur Bitcoin-Sicherheit".
+  if (state.offline && hasMultisig()) {
+    for (var mb7b = 0; mb7b < state.multisigs.length; mb7b++) {
+      var msb7b = state.multisigs[mb7b];
+      if (!msb7b.seeds || msb7b.seeds.length === 0) continue;
+      var st7b = msDescStatus(mb7b);
+      if (st7b.level === 'err') {
+        tips.push({
+          title: 'Multisig „' + esc(msb7b.name || ('Multisig ' + (mb7b + 1))) + '": Wallet-Descriptor bei jedem Backup erg&auml;nzen',
+          body: st7b.msg,
+          warn: true
+        });
+      } else if (st7b.level === 'warn') {
+        tips.push({
+          title: 'Multisig „' + esc(msb7b.name || ('Multisig ' + (mb7b + 1))) + '": Wallet-Descriptor bei Seed-Phrase-Backups erg&auml;nzen',
+          body: 'Bei <strong>' + esc(msb7b.name || ('Multisig ' + (mb7b + 1))) + '</strong> (' + msb7b.m + '-von-' + msb7b.n + '): ' + st7b.msg,
+          warn: true
+        });
+      }
+      // Blind-Signing Warnung
+      var hw7b = msHwStatus(mb7b);
+      if (hw7b.total > 0 && !hw7b.allOk) {
+        tips.push({
+          title: 'Multisig „' + esc(msb7b.name || ('Multisig ' + (mb7b + 1))) + '": Wallet-Descriptor auf Hardware-Wallets registrieren',
+          body: 'Bei <strong>' + esc(msb7b.name || ('Multisig ' + (mb7b + 1))) + '</strong> haben erst <strong>' + hw7b.registered + ' von ' + hw7b.total + '</strong> verkn&#252;pften Hardware-Wallets den Wallet-Descriptor registriert. Ohne registrierten Descriptor kann das Ger&auml;t die Empf&auml;nger- und Wechsel-Adressen nicht pr&#252;fen – du signierst dann praktisch <strong>blind</strong>. Empfehlung: den Wallet-Descriptor auf jeder Hardware-Wallet speichern/registrieren.',
+          warn: true
+        });
+      }
+    }
+  }
+
+  // 11b. Seed ohne Backup oder nur SD-Karten-Backup → kritische Warnung
+  (function() {
+    for (var si = 0; si < state.seeds.length; si++) {
+      var sd = state.seeds[si];
+      var bks = sd.backups || [];
+      if (bks.length === 0) {
+        tips.push({
+          title: 'Seed-Phrase ohne Backup – akutes Verlustrisiko',
+          body: (sd.name ? '<strong>' + esc(sd.name) + '</strong> hat ' : 'Mindestens eine Seed-Phrase hat ') + '<strong>kein einziges Backup</strong>. Bei Verlust oder Zerstörung des Hardware-Wallets ist die Seed-Phrase unwiederbringlich verloren – und damit auch alle darauf liegenden Bitcoin. Ein Backup ist kein Optional, sondern zwingend erforderlich. Mindestens ein physisches Backup (Papier, reißfestes Papier oder Metall) sofort anlegen und in einem Tamper-Evident-Bag aufbewahren.' + (hasMultisig() ? ' <strong>Besonders kritisch bei Multisig:</strong> Fehlt auch nur eine Seed-Phrase, kann das Multisig-Wallet nicht mehr vollständig wiederhergestellt werden.' : ''),
+          warn: true,
+          links: [
+            {text: 'Backup Stack (inkl. TerraPhrase + Bags)', url: 'https://clavastack.com/de/products/backup-stack'},
+            {text: 'Seedor Starter Set (Metall)', url: 'https://clavastack.com/de/products/seedor-starter-set'}
+          ]
+        });
+        return;
+      }
+      var onlySd = bks.every(function(bk) { return bk.type === 'sd'; });
+      if (onlySd && bks.length > 0) {
+        tips.push({
+          title: 'Backup ausschliesslich auf SD-Karte – unverschlüsselt und unsicher',
+          body: (sd.name ? '<strong>' + esc(sd.name) + '</strong>: ' : '') + 'Dein aktuelles Backup liegt unverschlüsselt auf einer SD-Karte. Wer die Karte findet, kann potenziell die Seed-Phrase auslesen. Ein SD-Karten-Backup bietet weder physischen Schutz (Feuer, Wasser) noch kryptografische Sicherheit (Verschlüsselung, PIN-Schutz). Sicherer ist ein verschlüsseltes oder PIN-geschütztes Backup, z. B. über eine Smartcard/Secure-Element-Lösung. Eine mögliche Umsetzung ist Specter Shield Lite. Ergänzend sollte mindestens ein physisches Backup (Metall oder reißfestes Papier) in einem Tamper-Evident-Bag aufbewahrt werden.' + (hasMultisig() ? ' <strong>Beachtung bei Multisig:</strong> Ein kompromittiertes Backup bedeutet, dass ein Angreifer eine der benötigten Schlüssel erhalten kann – das senkt die Sicherheit des gesamten Multisig-Setups.' : ''),
+          warn: true,
+          links: [
+            {text: 'Specter Shield Lite', url: 'https://clavastack.com/de/products/specter-shield-lite'},
+            {text: 'Specter Shield', url: 'https://clavastack.com/de/products/specter-shield'},
+            {text: 'Backup Stack', url: 'https://clavastack.com/de/products/backup-stack'}
+          ]
+        });
+        return;
+      }
+    }
+  })();
+
+  // 12b. Alte Adressformate (Nested SegWit / Legacy) → Hinweis
+  (function() {
+    var oldFormats = [];
+    for (var ai = 0; ai < state.addrTypes.length; ai++) {
+      var at = state.addrTypes[ai];
+      if (at.indexOf('Nested SegWit') >= 0 || at.indexOf('Legacy') >= 0) {
+        oldFormats.push(at);
+      }
+    }
+    if (oldFormats.length > 0) {
+      var fmtNames = oldFormats.map(function(f) { return f.replace(/\s*\(.*\)/, ''); });
+      tips.push({
+        title: 'Veraltete Adressformate erkannt: ' + esc(fmtNames.join(' und ')),
+        body: 'Du verwendest ' + esc(fmtNames.join(' und ')) + '-Adressen. Diese Adressformate sind technisch funktionstüchtig, gelten jedoch als veraltet: Sie verursachen höhere Transaktionsgebühren als Native SegWit und bieten eine geringere Datenschutzqualität (Input-Werte sind auf der Blockchain sichtbar). Für die Vererbung bedeutet dies zusätzlich: Dein Erbe muss beim Wiederherstellen genau den richtigen Adresstyp auswählen – ein falscher Adresstyp führt dazu, dass das Guthaben nicht angezeigt wird. Ein Wechsel auf Native SegWit (bc1q) oder Taproot (bc1p) reduziert die Gebühren, verbessert den Datenschutz und vereinfacht das Setup für die Erben erheblich. Ein Wechsel erfordert eine Transaktion auf die neuen Adressen.',
+        links: [
+          {text: 'Beratung zum Adressformat-Wechsel', url: 'https://clavastack.com/de/security-talk'}
+        ]
+      });
+    }
+  })();
+
+  // ── Erweiterte Tipps ──────────────────────────────────────────────────
+
+  // A1. Specter DIY Snapcase mit Seed-Speicherung → Upgrade auf Specter Shield Lite (Secure Element)
+  var showsShieldLiteRec = false;
+  for (var i = 0; i < state.devices.length; i++) {
+    if (state.devices[i].model === 'Specter DIY Snapcase') {
+      var dv = state.devices[i];
+      var sd = dv.model && dv.model.indexOf('Specter DIY') >= 0;
+      // Zeige Empfehlung wenn: Seed auf diesem Gerät mit SD-Karte verschlüsselt ODER als Smartcard gespeichert
+      if (dv.companions && dv.companions.length) {
+        showsShieldLiteRec = true;
+        break;
+      }
+      // ODER: Wenn irgendwo im Seed-Speicher dieses Gerät mit SD-Karte oder Smartcard verknüpft ist
+      for (var si = 0; si < state.seeds.length; si++) {
+        var sd2 = state.seeds[si];
+        if (sd2 && sd2.devices && sd2.devices.indexOf(i) >= 0) {
+          var opts = sd2.deviceOpts && sd2.deviceOpts[i];
+          if (opts && (opts.sdCard || opts.withSc)) {
+            showsShieldLiteRec = true;
+            break;
+          }
+        }
+      }
+    }
+    if (showsShieldLiteRec) break;
+  }
+  if (showsShieldLiteRec) {
+    tips.push({
+      title: 'Upgrade auf Specter Shield Lite: austauschbares Secure Element',
+      body: 'Du nutzt einen Specter DIY Snapcase. Ohne Shield speichert das Gerät die Seed-Phrase im internen Flash-Speicher – ohne PIN-Schutz auf Hardware-Ebene. Mit dem Upgrade Kit rüstest du einen Secure Element per Smartcard nach: Die Seed-Phrase wird dann PIN-geschützt auf der Karte gespeichert und ist deutlich sicherer gegen physischen Zugriff.',
+      links: [
+        {text: 'Specter Shield Lite Upgrade Kit', url: 'https://clavastack.com/de/products/specter-shield-lite-upgrade-kit'},
+        {text: 'Specter Shield Lite', url: 'https://clavastack.com/de/products/specter-shield-lite'},
+        {text: 'Specter Shield', url: 'https://clavastack.com/de/products/specter-shield'}
+      ],
+      advanced: true
+    });
+  }
+
   if (anyBackupType('sd')) {
     tips.push({ title:L('secTitle12'), body:L('secBody12'), links:[
       {text:'Specter Shield Lite', url:shopUrl('products/specter-shield-lite')},
@@ -2552,6 +2700,194 @@ function buildRecommendations() {
 
   return tips;
 }
+
+// ===== Wallet-Descriptor: Wo ist er gesichert? (nur Offline-Modus) =====
+// Stellt sicher, dass aeltere/teilweise Multisig-Objekte die Descriptor-Backup-Felder besitzen.
+function ensureMsDb(ms){
+  if(!ms.dbDevices)ms.dbDevices=[];
+  if(!ms.dbBackups)ms.dbBackups=[];
+  if(ms.dbPwm==null)ms.dbPwm=false;
+  if(ms.dbBook==null)ms.dbBook=false;
+  if(ms.companion==null)ms.companion="";
+  if(ms.companionPc==null)ms.companionPc=false;
+  if(ms.dbExp==null)ms.dbExp=false;
+  if(ms.descriptorInPasswordManager==null)ms.descriptorInPasswordManager=false;
+  if(!ms.descriptorLoadedOnHardwareWallets)ms.descriptorLoadedOnHardwareWallets={};
+  return ms;
+}
+// Hardware-Wallets (Index in state.devices), die ueber die Seeds zu diesem Multisig gehoeren.
+function msDeviceIdxs(i){
+  var ms=state.multisigs[i], out=[], seen={};
+  for(var k=0;k<ms.seeds.length;k++){ var s=state.seeds[ms.seeds[k]]; if(!s) continue;
+    for(var d=0;d<(s.devices||[]).length;d++){ var di=s.devices[d]; if(state.devices[di] && !seen[di]){ seen[di]=1; out.push(di); } } }
+  return out;
+}
+// Alle Seed-Phrase-Backups der Seeds dieses Multisigs (mit eindeutigem Schluessel "seedIdx:backupIdx").
+function msBackupRefs(i){
+  var ms=state.multisigs[i], out=[];
+  for(var k=0;k<ms.seeds.length;k++){ var si=ms.seeds[k], s=state.seeds[si]; if(!s) continue;
+    for(var b=0;b<(s.backups||[]).length;b++){ out.push({si:si,bi:b,key:si+":"+b,label:(s.name||"Seed "+(si+1))+" – Backup "+(b+1)}); } }
+  return out;
+}
+// PFLICHT-Logik (Wallet-Descriptor-Backup):
+// Eine Seed-Phrase ist "vollständig gesichert", wenn ALLE ihre Backups einen Wallet-Descriptor beiliegen haben.
+function seedFullyBacked(i, si){
+  var ms=state.multisigs[i]; ensureMsDb(ms); var s=state.seeds[si];
+  if(!s || (s.backups||[]).length===0) return false;
+  for(var b=0;b<s.backups.length;b++){
+    if(ms.dbBackups.indexOf(si+":"+b)>=0) continue;
+    if(s.backups[b] && s.backups[b].descriptorWithBackup) continue;
+    return false;
+  }
+  return true;
+}
+function msFullBackedCount(i){ var ms=state.multisigs[i], c=0; for(var k=0;k<ms.seeds.length;k++){ if(seedFullyBacked(i,ms.seeds[k])) c++; } return c; }
+function msAllSeedsFullyBacked(i){ var ms=state.multisigs[i]; if(ms.seeds.length===0) return false; for(var k=0;k<ms.seeds.length;k++){ if(!seedFullyBacked(i,ms.seeds[k])) return false; } return true; }
+function msReqFull(i){ var ms=state.multisigs[i]; var r=(ms.n||1)-(ms.m||1)+1; if(r<1)r=1; if(r>ms.n)r=ms.n; return r; }
+function msAnyDescriptor(i){ var ms=state.multisigs[i]; ensureMsDb(ms); return ms.dbDevices.length>0 || ms.dbBackups.length>0 || ms.dbPwm || ms.dbBook || ms.companionPc; }
+function msHwStatus(i){
+  var devs=msDeviceIdxs(i), reg=0;
+  ensureMsDb(state.multisigs[i]);
+  for(var d=0;d<devs.length;d++){ if(state.multisigs[i].dbDevices.indexOf(devs[d])>=0) reg++; }
+  return {total:devs.length, registered:reg, allOk:devs.length>0 && reg===devs.length};
+}
+
+// Bewertung des Descriptor-Backups (Seed-Phrase-Backups als Pflicht).
+// NEUE REGEL:
+// 1. Hardware-Wallet-Descriptor zaehlt NICHT als Seed-Phrase-Backup.
+// 2. Eine Seed-Phrase ist "komplett descriptor-gebackupt" wenn ALLE ihre Backups descriptorWithBackup=true haben.
+// 3. Ohne externen Cosigner: min. m Seed-Phrasen muessen komplett sein.
+// 4. MIT externem Cosigner: jedes eigene Seedphrase-Backup MUSS den Descriptor haben.
+// 5. Keine positive Meldung mehr wenn alles ok - nur Fehlermeldungen anzeigen.
+function msDescStatus(i){
+  var ms=state.multisigs[i]; ensureMsDb(ms);
+  var m=ms.m||1, n=ms.n||1;
+
+  function seedHasDescriptorOnAllBackups(si){
+    var sd=state.seeds[si];
+    if(!sd || !sd.backups || sd.backups.length===0) return false;
+    for(var b=0;b<sd.backups.length;b++){
+      if(ms.dbBackups.indexOf(si+":"+b)>=0) continue;
+      if(sd.backups[b] && sd.backups[b].descriptorWithBackup) continue;
+      return false;
+    }
+    return true;
+  }
+
+  var completeSeeds=[], incompleteSeeds=[];
+  for(var k=0;k<ms.seeds.length;k++){
+    var si=ms.seeds[k];
+    if(seedHasDescriptorOnAllBackups(si)){ completeSeeds.push(si); }
+    else { incompleteSeeds.push(si); }
+  }
+
+  // Sonderfall: externer Cosigner vorhanden.
+  if(ms.cosigners && ms.cosigners.length>0){
+    if(incompleteSeeds.length>0){
+      var incompleteLabels=[];
+      for(var k=0;k<incompleteSeeds.length;k++){ incompleteLabels.push(seedName(incompleteSeeds[k])); }
+      return {
+        level:"err", covered:completeSeeds.length, need:n,
+        msg:'<strong>Wallet-Descriptor wird ungen&uuml;gend abgesichert.</strong> Empfehlung dazu am Ende unter &bdquo;Tipps zur Bitcoin-Sicherheit&ldquo;.'
+      };
+    }
+    // Alles ok bei Cosigner - keine Warnung anzeigen
+    return {level:"ok", covered:completeSeeds.length, need:m, msg:''};
+  }
+
+  // Normale m-of-n-Regel (ohne externen Cosigner).
+  var requiredCompleteSeeds = m;
+
+  if(completeSeeds.length < requiredCompleteSeeds){
+    // gar kein oder zu wenig Descriptor
+    var none=!msAnyDescriptor(i);
+    var noBackupAtAll=completeSeeds.length===0 && (!ms.dbDevices.length && !ms.dbBackups.length && !ms.dbPwm && !ms.dbBook && !ms.companionPc);
+    return {level:"err", covered:completeSeeds.length, need:requiredCompleteSeeds,
+      msg:noBackupAtAll
+        ? 'Wallet-Descriptor wird ungen&uuml;gend abgesichert. Empfehlung dazu am Ende unter &bdquo;Tipps zur Bitcoin-Sicherheit&ldquo;.'
+        : 'Wallet-Descriptor wird mangelhaft abgesichert. Empfehlung dazu am Ende unter &bdquo;Tipps zur Bitcoin-Sicherheit&ldquo;.'};
+  }
+
+  // Genug komplette Seeds vorhanden, aber nicht alle.
+  if(incompleteSeeds.length>0){
+    // Pruefe ob es einen Fallback-Ort gibt (Passwortmanager oder HW-Descriptor)
+    var hasPwm=ms.descriptorInPasswordManager;
+    var hasHwDesc=false;
+    for(var k=0;k<incompleteSeeds.length;k++){
+      var si2=incompleteSeeds[k];
+      var sd2=state.seeds[si2];
+      if(sd2 && sd2.devices && ms.descriptorLoadedOnHardwareWallets){
+        for(var d=0;d<sd2.devices.length;d++){ if(ms.descriptorLoadedOnHardwareWallets[sd2.devices[d]]) hasHwDesc=true; }
+      }
+    }
+    // Wenn Fallback (PW-Manager oder HW) vorhanden: OK, keine Warnung
+    if(hasPwm || hasHwDesc){
+      return {level:"ok", covered:completeSeeds.length, need:requiredCompleteSeeds, msg:''};
+    }
+    // Kein Fallback: Warnung grenzwertig
+    return {level:"warn", covered:completeSeeds.length, need:requiredCompleteSeeds,
+      msg:'Wallet-Descriptor wird grenzwertig redundant abgesichert. Empfehlung dazu am Ende unter &bdquo;Tipps zur Bitcoin-Sicherheit&ldquo;.'};
+  }
+
+  // Alles perfekt - keine Meldung mehr
+  return {level:"ok", covered:completeSeeds.length, need:m, msg:''};
+}
+
+// UI-Funktionen für Descriptor-Backup-Tracking
+function toggleMsDbExp(i){ var ms=ensureMsDb(state.multisigs[i]); ms.dbExp=!ms.dbExp; render(); }
+function toggleMsDbDevice(i,di){ var a=ensureMsDb(state.multisigs[i]).dbDevices; var k=a.indexOf(di); if(k>=0)a.splice(k,1); else a.push(di); render(); }
+function toggleMsDbBackup(i,key){ var a=ensureMsDb(state.multisigs[i]).dbBackups; var k=a.indexOf(key); if(k>=0)a.splice(k,1); else a.push(key); render(); }
+function toggleMsDbPwm(i){ var ms=ensureMsDb(state.multisigs[i]); ms.dbPwm=!ms.dbPwm; render(); }
+function toggleMsDbBook(i){ var ms=ensureMsDb(state.multisigs[i]); ms.dbBook=!ms.dbBook; render(); }
+function setMsCompanion(i,v){ ensureMsDb(state.multisigs[i]).companion=v; render(); }
+function toggleMsCompanionPc(i){ var ms=ensureMsDb(state.multisigs[i]); ms.companionPc=!ms.companionPc; render(); }
+function toggleMsDescriptorInPwmDirect(i){ var ms=ensureMsDb(state.multisigs[i]); ms.descriptorInPasswordManager=!ms.descriptorInPasswordManager; render(); }
+function toggleMsDescriptorOnHwDirect(i,deviceId){ var ms=ensureMsDb(state.multisigs[i]); var map=ms.descriptorLoadedOnHardwareWallets; if(!map) map=ms.descriptorLoadedOnHardwareWallets={}; if(map[deviceId]) delete map[deviceId]; else map[String(deviceId)]=true; var a=ms.dbDevices; if(map[deviceId]){ var idx=a.indexOf(deviceId); if(idx<0)a.push(deviceId); } else { var idx2=a.indexOf(deviceId); if(idx2>=0)a.splice(idx2,1); } render(); }
+function handleHwDescriptorClick(i,deviceId,checked){ if(!checked){ var ms=ensureMsDb(state.multisigs[i]); var a=ms.dbDevices; var k=a.indexOf(deviceId); if(k>=0)a.splice(k,1); } render(); }
+
+// Descriptor-Backup Sektion (UI)
+function descriptorBackupSection(i){
+  var ms=state.multisigs[i]; ensureMsDb(ms);
+  var h='<div class="sub-block"><label class="chk-row"><input type="checkbox" '+(ms.dbExp?"checked":"")+' onchange="toggleMsDbExp('+i+')"> <strong>Wo ist der Wallet-Descriptor gesichert?</strong> (empfohlen erfassen)</label>';
+  if(!ms.dbExp){ h+='</div>'; return h; }
+  if(ms.seeds.length===0){ h+='<p class="mini-note">Ordne diesem Multisig zuerst oben Seed-Phrasen zu – dann erscheinen hier die passenden Hardware-Wallets und Backups.</p></div>'; return h; }
+
+  // 1) Hardware-Wallets (alle Devices, Seed-Devices + sonstige)
+  h+='<div style="margin-top:8px;"><label class="form-label">Wallet-Descriptor auf Hardware-Wallets registriert (auch gegen Blind-Signing)?</label>';
+  h+='<p class="mini-note">Alle Hardware-Wallets die Sie nutzen.</p>';
+  for(var dd=0;dd<state.devices.length;dd++){
+    var di=state.devices[dd]; var isChecked=ms.dbDevices.indexOf(dd)>=0 || ms.descriptorLoadedOnHardwareWallets[dd]; h+='<label class="chk-row"><input type="checkbox" '+(isChecked?"checked":"")+' onclick="handleHwDescriptorClick('+i+','+dd+',this.checked)">'+deviceLabel(di)+'</label>';
+  }
+  if(state.devices.length===0){ h+='<p class="mini-note">Keine Hardware-Wallets erfasst.</p>'; }
+  h+='</div>';
+
+  // 2) Seed-Phrase-Backups
+  var bks=msBackupRefs(i);
+  h+='<div style="margin-top:10px;"><label class="form-label">Bei welchen Seed-Phrase-Backups liegt ein Wallet-Descriptor-Backup bei?</label>';
+  if(bks.length===0){ h+='<p class="mini-note">Keine Seed-Backups erfasst.</p>'; }
+  for(var b=0;b<bks.length;b++){ var bk=bks[b]; var onb=ms.dbBackups.indexOf(bk.key)>=0; h+='<label class="chk-row"><input type="checkbox" '+(onb?"checked":"")+' onchange="toggleMsDbBackup('+i+',\''+bk.key+'\')"> '+bk.label+'</label>'; }
+  h+='</div>';
+
+  // 3) Weitere Orte mit neuen Feldern
+  h+='<div style="margin-top:10px;"><label class="form-label">Weitere Aufbewahrungsorte des Wallet-Descriptors</label>';
+  h+='<label class="chk-row"><input type="checkbox" '+(ms.dbPwm?"checked":"")+' onchange="toggleMsDbPwm('+i+')"> Im Passwort-Manager'+((state.pwm&&state.pwm.app)?(" ("+state.pwm.app+")"):"")+'</label>';
+  h+='<label class="chk-row"><input type="checkbox" '+(ms.dbBook?"checked":"")+' onchange="toggleMsDbBook('+i+')"> Im Passwort-Heft / Notizbuch</label>';
+  h+='<label class="chk-row"><input type="checkbox" '+(ms.descriptorInPasswordManager?"checked":"")+' onchange="toggleMsDescriptorInPwmDirect('+i+')"> Wallet-Descriptor selbst im Passwort-Manager gespeichert (z. B. alsPasswort-Anmerkung &bdquo;Multisig-Descriptor&ldquo;)</label>';
+
+  // Bestaetigung
+  var st=msDescStatus(i);
+  if(st.level==="err"){
+    h+='<div style="margin-top:10px;color:#c98b8b;font-size:0.76rem;">'+st.msg+'</div>';
+  } else if(st.level==="warn"){
+    h+='<div style="margin-top:10px;color:#9aa7b2;font-size:0.76rem;">'+st.msg+'</div>';
+  }
+  // Bei "ok" keine positive Meldung anzeigen
+  h+='<p class="mini-note" style="margin-top:8px;"><strong>Bei Verlust des Wallet-Descriptors sind die Bitcoin nicht wiederherstellbar</strong> &ndash; sichere ihn an mehreren Orten.</p>';
+  h+='</div>';
+  return h;
+}
+
+function deviceLabel(d){ var dv=state.devices[d]; if(!dv) return ""; return "Gerät "+(d+1)+(dv.model?" &ndash; "+dv.model:" (kein Modell)"); }
 
 function renderSecurityRecs() {
   var tips = buildRecommendations();
@@ -2606,6 +2942,10 @@ function renderSecurityRecs() {
       }
     }
   }
+  h += '<div class="sec-recs-disclaimer">';
+  h += '<div class="sec-recs-disclaimer-title">Hinweis</div>';
+  h += '<p>Die oben angezeigten Empfehlungen sind Basis-Tipps, die sich aus deiner aktuellen Wallet-Struktur ergeben. Sie ersetzen keine umfassende Sicherheitsanalyse.</p>';
+  h += '</div>';
   h += '<div class="sec-tip-cta">';
   h += '<div class="sec-tip-cta-title">' + L('ctaTitle') + '</div>';
   h += '<div class="sec-tip-cta-body">' + L('ctaBody') + '</div>';
@@ -2889,8 +3229,37 @@ function buildAndPrint(){
         if(state.offline && cs.xpub) h+=fRow(Lf('pdfCosignerXpub',ci), cs.xpub);
         else h+=eRow(Lf('pdfCosignerXpub',ci));
       }
-      h+='<div class="pdf-field-label" style="font-size:8.5pt;margin:8pt 0 2pt;">'+L('pdfDescriptorStored')+'</div>';
-      h+=eRow(L('pdfDescriptorSeeds')); h+=eRow(L('pdfDescriptorDevices')); h+=eRow(L('pdfDescriptorPWM')); h+=eRow(L('pdfDescriptorOther'));
+      h+='<div class="pdf-field-label" style="font-size:8.5pt;margin:8pt 0 2pt;">Wallet-Descriptor &ndash; wo &uuml;berall hinterlegt:</div>';
+      if(state.offline && state.multisigs.length>0){
+        ensureMsDb(ms);
+        // Hardware-Wallets (dbDevices)
+        var pdfDbDevices=[]; for(var pd=0;pd<(ms.dbDevices||[]).length;pd++){ if(state.devices[ms.dbDevices[pd]]) pdfDbDevices.push(deviceLabel(ms.dbDevices[pd])); }
+        if(pdfDbDevices.length) h+=fRow('Registriert auf HW:', pdfDbDevices.join(', '));
+        else h+=eRow('Registriert auf HW:');
+        // Seed-Phrase-Backups (dbBackups)
+        var pdfDbBackups=[], pxall=msBackupRefs(mi);
+        for(var pb=0;pb<(ms.dbBackups||[]).length;pb++){ for(var pk2=0;pk2<pxall.length;pk2++){ if(ms.dbBackups[pb]===pxall[pk2].key){ pdfDbBackups.push(pxall[pk2].label); break; } } }
+        if(pdfDbBackups.length) h+=fRow('Liegt bei Seed-Backups:', pdfDbBackups.join('; '));
+        else h+=eRow('Liegt bei Seed-Backups:');
+        // Neue Felder
+        h+=fRow('Selbst im Passwort-Manager gespeichert:', ms.descriptorInPasswordManager?'Ja':'Nein');
+        // Cosigner-Descriptor info
+        if(ms.cosigners && ms.cosigners.length>0){
+          h+='<div style="margin-top:6pt;border-top:1px solid #c8d6e2;padding-top:4pt;"><div style="font-size:8pt;font-weight:700;color:#0C1A27;margin-bottom:2pt;">Cosigner-Descriptor-Dokumentation</div>';
+          for(var c2=0;c2<ms.cosigners.length;c2++){
+            var cs2=ms.cosigners[c2];
+            h+='<div style="font-size:8pt;margin-top:2pt;">Cosigner '+(c2+1)+': '+esc(cs2.name||'(kein Name)')+' &ndash; Descriptor: '+(cs2.descriptorStored?'Hinterlegt':'Unbekannt');
+            if(cs2.descriptorLocation) h+=' ('+esc(cs2.descriptorLocation)+')';
+            if(cs2.lastChecked) h+=' (geprueft '+esc(cs2.lastChecked)+')';
+            h+='</div>';
+          }
+          h+='<p class="pdf-tamper-note" style="margin-top:2pt;">Hinweis: Cosigner-Descriptor ersetzt nicht die Pflicht, eigene Seed-Backups mit Descriptor zu sichern.</p>';
+          h+='</div>';
+        }
+        h+=eRow('In welchen Passwortmanagern:'); h+=eRow('Weitere Orte:');
+      } else {
+        h+=eRow('Bei welchen Seed-Phrasen:'); h+=eRow('Auf welchen Ger&auml;ten:'); h+=eRow('In welchen Passwortmanagern:'); h+=eRow('Weitere Orte:');
+      }
       if(state.offline && ms.descriptor){
         h+='<div style="font-size:9pt;font-weight:800;color:#0C1A27;margin:8pt 0 2pt;">'+L('pdfWalletDescriptorTitle')+'</div>';
         h+='<div style="font-family:monospace;font-size:7.5pt;color:#1a1a1a;word-break:break-all;border:1px solid #c8d6e2;border-radius:4px;padding:6pt;background:#fff;">'+esc(ms.descriptor)+'</div>';
