@@ -1252,6 +1252,8 @@ var SOFTWARE_WALLETS = [
     seed:true, recovery:"Singlesig: BIP39 12/24-Wort-Phrase (auch in anderen BIP39-Wallets nutzbar). 2FA-Modus: Blockstream-Multisig mit Server-Key – Timelock/CSV oder 2-of-3-Backup-Key nötig; Green-Recovery-Tool verwenden."},
    {label:"Nunchuk",           url:"https://nunchuk.io",            img:"assets/apps/nunchuk.png",
     seed:true, recovery:"Personal Wallet: Seedphrase(n) + Wallet-Konfigurationsdatei (BSMS/Descriptor). Singlesig: 1 Seed. Multisig 2-of-3: min. 2 Seeds + Konfiguration + ggf. Key-Passphrase."},
+   {label:"Liana",             url:"https://wizardsardine.com/liana", img:"assets/apps/liana-wallet.jpg",
+    seed:true, recovery:"Miniscript-Wallet (Primärpfad + Recovery-Pfad(e) mit Timelock). Benötigt: Seed-Phrase(n) je nach Pfad + den vollständigen Wallet-Descriptor (ohne ihn keine Wiederherstellung, auch nicht mit allen Seeds). Details im eigenen Abschnitt „Liana Wallet“ dieses Dokuments, falls dort konfiguriert."},
   {label:"BlitzWallet",       url:"https://blitzwalletapp.com",    img:"assets/apps/blitzwallet.png",
    seed:true, recovery:"Self-custodial (Spark/Lightning). 12-Wort-BIP39-Seed. Spark-Recovery-Tool: Seed eingeben → Funds in neue Wallet senden. Ältere eCash-Proofs: Migration beachten."},
    {label:"Exodus",            url:"https://www.exodus.com",        img:"assets/apps/exodus.png",
@@ -1305,6 +1307,14 @@ var RITREK_LOGO_URL = "assets/apps/ritrek.webp";       // [RITREK_LOGO_URL]
 // Timelock Recovery.
 var TIMELOCK_WEBSITE  = "https://timelockrecovery.com/";
 var TIMELOCK_LOGO_URL = "assets/apps/timelock-recovery.png";
+// Liana Wallet (Wizardsardine) – Miniscript-Wallet mit Primaerpfad + Recovery-Pfad(en)/Timelock.
+var LIANA_WEBSITE  = "https://wizardsardine.com/liana";
+var LIANA_LOGO_URL = "assets/apps/liana-wallet.jpg";
+// Ein einzelner relativer Timelock (OP_CHECKSEQUENCEVERIFY / BIP68) ist durch Bitcoins
+// Konsensregeln hart auf 65535 Bloecke begrenzt (16-Bit-Feld in nSequence) - das ist auch
+// das technische Maximum, das Liana selbst fuer einen Recovery-Pfad anbietet.
+var LIANA_MAX_TIMELOCK_BLOCKS = 65535;
+var BLOCKS_PER_DAY = 144, DAYS_PER_MONTH = 30.44, DAYS_PER_YEAR = 365.25;
 
 // ===== STATE =====
 function defaultState(){ return {
@@ -1317,6 +1327,8 @@ function defaultState(){ return {
   sw: {pc:0, phone:0, pcModels:[], phoneModels:[], pcB85:[], pcSeed:[], pcIdx:[], pcWords:[], phoneB85:[], phoneSeed:[], phoneIdx:[], phoneWords:[]},
   ex: {count:0, names:[]},
   multisigs: [],
+  lianaMode: null,      // null = unbeantwortet, "single" = Liana Single-Sig, "multi" = Liana Multi-Sig
+  lianaWallets: [],
   pwm: {use:null, app:""},
   book: {use:null},
   dig: {use:null, enc:null},
@@ -1326,6 +1338,49 @@ var state = defaultState();
 // newMultisig() ist im fix/multisig-descriptor-backup-rules-Branch entstanden (Deskriptor-Backup-Pflicht-Tracking);
 // im feature-Branch fehlte die Factory ganz (setMsCount/addMs riefen eine nicht existierende Funktion auf).
 function newMultisig(){ return {name:"", m:2, n:3, seeds:[], hot:[], custom:"", cosigners:[], descriptor:"", exp:false, dbExp:false, dbDevices:[], dbBackups:[], dbPwm:false, dbBook:false, companion:"", companionPc:false, descriptorInPasswordManager:false, descriptorLoadedOnHardwareWallets:{}}; }
+
+// Liana Wallet: ein Primaerpfad + 1..4 Recovery-Pfade. Bei state.lianaMode==="single" ist
+// m/n fest 1/1 (UI blendet die Signaturen-Auswahl aus); bei "multi" frei waehlbar wie Multisig.
+// Cosigner haben zusaetzlich hwModel, da der Normalfall eine Hardware-Wallet von Freunden/Familie ist.
+function newLianaKeySet(){ return {m:1, n:1, seeds:[], hot:[], custom:"", cosigners:[], exp:false}; }
+function newLianaRecovery(){
+  var r=newLianaKeySet();
+  // Empfehlung: Timelock standardmaessig auf das technische Maximum setzen.
+  r.timelockValue=LIANA_MAX_TIMELOCK_BLOCKS; r.timelockUnit="blocks";
+  return r;
+}
+function newLianaWallet(){
+  return {name:"", primary:newLianaKeySet(), recoveries:[newLianaRecovery()], descriptor:"",
+    dbExp:false, dbDevices:[], dbBackups:[], dbPwm:false, dbBook:false, dbLianaApp:false,
+    descriptorInPasswordManager:false, descriptorLoadedOnHardwareWallets:{}};
+}
+// Liana ist "im Spiel", sobald irgendein Hardware-Geraet Liana als Companion-App eingetragen hat.
+function anyLianaCompanion(){
+  for(var d=0;d<state.devices.length;d++){
+    var dv=state.devices[d];
+    for(var c=0;c<(dv.companions||[]).length;c++){ if(dv.companions[c].app==="Liana") return true; }
+  }
+  return false;
+}
+// Umrechnung Timelock-Eingabe (Tage/Monate/Jahre/Bloecke) -> Bloecke, gedeckelt am Bitcoin-Maximum.
+function lwTimelockBlocks(rec){
+  var b;
+  if(rec.timelockUnit==="blocks") b=parseInt(rec.timelockValue)||1;
+  else {
+    var days = rec.timelockUnit==="years" ? (parseFloat(rec.timelockValue)||0)*DAYS_PER_YEAR
+             : rec.timelockUnit==="days"  ? (parseFloat(rec.timelockValue)||0)
+             : (parseFloat(rec.timelockValue)||0)*DAYS_PER_MONTH; // default "months"
+    b=Math.round(days*BLOCKS_PER_DAY);
+  }
+  return Math.min(LIANA_MAX_TIMELOCK_BLOCKS, Math.max(1, b));
+}
+function lwTimelockLabel(rec){
+  var b=lwTimelockBlocks(rec);
+  var atMax = b>=LIANA_MAX_TIMELOCK_BLOCKS;
+  if(rec.timelockUnit==="blocks") return b+" Blöcke"+(atMax?" (Maximum)":"");
+  var unit={days:"Tag(e)", months:"Monat(e)", years:"Jahr(e)"}[rec.timelockUnit]||"";
+  return "~"+rec.timelockValue+" "+unit+" (~"+b+" Blöcke"+(atMax?", Maximum":"")+")";
+}
 
 function ensureArrayLen(arr, len, fill) {
  if (!Array.isArray(arr)) arr = [];
@@ -1571,6 +1626,7 @@ function screens(){
   arr.push({k:"sw"});
   arr.push({k:"ex"});
   arr.push({k:"multisig"});
+  if(anyLianaCompanion()){ arr.push({k:"lianaSigType"}); arr.push({k:"liana"}); }
   arr.push({k:"timelock"});
   arr.push({k:"dig"});
   arr.push({k:"contacts"});
@@ -1598,6 +1654,8 @@ function render(){
     case "contacts": html=renderContacts(); break;
     case "bip85": html=renderBip85(); break;
     case "multisig": html=renderMultisig(); break;
+    case "lianaSigType": html=renderLianaSigType(); break;
+    case "liana": html=renderLiana(); break;
     case "dig": html=renderDig(); break;
     case "timelock": html=renderTimelock(); break;
     case "summary": html=renderSummary(); break;
@@ -2260,6 +2318,341 @@ function setMsCosignerDescriptorLocation(i,ci,v){ state.multisigs[i].cosigners[c
 function setMsCosignerLastChecked(i,ci,v){ state.multisigs[i].cosigners[ci].lastChecked=v; render(); }
 function setMsDescriptor(i,v){ state.multisigs[i].descriptor=v; }
 
+// ===== Liana Wallet (Primaerpfad + Recovery-Pfad(e) mit Timelock) =====
+// Ausloeser: sobald irgendein Hardware-Geraet "Liana" als Companion-App eingetragen hat
+// (siehe anyLianaCompanion()). Es gibt bewusst keine separate Ja/Nein-Einstiegsfrage.
+function renderLianaSigType(){
+  var h='<div class="section-card"><div class="section-card-body">';
+  h+='<div class="ritrek-head">';
+  h+='<a href="'+esc(LIANA_WEBSITE)+'" target="_blank" rel="noopener" class="ritrek-logo-link"><img src="'+esc(LIANA_LOGO_URL)+'" alt="Liana Wallet" class="ritrek-logo" onerror="this.style.display=\'none\'"></a>';
+  h+='<div class="wizard-question" style="margin:0;">Du hast Liana als Companion-App ausgew&#228;hlt &#8211; nutzt du Liana als Single-Sig oder Multi-Sig?</div>';
+  h+='</div>';
+  h+='<p class="wizard-hint">Liana kombiniert einen <strong>Prim&#228;rpfad</strong> (normales Ausgeben) mit einem oder mehreren <strong>Recovery-Pfaden</strong>, die erst nach einer Wartezeit (Timelock) nutzbar werden. Bei <strong>Single-Sig</strong> hat jeder Pfad genau einen Schl&#252;ssel &#8211; einfacher und &#252;bersichtlicher ohne Multisig-Erfahrung. Bei <strong>Multi-Sig</strong> kann jeder Pfad mehrere Schl&#252;ssel (M-von-N) haben.</p>';
+  h+='<div class="wizard-choice-group">';
+  h+='<button class="wizard-choice-btn '+(state.lianaMode==="single"?"selected":"")+'" onclick="setLianaMode(\'single\')">Liana Single-Sig</button>';
+  h+='<button class="wizard-choice-btn '+(state.lianaMode==="multi"?"selected":"")+'" onclick="setLianaMode(\'multi\')">Liana Multi-Sig</button>';
+  h+='</div>';
+  h+=nav();
+  h+='</div></div>';
+  return h;
+}
+function setLianaMode(v){
+  state.lianaMode=v;
+  if(state.lianaWallets.length===0){ state.lianaWallets.push(newLianaWallet()); }
+  render();
+}
+
+function renderLiana(){
+  var h='<div class="section-card"><div class="section-card-body">';
+  h+='<div class="ritrek-head">';
+  h+='<a href="'+esc(LIANA_WEBSITE)+'" target="_blank" rel="noopener" class="ritrek-logo-link"><img src="'+esc(LIANA_LOGO_URL)+'" alt="Liana Wallet" class="ritrek-logo" onerror="this.style.display=\'none\'"></a>';
+  h+='<div class="wizard-question" style="margin:0;">Deine Liana Wallet(s)</div>';
+  h+='</div>';
+  h+='<p class="wizard-hint">Jede Liana Wallet hat genau einen Prim&#228;rpfad und mindestens einen Recovery-Pfad mit eigenem Timelock.</p>';
+  h+='<label class="form-label">Wie viele Liana Wallets hast du?</label>';
+  h+='<div class="count-pills">';
+  for(var v=1;v<=3;v++){ h+='<button class="count-pill '+(state.lianaWallets.length===v?"selected":"")+'" onclick="setLwCount('+v+')">'+v+'</button>'; }
+  h+='</div>';
+  for(var i=0;i<state.lianaWallets.length;i++){ h+=renderLw(i); }
+  if(state.lianaWallets.length>0 && state.lianaWallets.length<3){
+    h+='<button class="btn btn-back" style="margin-top:10px;border-color:var(--specter-primary);color:var(--specter-primary);" onclick="addLw()">+ weitere Liana Wallet</button>';
+  }
+  h+=nav();
+  h+='</div></div>';
+  return h;
+}
+function setLwCount(n){ if(n<1)n=1; while(state.lianaWallets.length<n)state.lianaWallets.push(newLianaWallet()); while(state.lianaWallets.length>n)state.lianaWallets.pop(); render(); }
+function addLw(){ if(state.lianaWallets.length<3){ state.lianaWallets.push(newLianaWallet()); render(); } }
+function setLwName(i,v){ state.lianaWallets[i].name=v; }
+
+// Ein Liana-"Pfad" ist entweder der Primaerpfad (ri<0) oder ein Recovery-Pfad (ri=Index in recoveries[]).
+function lwPath(i,ri){ return ri<0 ? state.lianaWallets[i].primary : state.lianaWallets[i].recoveries[ri]; }
+function renderLwPathBlock(i,ri,title,hintNote,isMulti){
+  var p=lwPath(i,ri);
+  if(!isMulti){ p.m=1; p.n=1; }
+  var h='<div class="sub-block" style="margin-top:10px;">';
+  h+='<label class="form-label">'+title+'</label>';
+  if(isMulti){
+    h+='<div style="display:flex;gap:12px;flex-wrap:wrap;">';
+    h+='<div class="form-group" style="flex:1;min-width:120px;"><label class="form-label">Ben&#246;tigte Signaturen (M)</label><select class="form-control" onchange="setLwM('+i+','+ri+',this.value)">'+numOpts(1,9,p.m)+'</select></div>';
+    h+='<div class="form-group" style="flex:1;min-width:120px;"><label class="form-label">Schl&#252;ssel gesamt (N)</label><select class="form-control" onchange="setLwN('+i+','+ri+',this.value)">'+numOpts(1,9,p.n)+'</select></div>';
+    h+='</div>';
+  } else {
+    h+='<p class="mini-note">Single-Sig: genau 1 Schl&#252;ssel f&#252;r diesen Pfad &#8211; entweder eine deiner eigenen Seed-Phrasen/Hot-Wallets oder eine externe Person.</p>';
+  }
+  h+='<div class="sub-block"><label class="form-label">Welche deiner Seed-Phrasen geh&#246;ren dazu?</label>';
+  if(state.seeds.length===0){ h+='<p class="mini-note">Lege zuerst Seed-Phrasen an.</p>'; }
+  for(var s=0;s<state.seeds.length;s++){ var on=p.seeds.indexOf(s)>=0; h+='<label class="chk-row"><input type="checkbox" '+(on?"checked":"")+' onchange="toggleLwSeed('+i+','+ri+','+s+')"> '+esc(seedName(s))+'</label>'; }
+  h+='<button class="btn btn-back" style="margin-top:8px;border-color:var(--specter-primary);color:var(--specter-primary);" onclick="toggleLwExp('+i+','+ri+')">'+(p.exp?'Erweitern ausblenden':'Erweitern &#9662;')+'</button>';
+  if(p.exp){
+    h+='<div style="margin-top:10px;"><label class="form-label">Hot-Wallets (Software-Wallets) als Schl&#252;ssel</label>';
+    var hots=hotWalletList();
+    if(hots.length===0){ h+='<p class="mini-note">Keine Software-Wallets erfasst (siehe Software-Wallets-Schritt).</p>'; }
+    for(var hw=0;hw<hots.length;hw++){ var onh=p.hot.indexOf(hots[hw].id)>=0; h+='<label class="chk-row"><input type="checkbox" '+(onh?"checked":"")+' onchange="toggleLwHot('+i+','+ri+',\''+hots[hw].id+'\')"> '+esc(hots[hw].label)+'</label>'; }
+    h+='<div class="form-group" style="margin-top:8px;"><label class="form-label">Custom (frei eintragen)</label>'
+      +'<textarea class="form-control" rows="3" placeholder="eigene Notizen zu weiteren Schl&#252;sseln" oninput="setLwCustom('+i+','+ri+',this.value)">'+esc(p.custom||"")+'</textarea></div>';
+    h+='</div>';
+  }
+  h+='</div>';
+  var own=p.seeds.length+p.hot.length;
+  var maxC=Math.max(0, p.n-own);
+  if(isMulti){
+    if(p.cosigners.length>maxC){ p.cosigners.length=maxC; }
+  } else {
+    while(p.cosigners.length<maxC) p.cosigners.push({name:"",hwModel:"",xpub:"",descriptorStored:false,descriptorLocation:"",lastChecked:""});
+    while(p.cosigners.length>maxC) p.cosigners.pop();
+  }
+  h+='<div class="sub-block"><label class="form-label">Externe Person mit eigener Hardware-Wallet</label>';
+  h+='<p class="mini-note">Der Normalfall f&#252;r einen Recovery-Schl&#252;ssel ist eine Hardware-Wallet von Familie oder Freunden &#8211; nicht nur ein Schl&#252;ssel, sondern ein eigenes Ger&#228;t mit eigenem Besitzer.</p>';
+  if(isMulti){
+    h+='<p class="mini-note">Bei <strong>'+p.m+' von '+p.n+'</strong>: du hast '+own+' eigene Schl&#252;ssel zugeordnet &#8211; du kannst noch <strong>'+maxC+'</strong> externe Personen hinzuf&#252;gen.</p>';
+    h+='<div class="count-pills">';
+    for(var c=0;c<=maxC;c++){ h+='<button class="count-pill '+(p.cosigners.length===c?"selected":"")+'" onclick="setLwCosignerCount('+i+','+ri+','+c+')">'+c+'</button>'; }
+    h+='</div>';
+  } else if(maxC===0){
+    h+='<p class="mini-note">Eigener Schl&#252;ssel bereits gew&#228;hlt &#8211; f&#252;r diesen Pfad wird keine externe Person ben&#246;tigt.</p>';
+  }
+  for(var ci=0;ci<p.cosigners.length;ci++){
+    var cs=p.cosigners[ci];
+    h+='<div class="form-group" style="margin-top:8px;"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+(isMulti?('Person '+(ci+1)+' (Name, Kontakt)'):'Name, Kontakt')+' &#8211; wem geh&#246;rt die Hardware-Wallet?</label>'
+      +'<input class="form-control" type="text" value="'+esc(cs.name)+'" placeholder="Name, Telefon/E-Mail" oninput="setLwCosignerName('+i+','+ri+','+ci+',this.value)"></div>';
+    h+='<div class="form-group" style="margin-top:6px;"><label class="form-label" style="text-transform:none;font-size:0.72rem;">Welche Hardware-Wallet nutzt diese Person?</label>'
+      +'<select class="form-control" onchange="setLwCosignerHwModel('+i+','+ri+','+ci+',this.value)"><option value="">-- Bitte w&#228;hlen --</option>'+modelOpts(cs.hwModel)+'</select></div>';
+    if(state.offline){
+      h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">xPub (nur offline)</label>'
+        +'<input class="form-control" type="text" value="'+esc(cs.xpub||"")+'" placeholder="xpub… / zpub…" oninput="setLwCosignerXpub('+i+','+ri+','+ci+',this.value)"></div>';
+      h+='<label class="chk-row" style="margin-top:6px;"><input type="checkbox" '+(cs.descriptorStored?"checked":"")+' onchange="toggleLwCosignerDescriptorStored('+i+','+ri+','+ci+')"> Person hat den Wallet-Descriptor hinterlegt</label>';
+      if(cs.descriptorStored||cs.descriptorLocation){
+        h+='<div class="form-group" style="margin-top:6px;"><label class="form-label" style="text-transform:none;font-size:0.72rem;">Wo ist der Descriptor bei dieser Person hinterlegt?</label>'
+          +'<input class="form-control" type="text" value="'+esc(cs.descriptorLocation||"")+'" placeholder="z. B. Sparrow auf eigenem PC, Coldcard, Tresor" oninput="setLwCosignerDescriptorLocation('+i+','+ri+','+ci+',this.value)"></div>';
+      }
+      h+='<div class="form-group" style="margin-top:6px;"><label class="form-label" style="text-transform:none;font-size:0.72rem;">Wann wurde das zuletzt gepr&#252;ft?</label>'
+        +'<input class="form-control" type="date" value="'+esc(cs.lastChecked||"")+'" placeholder="JJJJ-MM-TT" oninput="setLwCosignerLastChecked('+i+','+ri+','+ci+',this.value)"></div>';
+    }
+  }
+  h+='</div>';
+  if(hintNote){ h+='<p class="mini-note">'+hintNote+'</p>'; }
+  h+='</div>';
+  return h;
+}
+function setLwM(i,ri,v){ lwPath(i,ri).m=parseInt(v)||1; render(); }
+function setLwN(i,ri,v){ lwPath(i,ri).n=parseInt(v)||1; render(); }
+function toggleLwSeed(i,ri,s){ var a=lwPath(i,ri).seeds; var k=a.indexOf(s); if(k>=0)a.splice(k,1); else a.push(s); render(); }
+function toggleLwExp(i,ri){ var p=lwPath(i,ri); p.exp=!p.exp; render(); }
+function toggleLwHot(i,ri,id){ var a=lwPath(i,ri).hot; var k=a.indexOf(id); if(k>=0)a.splice(k,1); else a.push(id); render(); }
+function setLwCustom(i,ri,v){ lwPath(i,ri).custom=v; }
+function setLwCosignerCount(i,ri,n){ var a=lwPath(i,ri).cosigners; while(a.length<n)a.push({name:"",hwModel:"",xpub:"",descriptorStored:false,descriptorLocation:"",lastChecked:""}); while(a.length>n)a.pop(); render(); }
+function setLwCosignerName(i,ri,ci,v){ lwPath(i,ri).cosigners[ci].name=v; }
+function setLwCosignerHwModel(i,ri,ci,v){ lwPath(i,ri).cosigners[ci].hwModel=v; render(); }
+function setLwCosignerXpub(i,ri,ci,v){ lwPath(i,ri).cosigners[ci].xpub=v; }
+function toggleLwCosignerDescriptorStored(i,ri,ci){ var cs=lwPath(i,ri).cosigners[ci]; cs.descriptorStored=!cs.descriptorStored; render(); }
+function setLwCosignerDescriptorLocation(i,ri,ci,v){ lwPath(i,ri).cosigners[ci].descriptorLocation=v; render(); }
+function setLwCosignerLastChecked(i,ri,ci,v){ lwPath(i,ri).cosigners[ci].lastChecked=v; render(); }
+function setLwRecoveryCount(i,n){ var lw=state.lianaWallets[i]; if(n<1)n=1; while(lw.recoveries.length<n)lw.recoveries.push(newLianaRecovery()); while(lw.recoveries.length>n)lw.recoveries.pop(); render(); }
+function addLwRecovery(i){ if(state.lianaWallets[i].recoveries.length<4){ state.lianaWallets[i].recoveries.push(newLianaRecovery()); render(); } }
+function setLwRecTimelockValue(i,ri,v){ state.lianaWallets[i].recoveries[ri].timelockValue=v; render(); }
+function setLwRecTimelockUnit(i,ri,v){ state.lianaWallets[i].recoveries[ri].timelockUnit=v; render(); }
+function setLwDescriptor(i,v){ state.lianaWallets[i].descriptor=v; }
+
+function renderLw(i){
+  var lw=state.lianaWallets[i];
+  var isMulti = state.lianaMode==="multi";
+  var h='<div class="seed-card" style="margin-top:12px;"><h4>Liana Wallet '+(i+1)+'</h4>';
+  h+='<div class="form-group"><label class="form-label">Name (optional)</label><input class="form-control" type="text" value="'+esc(lw.name)+'" placeholder="z. B. Haupt-Nachlass" oninput="setLwName('+i+',this.value)"></div>';
+
+  h+=renderLwPathBlock(i, -1, 'Prim&#228;rpfad (sofort ausgabef&#228;hig)', null, isMulti);
+
+  h+='<div class="sub-block"><label class="form-label">Recovery-Pfade (nutzbar nach Timelock)</label>';
+  h+='<p class="mini-note">Mindestens ein Recovery-Pfad ist f&#252;r eine sinnvolle Vererbung n&#246;tig. Erben ben&#246;tigen NUR den passenden Recovery-Schl&#252;ssel plus Geduld &#8211; nicht den Prim&#228;rschl&#252;ssel. Der Timelock steht standardm&#228;&#223;ig auf dem <strong>technischen Maximum</strong> (65.535 Bl&#246;cke, ca. 455 Tage / 1,25 Jahre) &#8211; das ist die l&#228;ngstm&#246;gliche Frist, die ein einzelner Timelock in Bitcoin erlauben kann (BIP68/112), und gibt dir maximale Zeit, im Ernstfall selbst noch einzugreifen.</p>';
+  h+='<div class="count-pills">';
+  for(var v=1;v<=4;v++){ h+='<button class="count-pill '+(lw.recoveries.length===v?"selected":"")+'" onclick="setLwRecoveryCount('+i+','+v+')">'+v+'</button>'; }
+  h+='</div>';
+  for(var ri=0;ri<lw.recoveries.length;ri++){
+    var rec=lw.recoveries[ri];
+    h+='<div class="seed-card" style="margin-top:10px;margin-left:16px;border-left:3px solid var(--specter-primary);padding-left:12px;background:var(--specter-dark-secondary);">';
+    h+='<h4 style="margin-top:0;">Recovery-Pfad '+(ri+1)+'</h4>';
+    h+='<div style="display:flex;gap:12px;flex-wrap:wrap;">';
+    h+='<div class="form-group" style="flex:1;min-width:100px;"><label class="form-label">Timelock</label><input class="form-control" type="number" min="1" value="'+esc(rec.timelockValue)+'" oninput="setLwRecTimelockValue('+i+','+ri+',this.value)"></div>';
+    h+='<div class="form-group" style="flex:1;min-width:120px;"><label class="form-label">Einheit</label><select class="form-control" onchange="setLwRecTimelockUnit('+i+','+ri+',this.value)">'
+      +'<option value="blocks"'+(rec.timelockUnit==="blocks"?" selected":"")+'>Bl&#246;cke</option>'
+      +'<option value="days"'+(rec.timelockUnit==="days"?" selected":"")+'>Tage</option>'
+      +'<option value="months"'+(rec.timelockUnit==="months"?" selected":"")+'>Monate</option>'
+      +'<option value="years"'+(rec.timelockUnit==="years"?" selected":"")+'>Jahre</option>'
+      +'</select></div>';
+    h+='</div>';
+    h+='<p class="mini-note">Entspricht '+lwTimelockLabel(rec)+'. Maximum: 65.535 Bl&#246;cke (Bitcoin-Konsensregel, BIP68/112).</p>';
+    h+=renderLwPathBlock(i, ri, 'Schl&#252;ssel dieses Recovery-Pfads', 'Erben ben&#246;tigen f&#252;r diesen Pfad nur diese Schl&#252;ssel + Ablauf des Timelocks &#8211; nicht den Prim&#228;rschl&#252;ssel.', isMulti);
+    h+='</div>';
+  }
+  if(lw.recoveries.length<4){
+    h+='<button class="btn btn-back" style="margin-top:8px;border-color:var(--specter-primary);color:var(--specter-primary);" onclick="addLwRecovery('+i+')">+ weiterer Recovery-Pfad</button>';
+  }
+  h+='</div>';
+
+  if(state.offline){
+    h+='<div class="sub-block"><label class="form-label">Wallet-Descriptor (nur offline)</label>'
+      +'<textarea class="form-control" rows="3" placeholder="wsh(or_i(pk([..]xpub..),and_v(v:pkh(xpub..),older(26280))))" oninput="setLwDescriptor('+i+',this.value)">'+esc(lw.descriptor||"")+'</textarea>'
+      +'<p class="mini-note"><strong>Achtung:</strong> Der Wallet-Descriptor erlaubt Watch-Only-Zugriff &#8211; damit ist <strong>sichtbar, wie viel Bitcoin</strong> auf der Wallet liegt (kein Senden). Wird im PDF gro&#223; unter &bdquo;Wallet Descriptor&ldquo; abgedruckt.</p></div>';
+    h+=lwDescriptorBackupSection(i);
+  } else {
+    h+='<p class="mini-note">Den Wallet-Descriptor (sehr wichtig f&#252;r die Wiederherstellung) tr&#228;gst du im PDF handschriftlich ein &#8211; oder aktiviere oben den Offline-Modus, um ihn einzutippen.</p>';
+  }
+  h+='</div>';
+  return h;
+}
+
+// ===== Liana Wallet: Wallet-Descriptor-Backup-Tracking =====
+// Analog zu Multisig, aber ueber Primaer- UND alle Recovery-Pfade hinweg, da ein Liana-Wallet
+// EINEN gemeinsamen Descriptor fuer den gesamten Miniscript-Policy-Baum hat (nicht pro Pfad).
+// Zusaetzlich zu den Multisig-Feldern: dbLianaApp - Liana speichert den Descriptor selbst lokal.
+function ensureLwDb(lw){
+  if(!lw.dbDevices)lw.dbDevices=[];
+  if(!lw.dbBackups)lw.dbBackups=[];
+  if(lw.dbPwm==null)lw.dbPwm=false;
+  if(lw.dbBook==null)lw.dbBook=false;
+  if(lw.dbLianaApp==null)lw.dbLianaApp=false;
+  if(lw.dbExp==null)lw.dbExp=false;
+  if(lw.descriptorInPasswordManager==null)lw.descriptorInPasswordManager=false;
+  if(!lw.descriptorLoadedOnHardwareWallets)lw.descriptorLoadedOnHardwareWallets={};
+  return lw;
+}
+function lwAllSeedIdxs(i){
+  var lw=state.lianaWallets[i], out=[], seen={};
+  var paths=[lw.primary].concat(lw.recoveries);
+  for(var p=0;p<paths.length;p++){ var seeds=paths[p].seeds; for(var k=0;k<seeds.length;k++){ if(!seen[seeds[k]]){ seen[seeds[k]]=1; out.push(seeds[k]); } } }
+  return out;
+}
+// Ist eine Seed-Phrase (Index si) Teil irgendeines Liana-Wallets (Primaer- oder Recovery-Pfad)?
+function seedInAnyLiana(si){
+  for(var i=0;i<state.lianaWallets.length;i++){ if(lwAllSeedIdxs(i).indexOf(si)>=0) return true; }
+  return false;
+}
+function lwAllCosigners(i){
+  var lw=state.lianaWallets[i]; var out=[].concat(lw.primary.cosigners);
+  for(var r=0;r<lw.recoveries.length;r++){ out=out.concat(lw.recoveries[r].cosigners); }
+  return out;
+}
+function lwDeviceIdxs(i){
+  var seeds=lwAllSeedIdxs(i), out=[], seen={};
+  for(var k=0;k<seeds.length;k++){ var s=state.seeds[seeds[k]]; if(!s) continue;
+    for(var d=0;d<(s.devices||[]).length;d++){ var di=s.devices[d]; if(state.devices[di] && !seen[di]){ seen[di]=1; out.push(di); } } }
+  return out;
+}
+function lwBackupRefs(i){
+  var seeds=lwAllSeedIdxs(i), out=[];
+  for(var k=0;k<seeds.length;k++){ var si=seeds[k], s=state.seeds[si]; if(!s) continue;
+    for(var b=0;b<(s.backups||[]).length;b++){ out.push({si:si,bi:b,key:si+":"+b,label:(s.name||"Seed "+(si+1))+" – Backup "+(b+1)}); } }
+  return out;
+}
+function lwSeedFullyBacked(i, si){
+  var lw=state.lianaWallets[i]; ensureLwDb(lw); var s=state.seeds[si];
+  if(!s || (s.backups||[]).length===0) return false;
+  for(var b=0;b<s.backups.length;b++){
+    if(lw.dbBackups.indexOf(si+":"+b)>=0) continue;
+    if(s.backups[b] && s.backups[b].descriptorWithBackup) continue;
+    return false;
+  }
+  return true;
+}
+function lwAnyDescriptor(i){ var lw=state.lianaWallets[i]; ensureLwDb(lw); return lw.dbDevices.length>0 || lw.dbBackups.length>0 || lw.dbPwm || lw.dbBook || lw.dbLianaApp; }
+function lwDescStatus(i){
+  var lw=state.lianaWallets[i]; ensureLwDb(lw);
+  var m=lw.primary.m||1;
+  var allSeeds=lwAllSeedIdxs(i);
+  var completeSeeds=[], incompleteSeeds=[];
+  for(var k=0;k<allSeeds.length;k++){
+    var si=allSeeds[k];
+    if(lwSeedFullyBacked(i,si)){ completeSeeds.push(si); } else { incompleteSeeds.push(si); }
+  }
+  var completePrimary=0;
+  for(var k2=0;k2<lw.primary.seeds.length;k2++){ if(lwSeedFullyBacked(i,lw.primary.seeds[k2])) completePrimary++; }
+
+  if(lwAllCosigners(i).length>0){
+    if(incompleteSeeds.length>0){
+      var incompleteLabels=[]; for(var k3=0;k3<incompleteSeeds.length;k3++){ incompleteLabels.push(seedName(incompleteSeeds[k3])); }
+      return {level:"err", covered:completeSeeds.length, need:allSeeds.length,
+        msg:'<strong>Pflicht nicht erf&uuml;llt:</strong> Diese Liana-Wallet hat eine externe Person mit eigener Hardware-Wallet. '+
+          '<strong>Jedes einzelne Backup jeder eigenen Seed-Phrase (Prim&auml;r- und Recovery-Pfade) muss den Wallet-Descriptor enthalten.</strong> '+
+          'Bei '+incompleteLabels.join(', ')+' fehlen Descriptor-Backups.'};
+    }
+    return {level:"ok", covered:completeSeeds.length, need:allSeeds.length,
+      msg:'Der Wallet-Descriptor ist ausreichend gesichert: <strong>'+completeSeeds.length+' von '+allSeeds.length+'</strong> Seed-Phrasen vollst&auml;ndig abgedeckt.'};
+  }
+
+  if(completePrimary < m){
+    var none=!lwAnyDescriptor(i);
+    return {level:"err", covered:completePrimary, need:m,
+      msg:none
+        ? 'F&uuml;r dieses Liana-Wallet ist <strong>kein Wallet-Descriptor-Backup</strong> erfasst. Bei Verlust des Descriptors ist die Wallet <strong>nicht wiederherstellbar</strong> &ndash; auch nicht mit allen Schl&uuml;sseln.'
+        : '<strong>Pflicht nicht erf&uuml;llt:</strong> Erst <strong>'+completePrimary+' von '+m+'</strong> n&ouml;tigen Prim&auml;rpfad-Seed-Phrasen sind vollst&auml;ndig mit Wallet-Descriptor gesichert.'};
+  }
+
+  if(incompleteSeeds.length>0){
+    var inLbl=[]; for(var k4=0;k4<incompleteSeeds.length;k4++) inLbl.push(seedName(incompleteSeeds[k4]));
+    return {level:"warn", covered:completeSeeds.length, need:allSeeds.length,
+      msg:'Die Mindestbedingung ist erf&uuml;llt ('+completePrimary+' von '+m+' Prim&auml;rpfad-Seed-Phrasen vollst&auml;ndig gesichert), aber '+inLbl.join(', ')+' '+(inLbl.length>1?'haben':'hat')+' unvollst&auml;ndige Descriptor-Backups. <strong>Empfehlung:</strong> trotzdem jedem Backup einen Wallet-Descriptor beilegen.'};
+  }
+
+  return {level:"ok", covered:completeSeeds.length, need:allSeeds.length,
+    msg:'Der Wallet-Descriptor ist ausreichend gesichert: <strong>'+completeSeeds.length+' von '+allSeeds.length+'</strong> Seed-Phrasen vollst&auml;ndig abgedeckt'+(lw.dbPwm?' + Kopie im Passwort-Manager':'')+'.'};
+}
+
+function toggleLwDbExp(i){ var lw=ensureLwDb(state.lianaWallets[i]); lw.dbExp=!lw.dbExp; render(); }
+function toggleLwDbDevice(i,di){ var a=ensureLwDb(state.lianaWallets[i]).dbDevices; var k=a.indexOf(di); if(k>=0)a.splice(k,1); else a.push(di); render(); }
+function toggleLwDbBackup(i,key){ var a=ensureLwDb(state.lianaWallets[i]).dbBackups; var k=a.indexOf(key); if(k>=0)a.splice(k,1); else a.push(key); render(); }
+function toggleLwDbPwm(i){ var lw=ensureLwDb(state.lianaWallets[i]); lw.dbPwm=!lw.dbPwm; render(); }
+function toggleLwDbBook(i){ var lw=ensureLwDb(state.lianaWallets[i]); lw.dbBook=!lw.dbBook; render(); }
+function toggleLwDbLianaApp(i){ var lw=ensureLwDb(state.lianaWallets[i]); lw.dbLianaApp=!lw.dbLianaApp; render(); }
+function toggleLwDescriptorInPwmDirect(i){ var lw=ensureLwDb(state.lianaWallets[i]); lw.descriptorInPasswordManager=!lw.descriptorInPasswordManager; render(); }
+function toggleLwDescriptorOnHwDirect(i,deviceId){ var lw=ensureLwDb(state.lianaWallets[i]); var map=lw.descriptorLoadedOnHardwareWallets; if(!map) map=lw.descriptorLoadedOnHardwareWallets={}; if(map[deviceId]) delete map[deviceId]; else map[String(deviceId)]=true; render(); }
+
+function lwDescriptorBackupSection(i){
+  var lw=state.lianaWallets[i]; ensureLwDb(lw);
+  var h='<div class="sub-block"><label class="chk-row"><input type="checkbox" '+(lw.dbExp?"checked":"")+' onchange="toggleLwDbExp('+i+')"> <strong>Wo ist der Wallet-Descriptor gesichert?</strong> (empfohlen erfassen)</label>';
+  if(!lw.dbExp){ h+='</div>'; return h; }
+  var allSeeds=lwAllSeedIdxs(i);
+  h+='<label class="chk-row" style="margin-top:8px;"><input type="checkbox" '+(lw.dbLianaApp?"checked":"")+' onchange="toggleLwDbLianaApp('+i+')"> Die Liana Wallet selbst speichert den Descriptor (lokal auf dem Computer, auf dem sie installiert ist)</label>';
+  if(allSeeds.length===0){ h+='<p class="mini-note">Ordne diesem Liana-Wallet zuerst oben Seed-Phrasen zu (Prim&auml;r- oder Recovery-Pfad) &ndash; dann erscheinen hier zus&auml;tzlich die passenden Hardware-Wallets und Backups.</p></div>'; return h; }
+
+  var devs=lwDeviceIdxs(i);
+  h+='<div style="margin-top:8px;"><label class="form-label">Auf welchen Hardware-Wallets ist der Wallet-Descriptor registriert / gebackupt?</label>';
+  h+='<p class="mini-note">Es werden nur Ger&auml;te angezeigt, die mit den Seed-Phrasen dieses Liana-Wallets verkn&uuml;pft sind.</p>';
+  if(devs.length===0){ h+='<p class="mini-note">Keine Hardware-Wallets mit den Seeds dieses Liana-Wallets verkn&uuml;pft.</p>'; }
+  for(var d=0;d<devs.length;d++){ var di=devs[d]; var on=lw.dbDevices.indexOf(di)>=0; h+='<label class="chk-row"><input type="checkbox" '+(on?"checked":"")+' onchange="toggleLwDbDevice('+i+','+di+')"> '+deviceLabel(di)+'</label>'; }
+  h+='</div>';
+
+  var bks=lwBackupRefs(i);
+  h+='<div style="margin-top:10px;"><label class="form-label">Bei welchen Seed-Phrase-Backups liegt ein Wallet-Descriptor-Backup bei?</label>';
+  if(bks.length===0){ h+='<p class="mini-note">Keine Seed-Backups erfasst.</p>'; }
+  for(var b=0;b<bks.length;b++){ var bk=bks[b]; var onb=lw.dbBackups.indexOf(bk.key)>=0; h+='<label class="chk-row"><input type="checkbox" '+(onb?"checked":"")+' onchange="toggleLwDbBackup('+i+',\''+bk.key+'\')"> '+bk.label+'</label>'; }
+  h+='</div>';
+
+  h+='<div style="margin-top:10px;"><label class="form-label">Weitere Aufbewahrungsorte des Wallet-Descriptors</label>';
+  h+='<label class="chk-row"><input type="checkbox" '+(lw.dbPwm?"checked":"")+' onchange="toggleLwDbPwm('+i+')"> Im Passwort-Manager'+((state.pwm&&state.pwm.app)?(" ("+state.pwm.app+")"):"")+'</label>';
+  h+='<label class="chk-row"><input type="checkbox" '+(lw.dbBook?"checked":"")+' onchange="toggleLwDbBook('+i+')"> Im Passwort-Heft / Notizbuch</label>';
+  h+='<label class="chk-row"><input type="checkbox" '+(lw.descriptorInPasswordManager?"checked":"")+' onchange="toggleLwDescriptorInPwmDirect('+i+')"> Wallet-Descriptor selbst im Passwort-Manager gespeichert</label>';
+
+  var allDevLabels=[];
+  for(var dd=0;dd<state.devices.length;dd++){ allDevLabels.push({id:dd,label:deviceLabel(dd)}); }
+  if(allDevLabels.length){
+    h+='<div style="margin-top:8px;"><label class="form-label">Zus&auml;tzlich: Wallet-Descriptor auf Hardware-Wallet registriert (gegen Blind-Signing)?</label>';
+    for(var h2=0;h2<allDevLabels.length;h2++){ h+='<label class="chk-row"><input type="checkbox" '+(lw.descriptorLoadedOnHardwareWallets[allDevLabels[h2].id]?"checked":"")+' onchange="toggleLwDescriptorOnHwDirect('+i+',\''+allDevLabels[h2].id+'\')"> '+allDevLabels[h2].label+'</label>'; }
+  }
+  h+='</div>';
+
+  var st=lwDescStatus(i);
+  if(st.level==="ok"){
+    h+='<div style="margin-top:10px;color:#3a9a5a;font-size:0.8rem;">&#10004; Wallet-Descriptor ausreichend gesichert ('+st.covered+' von '+st.need+' Seed-Phrasen). Das ist sichergestellt.</div>';
+  } else if(st.level==="err"){
+    h+='<div style="margin-top:10px;color:#c98b8b;font-size:0.76rem;">Pflicht noch nicht erf&uuml;llt: erst '+st.covered+' von '+st.need+' n&ouml;tigen Seed-Phrasen vollst&auml;ndig gesichert. Details am Ende unter &bdquo;Tipps zur Bitcoin-Sicherheit&ldquo;.</div>';
+  } else {
+    h+='<div style="margin-top:10px;color:#9aa7b2;font-size:0.76rem;">Pflicht erf&uuml;llt, aber nicht jedes Backup hat einen Wallet-Descriptor. Empfehlung dazu am Ende unter &bdquo;Tipps zur Bitcoin-Sicherheit&ldquo;.</div>';
+  }
+  h+='<p class="mini-note" style="margin-top:8px;"><strong>Bei Verlust des Wallet-Descriptors ist die Wallet nicht wiederherstellbar</strong> &ndash; sichere ihn an mehreren Orten.</p>';
+  h+='</div>';
+  return h;
+}
+
 // ===== Timelock Recovery + RITREK App (presigned Transaction) =====
 function renderTimelock(){
   var h='<div class="section-card"><div class="section-card-body">';
@@ -2346,6 +2739,7 @@ function renderSummary(){
   h+='<li><span>'+L('seedsInMultisig')+'</span><span>'+ms+'</span></li>';
   h+='<li><span>'+L('passwordManager')+'</span><span>'+(state.pwm.use===true?(state.pwm.app||L('yes')):L('no'))+'</span></li>';
   h+='<li><span>'+L('timelockRecovery')+'</span><span>'+(state.timelock.use?(state.timelock.ritrek?L('timelockRitrek'):L('yes')):L('no'))+'</span></li>';
+  h+='<li><span>Liana Wallets</span><span>'+(anyLianaCompanion()?(state.lianaWallets.length+(state.lianaMode?" ("+(state.lianaMode==="multi"?"Multi-Sig":"Single-Sig")+")":"")):L('no'))+'</span></li>';
   h+='</ul>';
   h+='<button class="btn btn-pdf" onclick="buildAndPrint()" style="margin-top:28px;">'+L('createPDF')+'</button>';
   h+='<div style="text-align:center;margin-top:20px;">';
@@ -2523,6 +2917,18 @@ function buildRecommendations() {
       {text:'Sparrow Wallet', url:'https://sparrowwallet.com'},
       {text:'Specter Desktop', url:'https://specter.solutions'}
     ]});
+  }
+
+  // 8b. Kein automatischer Vererbungsmechanismus vorhanden
+  if (!anyLianaCompanion() && !state.timelock.use && !hasMultisig()) {
+    tips.push({
+      title: 'Automatischen Vererbungsmechanismus in Betracht ziehen',
+      body: 'Aktuell ist kein Mechanismus erfasst, der deinen Erben nach einer gewissen Zeit automatisch Zugriff ermöglicht (Multisig, Timelock Recovery oder eine Liana Wallet mit Recovery-Pfad). Ohne so einen Mechanismus hängt die Vererbung vollständig davon ab, dass Erben diesen Plan finden und korrekt anwenden. Liana Wallet erlaubt z. B. einen Recovery-Pfad, der nach festgelegter Inaktivität nutzbar wird – ohne den Primärschlüssel.',
+      links: [
+        {text: 'Liana Wallet', url: LIANA_WEBSITE},
+        {text: 'Timelock Recovery', url: TIMELOCK_WEBSITE}
+      ]
+    });
   }
 
   var NO_DISPLAY_MODELS = ['BitBox01'];
@@ -2887,8 +3293,6 @@ function descriptorBackupSection(i){
   return h;
 }
 
-function deviceLabel(d){ var dv=state.devices[d]; if(!dv) return ""; return "Gerät "+(d+1)+(dv.model?" &ndash; "+dv.model:" (kein Modell)"); }
-
 function renderSecurityRecs() {
   var tips = buildRecommendations();
   var regularTips = [];
@@ -3011,6 +3415,26 @@ function walletAccountsBlock(title, w, isPp){
   return h;
 }
 
+// Druckt die eigenen Seeds/Hot-Wallets/Custom-Keys/Personen(-Hardware-Wallets) eines Liana-Pfads.
+function pdfLwPathRows(p){
+  var h='';
+  var own=[]; for(var k=0;k<p.seeds.length;k++){ var sidx=p.seeds[k]; var sfp=(state.seeds[sidx]&&state.seeds[sidx].wallet&&state.seeds[sidx].wallet.fp)||""; own.push(seedName(sidx)+(sfp?" (FP: "+esc(sfp)+")":"")); }
+  var ohot=[]; for(var kh=0;kh<(p.hot||[]).length;kh++){ ohot.push(hotLabelById(p.hot[kh])); }
+  h+=fRow('Eigene Seed-Phrasen:', own.length?own.join(', '):null);
+  if(ohot.length) h+=fRow('Eigene Hot-Wallets:', ohot.join(', '));
+  if(p.custom) h+=fRow('Weitere Schl&uuml;ssel (eigene Angabe):', p.custom);
+  h+=fRow('Eigene Schl&uuml;ssel:', String(p.seeds.length+ohot.length));
+  h+=fRow('Externe Personen:', String(p.cosigners.length));
+  for(var ci=0;ci<p.cosigners.length;ci++){
+    var cs=p.cosigners[ci];
+    h+=fRow('Person '+(ci+1)+' (wem geh&ouml;rt die Hardware-Wallet):', cs.name||null);
+    h+=fRow('Person '+(ci+1)+' &ndash; Hardware-Wallet-Modell:', cs.hwModel||null);
+    if(state.offline && cs.xpub) h+=fRow('Person '+(ci+1)+' xPub:', cs.xpub);
+    else h+=eRow('Person '+(ci+1)+' xPub:');
+  }
+  return h;
+}
+
 // ===== PDF BUILD =====
 function buildAndPrint(){
   var h='';
@@ -3062,11 +3486,12 @@ function buildAndPrint(){
 
   // 2. Overview
   h+='<h2 class="pdf-h2">'+L('pdfOverview')+'</h2>';
-  h+='<table class="pdf-overview-table"><thead><tr><th>'+L('pdfOverviewTable')+'</th><th>'+L('pdfOvBackups')+'</th><th>'+L('pdfOvAccounts')+'</th><th>'+L('pdfOvPassphrases')+'</th><th>'+L('pdfOvMultisig')+'</th></tr></thead><tbody>';
-  if(state.seeds.length===0){ h+='<tr><td colspan="5" class="td-empty"></td></tr>'; }
+  var showLianaCol = state.lianaWallets.length>0;
+  h+='<table class="pdf-overview-table"><thead><tr><th>'+L('pdfOverviewTable')+'</th><th>'+L('pdfOvBackups')+'</th><th>'+L('pdfOvAccounts')+'</th><th>'+L('pdfOvPassphrases')+'</th><th>'+L('pdfOvMultisig')+'</th>'+(showLianaCol?'<th>Liana</th>':'')+'</tr></thead><tbody>';
+  if(state.seeds.length===0){ h+='<tr><td colspan="'+(showLianaCol?6:5)+'" class="td-empty"></td></tr>'; }
   for(var i=0;i<state.seeds.length;i++){
     var s=state.seeds[i];
-    h+='<tr><td>'+esc(s.name||("Seed #"+(i+1)))+'</td><td>'+s.backups.length+'</td><td>'+totalAccounts(s)+'</td><td>'+s.passphrases+'</td><td>'+(s.multisig?L('yes'):L('no'))+'</td></tr>';
+    h+='<tr><td>'+esc(s.name||("Seed #"+(i+1)))+'</td><td>'+s.backups.length+'</td><td>'+totalAccounts(s)+'</td><td>'+s.passphrases+'</td><td>'+(s.multisig?L('yes'):L('no'))+'</td>'+(showLianaCol?('<td>'+(seedInAnyLiana(i)?L('yes'):L('no'))+'</td>'):'')+'</tr>';
   }
   h+='</tbody></table>';
 
@@ -3264,6 +3689,50 @@ function buildAndPrint(){
         h+='<div style="font-size:9pt;font-weight:800;color:#0C1A27;margin:8pt 0 2pt;">'+L('pdfWalletDescriptorTitle')+'</div>';
         h+='<div style="font-family:monospace;font-size:7.5pt;color:#1a1a1a;word-break:break-all;border:1px solid #c8d6e2;border-radius:4px;padding:6pt;background:#fff;">'+esc(ms.descriptor)+'</div>';
         h+='<p class="pdf-tamper-note">'+L('pdfDescriptorNote')+'</p>';
+      }
+      h+='</div>';
+    }
+  }
+
+  // 9b. Liana Wallet
+  if(state.lianaWallets.length>0 && anyLianaCompanion()){
+    h+='<h2 class="pdf-h2">Liana Wallet'+(state.lianaMode?(" ("+(state.lianaMode==="multi"?"Multi-Sig":"Single-Sig")+")"):"")+'</h2>';
+    h+='<div class="pdf-ritrek-head"><a href="'+esc(LIANA_WEBSITE)+'"><img class="pdf-ritrek-logo" src="'+esc(LIANA_LOGO_URL)+'" alt="Liana Wallet" onerror="this.style.display=\'none\'"></a>';
+    h+='<span class="pdf-ritrek-head-text">Liana Wallet &ndash; '+esc(LIANA_WEBSITE)+'</span></div>';
+    h+='<p class="pdf-text">Liana kombiniert einen <strong>Prim&auml;rpfad</strong> (normales Ausgeben) mit einem oder mehreren <strong>Recovery-Pfaden</strong>, die erst nutzbar werden, wenn &uuml;ber den Prim&auml;rpfad eine festgelegte Zeit lang (Timelock) NICHT ausgegeben wurde. Erben ben&ouml;tigen NUR den passenden Recovery-Schl&uuml;ssel plus Geduld &ndash; nicht den Prim&auml;rschl&uuml;ssel. Ohne den <strong>Wallet-Descriptor</strong> ist die Wallet nicht wiederherstellbar, auch nicht mit allen Schl&uuml;sseln.</p>';
+    for(var li=0; li<state.lianaWallets.length; li++){
+      var lw=state.lianaWallets[li]; ensureLwDb(lw);
+      h+='<div class="pdf-wallet-block">';
+      h+='<div class="pdf-wallet-block-title">Liana Wallet '+(li+1)+(lw.name?" &ndash; "+esc(lw.name):"")+'</div>';
+
+      h+='<div class="pdf-field-label" style="font-size:8.5pt;margin:4pt 0 2pt;">Prim&auml;rpfad ('+lw.primary.m+' von '+lw.primary.n+')</div>';
+      h+=pdfLwPathRows(lw.primary);
+
+      for(var ri=0; ri<lw.recoveries.length; ri++){
+        var rec=lw.recoveries[ri];
+        h+='<div class="pdf-field-label" style="font-size:8.5pt;margin:8pt 0 2pt;">Recovery-Pfad '+(ri+1)+' ('+rec.m+' von '+rec.n+') &ndash; Timelock: '+lwTimelockLabel(rec)+'</div>';
+        h+=pdfLwPathRows(rec);
+      }
+
+      h+='<div class="pdf-field-label" style="font-size:8.5pt;margin:8pt 0 2pt;">Wallet-Descriptor &ndash; wo &uuml;berall hinterlegt:</div>';
+      if(state.offline){
+        var pdfDevs=[]; for(var pd=0; pd<(lw.dbDevices||[]).length; pd++){ if(state.devices[lw.dbDevices[pd]]) pdfDevs.push(deviceLabel(lw.dbDevices[pd])); }
+        if(pdfDevs.length) h+=fRow('Registriert auf HW:', pdfDevs.join(', '));
+        else h+=eRow('Registriert auf HW:');
+        var pdfBackups=[], pxall=lwBackupRefs(li);
+        for(var pb=0; pb<(lw.dbBackups||[]).length; pb++){ for(var pk=0; pk<pxall.length; pk++){ if(lw.dbBackups[pb]===pxall[pk].key){ pdfBackups.push(pxall[pk].label); break; } } }
+        if(pdfBackups.length) h+=fRow('Liegt bei Seed-Backups:', pdfBackups.join('; '));
+        else h+=eRow('Liegt bei Seed-Backups:');
+        h+=fRow('Liana Wallet speichert es selbst (lokal):', lw.dbLianaApp?'Ja':'Nein');
+        h+=fRow('Selbst im Passwort-Manager gespeichert:', lw.descriptorInPasswordManager?'Ja':'Nein');
+        h+=eRow('In welchen Passwortmanagern:'); h+=eRow('Weitere Orte:');
+      } else {
+        h+=eRow('Bei welchen Seed-Phrasen:'); h+=eRow('Auf welchen Ger&auml;ten:'); h+=eRow('In welchen Passwortmanagern:'); h+=eRow('Weitere Orte:');
+      }
+      if(state.offline && lw.descriptor){
+        h+='<div style="font-size:9pt;font-weight:800;color:#0C1A27;margin:8pt 0 2pt;">Wallet Descriptor</div>';
+        h+='<div style="font-family:monospace;font-size:7.5pt;color:#1a1a1a;word-break:break-all;border:1px solid #c8d6e2;border-radius:4px;padding:6pt;background:#fff;">'+esc(lw.descriptor)+'</div>';
+        h+='<p class="pdf-tamper-note">Mit diesem Descriptor l&auml;sst sich ein Watch-Only-Wallet einrichten &ndash; man sieht damit, wie viel Bitcoin vorhanden ist (Senden ist damit allein nicht m&ouml;glich).</p>';
       }
       h+='</div>';
     }
