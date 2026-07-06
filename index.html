@@ -2640,15 +2640,7 @@ function lwDescriptorBackupSection(i){
   }
   h+='</div>';
 
-  var st=lwDescStatus(i);
-  if(st.level==="ok"){
-    h+='<div style="margin-top:10px;color:#3a9a5a;font-size:0.8rem;">&#10004; Wallet-Descriptor ausreichend gesichert ('+st.covered+' von '+st.need+' Seed-Phrasen). Das ist sichergestellt.</div>';
-  } else if(st.level==="err"){
-    h+='<div style="margin-top:10px;color:#c98b8b;font-size:0.76rem;">Pflicht noch nicht erf&uuml;llt: erst '+st.covered+' von '+st.need+' n&ouml;tigen Seed-Phrasen vollst&auml;ndig gesichert. Details am Ende unter &bdquo;Tipps zur Bitcoin-Sicherheit&ldquo;.</div>';
-  } else {
-    h+='<div style="margin-top:10px;color:#9aa7b2;font-size:0.76rem;">Pflicht erf&uuml;llt, aber nicht jedes Backup hat einen Wallet-Descriptor. Empfehlung dazu am Ende unter &bdquo;Tipps zur Bitcoin-Sicherheit&ldquo;.</div>';
-  }
-  h+='<p class="mini-note" style="margin-top:8px;"><strong>Bei Verlust des Wallet-Descriptors ist die Wallet nicht wiederherstellbar</strong> &ndash; sichere ihn an mehreren Orten.</p>';
+  h+='<p class="mini-note" style="margin-top:8px;"><strong>Bei Verlust des Wallet-Descriptors ist die Wallet nicht wiederherstellbar</strong> &ndash; sichere ihn an mehreren Orten. Eine Einsch&auml;tzung, ob das ausreichend abgedeckt ist, findest du am Ende unter &bdquo;Tipps zur Bitcoin-Sicherheit&ldquo;.</p>';
   h+='</div>';
   return h;
 }
@@ -2929,6 +2921,30 @@ function buildRecommendations() {
         {text: 'Timelock Recovery', url: TIMELOCK_WEBSITE}
       ]
     });
+  }
+
+  // 8c. Liana: Wallet-Descriptor-Backup-Abdeckung (nur Offline-Modus, nur als End-Empfehlung,
+  // keine direkte Inline-Rueckmeldung im Liana-Schritt selbst).
+  if (state.offline && state.lianaWallets.length > 0 && anyLianaCompanion()) {
+    for (var lb8c = 0; lb8c < state.lianaWallets.length; lb8c++) {
+      var lwb8c = state.lianaWallets[lb8c];
+      if (lwAllSeedIdxs(lb8c).length === 0) continue;
+      var stlw8c = lwDescStatus(lb8c);
+      var lwLabel8c = esc(lwb8c.name || ('Liana Wallet ' + (lb8c + 1)));
+      if (stlw8c.level === 'err') {
+        tips.push({
+          title: 'Liana Wallet „' + lwLabel8c + '": Wallet-Descriptor sichern',
+          body: stlw8c.msg + ' Optionen: auf Hardware-Wallets registrieren, Seed-Backups beilegen, im Passwort-Manager speichern, oder die Liana Wallet selbst lokal speichern lassen.',
+          warn: true
+        });
+      } else if (stlw8c.level === 'warn') {
+        tips.push({
+          title: 'Liana Wallet „' + lwLabel8c + '": Wallet-Descriptor bei allen Backups ergänzen',
+          body: stlw8c.msg,
+          warn: true
+        });
+      }
+    }
   }
 
   var NO_DISPLAY_MODELS = ['BitBox01'];
