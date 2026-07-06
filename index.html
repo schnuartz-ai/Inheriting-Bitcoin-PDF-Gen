@@ -2947,6 +2947,17 @@ function buildRecommendations() {
     }
   }
 
+  // 8d. Liana ohne Taproot -> Privacy-Hinweis (Tapscript)
+  if (state.lianaWallets.length > 0 && anyLianaCompanion() && state.addrTypes.indexOf('Taproot (bc1p…)') < 0) {
+    tips.push({
+      title: 'Privatsph&auml;re: Liana Wallet mit Taproot statt Native SegWit nutzen',
+      body: 'Deine Liana Wallet nutzt aktuell kein Taproot-Adressformat. Bei Taproot wird die Miniscript-Policy als sogenannter <strong>Tapscript</strong>-Baum abgelegt: Beim Ausgeben wird nur der tats&auml;chlich genutzte Spending Path (z.&thinsp;B. der Prim&auml;rpfad) auf der Blockchain sichtbar &ndash; alle anderen Pfade (z.&thinsp;B. die Recovery-Pfade samt deren Schl&uuml;sseln und Timelocks) bleiben verborgen, solange sie nicht verwendet werden. Ohne Taproot (z.&thinsp;B. bei Native SegWit/wsh) wird dagegen bei jeder Ausgabe die <strong>komplette Policy inkl. aller Pfade</strong> offengelegt &ndash; unabh&auml;ngig davon, welcher Pfad tats&auml;chlich genutzt wird. Das verr&auml;t Au&szlig;enstehenden mehr &uuml;ber deine Vererbungsstruktur (Anzahl Recovery-Pfade, Timelocks, beteiligte Schl&uuml;ssel) als n&ouml;tig. Empfehlung: Taproot-Adressformat aktivieren.',
+      links: [
+        {text: 'Liana Wallet', url: LIANA_WEBSITE}
+      ]
+    });
+  }
+
   var NO_DISPLAY_MODELS = ['BitBox01'];
   var noDisplayFound = [];
   for (var i = 0; i < state.devices.length; i++) {
