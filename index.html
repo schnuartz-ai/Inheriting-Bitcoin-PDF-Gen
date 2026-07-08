@@ -479,6 +479,8 @@ var STRINGS = {
     offlineHeaderAvailable:"Offline available",
     offlineHeaderReadyNow:"Ready for offline",
     offlineHeaderReady:"Offline ready",
+    offlineHeaderNotCachedYet:"Click to prepare for offline use",
+    offlineHeaderCachedOnline:"Already cached – will activate once you're offline",
     offlinePreloadUnsupported:"Offline caching is not supported in this browser.",
     offlineWarningStrong:'Best to enter only offline',
     offlineWarningText:"These are <b>not</b> seed phrases or PINs. They are data (e.g. xPub or wallet descriptor) with which one can <b>see how much Bitcoin</b> is on your wallet – but nobody can spend anything with this. Ideally enter only on a device without internet.",
@@ -857,6 +859,8 @@ var STRINGS = {
     offlineHeaderAvailable:'Jetzt offline verfügbar',
     offlineHeaderReadyNow:'Jetzt ready for offline',
     offlineHeaderReady:'Offline bereit',
+    offlineHeaderNotCachedYet:'Klicken, um für Offline-Nutzung vorzubereiten',
+    offlineHeaderCachedOnline:'Bereits zwischengespeichert – aktiv, sobald du offline bist',
     offlinePreloadUnsupported:'Offline-Caching wird von diesem Browser nicht unterstützt.',
     offlineWarningStrong:'Am besten nur offline eingeben',
     offlineWarningText:'Das sind <b>keine</b> Seed-Phrasen oder PINs. Es sind Daten (z. B. xPub oder Wallet-Descriptor), mit denen man <b>sehen kann, wie viel Bitcoin</b> auf deiner Wallet liegt – allein damit kann aber niemand etwas ausgeben. Gib sie idealerweise nur auf einem Gerät ohne Internet ein.',
@@ -1589,7 +1593,7 @@ function refreshOfflineHeaderStatus(){
     badge.classList.remove('is-checking');
     text.textContent=L('offlineHeaderAvailable');
     check.hidden = true;
-    badge.title=L('offlinePreloadStart');
+    badge.title=L('offlineHeaderNotCachedYet');
     return false;
   };
   if(!('navigator' in window) || !('serviceWorker' in navigator) || !('caches' in window)){
@@ -1618,7 +1622,7 @@ function refreshOfflineHeaderStatus(){
     badge.classList.remove('is-ready');
     text.textContent=L('offlineHeaderAvailable');
     check.hidden = true;
-    badge.title=L('offlinePreloadStart');
+    badge.title = (cacheReady && swReady) ? L('offlineHeaderCachedOnline') : L('offlineHeaderNotCachedYet');
     return false;
   }).catch(function(){ return setAvailable(); });
 }
