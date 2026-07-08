@@ -2802,15 +2802,15 @@ function toggleSaveInfo(btn) {
 // Info-Button, der fuenf Wege zeigt, den fertigen Plan sicher zu hinterlegen.
 function togglePostPdfStorage(btn){ var box=btn.nextElementSibling; if(!box) return; box.style.display = box.style.display === "block" ? "none" : "block"; }
 function renderPostPdfStorageBlock(){
-  if(!state.postPdfStorageVisible) return '';
-  var h='<div id="post-pdf-storage" style="text-align:center;margin-top:20px;">';
+  var h='<div id="post-pdf-storage" style="text-align:center;margin-top:20px;display:'+(state.postPdfStorageVisible?'block':'none')+';">';
+  h+='<div style="display:inline-block;width:100%;max-width:780px;padding:16px 18px;border:1px solid #2a3a4a;border-radius:var(--radius);background:linear-gradient(180deg, rgba(12,26,39,0.98), rgba(4,7,11,0.98));box-shadow:0 10px 28px rgba(0,0,0,0.22);">';
   h+='<button class="btn btn-subtle" type="button" onclick="togglePostPdfStorage(this)">'+L('postPdfBtn')+'</button>';
-  h+='<div class="post-pdf-storage-box" style="display:none;text-align:left;background:#f7f9fb;border:1px solid #d8e2ec;border-radius:12px;padding:14px 16px;margin-top:10px;color:#2a2a2a;line-height:1.6;font-size:0.8rem;">';
-  h+='<p style="margin:0 0 10px;font-weight:700;color:#0C1A27;">'+L('postPdfTitle')+'</p>';
-  h+='<ul style="margin:0 0 12px;padding-left:18px;">';
-  for(var s=1;s<=5;s++){ h+='<li><strong>'+L('postPdfStep'+s+'Title')+'</strong><br>'+L('postPdfStep'+s+'Body')+'</li>'; }
-  h+='</ul>';
-  h+='</div></div>';
+  h+='<div class="post-pdf-storage-box" style="display:none;text-align:left;margin-top:14px;color:var(--specter-light);line-height:1.65;font-size:0.84rem;">';
+  h+='<p style="margin:0 0 12px;color:var(--specter-light-secondary);font-weight:700;">'+L('postPdfTitle')+'</p>';
+  h+='<ol style="margin:0;padding-left:22px;">';
+  for(var s=1;s<=5;s++){ h+='<li style="margin:0 0 10px;"><strong>'+L('postPdfStep'+s+'Title')+'</strong><br><span style="color:var(--specter-light-secondary);">'+L('postPdfStep'+s+'Body')+'</span></li>'; }
+  h+='</ol>';
+  h+='</div></div></div>';
   return h;
 }
 
