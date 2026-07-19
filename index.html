@@ -204,6 +204,10 @@ select.form-control option { background: var(--specter-dark-accent); }
   .radio-group { gap: 8px; }
   .radio-btn { padding: 8px 12px; font-size: 0.82rem; }
   .warning-banner { padding: 12px 14px; gap: 10px; }
+  /* 16px verhindert Auto-Zoom bei Fokus auf iOS Safari (alles darunter loest den Zoom aus). */
+  .form-control, select.form-control, textarea.form-control { font-size: 16px; }
+  /* Touch-Targets auf min. 44px anheben (Zaehler fuer Geraete/Seeds/Accounts/Backups/Cosigner). */
+  .count-pill { width: 44px; height: 44px; }
 }
 
 /* ===== WIZARD ADDITIONS ===== */
@@ -690,7 +694,7 @@ var STRINGS = {
     pdfRitrekWarning:'The RITREK App is used exclusively for PSBT coordination. Seed phrases and sensitive data remain exclusively on the hardware.',
     pdfBip85Empty:'Derivation via BIP85 (from which seed phrase?):',
     pdfBip85Label:'BIP85 derivation:',
-    pdfBip85Val:function(nm,idx){ return 'BIP85 from '+(nm||'Seed ?')+(idx!=null&&idx!==''?' / Index '+idx:''); },
+    pdfBip85Val:function(nm,idx,words){ return 'BIP85 from '+(nm||'Seed ?')+(idx!=null&&idx!==''?' / Index '+idx:'')+(words?' / '+words+' words':''); },
     pdf2FALabel:'2FA type (check):',
     pdf2FAOptions:'&#9744; Authenticator App / TOTP (e.g. Google Authenticator) &nbsp;&nbsp; &#9744; SMS &nbsp;&nbsp; &#9744; Email &nbsp;&nbsp; &#9744; Hardware Key (e.g. YubiKey, BitBox) &nbsp;&nbsp; &#9744; Other',
     pdfStoreDoc:'in this document (handwritten)',
@@ -752,6 +756,37 @@ var STRINGS = {
     ctaTitle:'Get personalised professional advice',
     ctaBody:'Book a free 15-minute call in which we analyse your Bitcoin security setup and discuss how you can strategically improve both your inheritance plan and overall Bitcoin security.',
     ctaBtn:'Book Free Initial Consulting',
+    antiPhishNotSupported:function(model){ return 'ℹ '+model+' does not show anti-phishing words when unlocking – this field is left out of the PDF for this device.'; },
+    customNameLabel:'Name (free text)', customNamePh:'e.g. your own / another one',
+    companionOptionalNote:'ℹ The app entered here is <strong>not required</strong> to access the wallet later – it only documents what you currently use. Any software that supports the same standard (BIP32/39/44/49/84, PSBT, and the matching wallet descriptor if needed) works just as well, even if the plan names a different app.',
+    pdfCompanionOptionalNote:'This app is not required – any compatible software (e.g. Sparrow, Specter Desktop) works just as well, even if a different app is named here.',
+    pdfTEBagMetal:'Tamper-Evident Bag / Seal Number',
+    bagDigitalMetal:'Add tamper-evident bag / seal number here',
+    pdfLockGlossaryTitle:'🔒 Lock icon',
+    pdfLockGlossaryBody:'Marks fields with especially sensitive data (PIN, password, passphrase). Fill in by hand only – never store digitally, photograph, or type in.',
+    incompleteTitle:function(n){ return 'Not yet fully filled in ('+n+')'; },
+    incompleteHint:'These items are still missing – click to jump straight to the relevant step.',
+    incDevNoModel:function(n){ return 'Device '+n+': no model selected'; },
+    incDevNoModelCustom:function(n){ return 'Device '+n+': model name missing ("Other")'; },
+    incCompNoApp:function(d,c){ return 'Device '+d+', companion app '+c+': no app selected'; },
+    incCompNoAppCustom:function(d,c){ return 'Device '+d+', companion app '+c+': app name missing ("Other")'; },
+    incMetalNoBrand:function(seed,b){ return seed+', backup '+b+': no metal-backup brand selected'; },
+    incMetalNoBrandCustom:function(seed,b){ return seed+', backup '+b+': brand name missing ("Other")'; },
+    incScNoCard:function(seed,b){ return seed+', backup '+b+': no smartcard selected'; },
+    incSwNoApp:function(n){ return 'Computer wallet '+n+': no app selected'; },
+    incSwNoAppCustom:function(n){ return 'Computer wallet '+n+': app name missing ("Other")'; },
+    incSwPhoneNoApp:function(n){ return 'Smartphone wallet '+n+': no app selected'; },
+    incSwPhoneNoAppCustom:function(n){ return 'Smartphone wallet '+n+': app name missing ("Other")'; },
+    incExNoName:function(n){ return 'Exchange '+n+': no service selected'; },
+    incExNoNameCustom:function(n){ return 'Exchange '+n+': name missing ("Other")'; },
+    incPwmNoApp:'Password manager: no app selected',
+    incPwmNoAppCustom:'Password manager: app name missing ("Other")',
+    incMsKeys:function(name,have,need){ return name+': only '+have+' of '+need+' keys assigned so far'; },
+    incMsCosignerNoName:function(name,n){ return name+', cosigner '+n+': no name entered'; },
+    incTimelockNoFrom:'Timelock / Wallet Recovery: no source wallet selected',
+    incTimelockNoTo:'Timelock / Wallet Recovery: no destination wallet selected',
+    incTimelockNoCustom:'Timelock / Wallet Recovery: destination name missing ("Other")',
+    swWordsCount:function(n){ return n+' words'; },
   },
   de:{
     pageTitle:'Bitcoin-Nachlassplan – ClavaStack',
@@ -1069,7 +1104,7 @@ var STRINGS = {
     pdfRitrekWarning:'Die RITREK App dient ausschliesslich der Koordination von PSBTs. Seed-Phrasen und sensible Daten bleiben ausschliesslich auf der Hardware.',
     pdfBip85Empty:'Ableitung via BIP85 (aus welcher Seed-Phrase?):',
     pdfBip85Label:'BIP85-Ableitung:',
-    pdfBip85Val:function(nm,idx){ return 'BIP85 aus '+(nm||'Seed ?')+(idx!=null&&idx!==''?' / Index '+idx:''); },
+    pdfBip85Val:function(nm,idx,words){ return 'BIP85 aus '+(nm||'Seed ?')+(idx!=null&&idx!==''?' / Index '+idx:'')+(words?' / '+words+' Wörter':''); },
     pdf2FALabel:'2FA-Art (ankreuzen):',
     pdf2FAOptions:'&#9744; Authenticator-App / TOTP (z.&thinsp;B. Google Authenticator) &nbsp;&nbsp; &#9744; SMS &nbsp;&nbsp; &#9744; E-Mail &nbsp;&nbsp; &#9744; Hardware-Key (z.&thinsp;B. YubiKey, BitBox) &nbsp;&nbsp; &#9744; Andere',
     pdfStoreDoc:'in diesem Dokument (handschriftlich)',
@@ -1131,6 +1166,37 @@ var STRINGS = {
     ctaTitle:'Hol dir auf dich zugeschnittene professionelle Beratung',
     ctaBody:'Buche ein kostenloses 15-min&uuml;tiges Gespr&auml;ch, in dem wir deine Bitcoin-Sicherheit analysieren und strategisch besprechen, wie du deine Vererbungsl&ouml;sung und deinen Bitcoin-Schutz gezielt verbessern kannst.',
     ctaBtn:'Kostenloses Erstgespr&auml;ch buchen',
+    antiPhishNotSupported:function(model){ return 'ℹ '+model+' zeigt beim Entsperren keine Anti-Phishing-W&ouml;rter an – im PDF entf&auml;llt dieses Feld daher f&uuml;r dieses Ger&auml;t.'; },
+    customNameLabel:'Name (frei eintragen)', customNamePh:'z.&thinsp;B. eigene/andere',
+    companionOptionalNote:'ℹ Die hier eingetragene App ist <strong>nicht zwingend erforderlich</strong>, um sp&auml;ter auf die Wallet zuzugreifen – sie dokumentiert nur, was du aktuell nutzt. Jede Software, die den gleichen Standard beherrscht (BIP32/39/44/49/84, PSBT, ggf. den passenden Wallet-Descriptor), funktioniert ebenso, auch wenn im Nachlassplan eine andere App genannt ist.',
+    pdfCompanionOptionalNote:'Diese App ist nicht zwingend erforderlich – jede zum Ger&auml;t kompatible Software (z.&thinsp;B. Sparrow, Specter Desktop) funktioniert ebenso, auch wenn hier eine andere App genannt ist.',
+    pdfTEBagMetal:'Tamper-Evident-Bag / Siegelnummer',
+    bagDigitalMetal:'Tamper-Evident-Bag-/Siegelnummer hier eintragen',
+    pdfLockGlossaryTitle:'&#128274; Schloss-Symbol',
+    pdfLockGlossaryBody:'Kennzeichnet Felder mit besonders sensiblen Angaben (PIN, Passwort, Passphrase). Diese ausschlie&szlig;lich handschriftlich eintragen – niemals digital speichern, fotografieren oder abtippen.',
+    incompleteTitle:function(n){ return 'Noch nicht vollst&auml;ndig ausgef&uuml;llt ('+n+')'; },
+    incompleteHint:'Diese Punkte fehlen noch – klicke, um direkt zum jeweiligen Schritt zu springen.',
+    incDevNoModel:function(n){ return 'Ger&auml;t '+n+': kein Modell ausgew&auml;hlt'; },
+    incDevNoModelCustom:function(n){ return 'Ger&auml;t '+n+': Modellbezeichnung fehlt ("Andere")'; },
+    incCompNoApp:function(d,c){ return 'Ger&auml;t '+d+', Companion-App '+c+': keine App ausgew&auml;hlt'; },
+    incCompNoAppCustom:function(d,c){ return 'Ger&auml;t '+d+', Companion-App '+c+': App-Name fehlt ("Andere")'; },
+    incMetalNoBrand:function(seed,b){ return seed+', Backup '+b+': keine Metal-Backup-Marke ausgew&auml;hlt'; },
+    incMetalNoBrandCustom:function(seed,b){ return seed+', Backup '+b+': Marke fehlt ("Andere")'; },
+    incScNoCard:function(seed,b){ return seed+', Backup '+b+': keine Smartcard ausgew&auml;hlt'; },
+    incSwNoApp:function(n){ return 'Computer-Wallet '+n+': keine App ausgew&auml;hlt'; },
+    incSwNoAppCustom:function(n){ return 'Computer-Wallet '+n+': App-Name fehlt ("Andere")'; },
+    incSwPhoneNoApp:function(n){ return 'Smartphone-Wallet '+n+': keine App ausgew&auml;hlt'; },
+    incSwPhoneNoAppCustom:function(n){ return 'Smartphone-Wallet '+n+': App-Name fehlt ("Andere")'; },
+    incExNoName:function(n){ return 'B&ouml;rse '+n+': kein Dienst ausgew&auml;hlt'; },
+    incExNoNameCustom:function(n){ return 'B&ouml;rse '+n+': Name fehlt ("Andere")'; },
+    incPwmNoApp:'Passwortmanager: keine App ausgew&auml;hlt',
+    incPwmNoAppCustom:'Passwortmanager: Name fehlt ("Andere")',
+    incMsKeys:function(name,have,need){ return name+': erst '+have+' von '+need+' Schl&uuml;sseln zugeordnet'; },
+    incMsCosignerNoName:function(name,n){ return name+', Cosigner '+n+': kein Name eingetragen'; },
+    incTimelockNoFrom:'Timelock / Wallet Recovery: keine Quell-Wallet ausgew&auml;hlt',
+    incTimelockNoTo:'Timelock / Wallet Recovery: keine Ziel-Wallet ausgew&auml;hlt',
+    incTimelockNoCustom:'Timelock / Wallet Recovery: Ziel-Bezeichnung fehlt ("Andere")',
+    swWordsCount:function(n){ return n+' W&ouml;rter'; },
   }
 };
 
@@ -1187,13 +1253,15 @@ function updateHeaderLang(){
 }
 
 // ===== DATEN =====
+// antiPhish:true = Geraet zeigt beim PIN-Entsperren eigene Anti-Phishing-Woerter an (recherchiert: Coldcard-, Specter- und Passport-Dokumentation).
+// Ledger, Trezor, BitBox02, Jade, Keepkey, SeedSigner und Krux haben laut offizieller Doku KEIN wortbasiertes Anti-Phishing-Feature.
 var HW_MODELS = [
-  {label:"Specter DIY Snapcase", url:"https://specter.solutions", img:"assets/products/specter-diy.png", specter:true,  shield:false},
-  {label:"Specter Shield Lite",   url:"https://specter.solutions", img:"assets/products/specter-shield-lite.png",  specter:true,  shield:true},
-  {label:"Specter Shield",        url:"https://specter.solutions", img:"assets/products/specter-shield.png",       specter:true,  shield:true},
-  {label:"Coldcard Mk4",          url:"https://coldcard.com",      img:"assets/products/hw-coldcard-mk4.webp"},
-  {label:"Coldcard Q",            url:"https://coldcard.com",      img:"assets/products/hw-coldcard-q.webp"},
-  {label:"Coldcard",              url:"https://coldcard.com",      img:"assets/products/hw-coldcard.png"},
+  {label:"Specter DIY Snapcase", url:"https://specter.solutions", img:"assets/products/specter-diy.png", specter:true,  shield:false, antiPhish:true},
+  {label:"Specter Shield Lite",   url:"https://specter.solutions", img:"assets/products/specter-shield-lite.png",  specter:true,  shield:true, antiPhish:true},
+  {label:"Specter Shield",        url:"https://specter.solutions", img:"assets/products/specter-shield.png",       specter:true,  shield:true, antiPhish:true},
+  {label:"Coldcard Mk4",          url:"https://coldcard.com",      img:"assets/products/hw-coldcard-mk4.webp", antiPhish:true},
+  {label:"Coldcard Q",            url:"https://coldcard.com",      img:"assets/products/hw-coldcard-q.webp", antiPhish:true},
+  {label:"Coldcard",              url:"https://coldcard.com",      img:"assets/products/hw-coldcard.png", antiPhish:true},
   {label:"Ledger Nano S",         url:"https://www.ledger.com",    img:"assets/products/hw-ledger.png"},
   {label:"Ledger Nano S Plus",    url:"https://www.ledger.com",    img:"assets/products/hw-ledger-nano-s-plus.webp"},
   {label:"Ledger Nano X",         url:"https://www.ledger.com",    img:"assets/products/hw-ledger.png"},
@@ -1207,12 +1275,12 @@ var HW_MODELS = [
 
   {label:"SeedSigner",            url:"https://seedsigner.com",    img:"assets/products/hw-seedsigner.webp"},
   {label:"Krux",                  url:"https://selfcustody.github.io/krux", img:"assets/products/hw-krux.webp"},
-  {label:"Passport Core",         url:"https://foundationdevices.com", img:"assets/products/hw-passport-core.webp"},
-  {label:"Passport Prime",        url:"https://foundationdevices.com", img:"assets/products/hw-passport-prime.webp"},
+  {label:"Passport Core",         url:"https://foundationdevices.com", img:"assets/products/hw-passport-core.webp", antiPhish:true},
+  {label:"Passport Prime",        url:"https://foundationdevices.com", img:"assets/products/hw-passport-prime.webp", antiPhish:true},
   {label:"Blockstream Jade",      url:"https://blockstream.com/jade", img:"assets/products/hw-jade.webp"},
   {label:"Blockstream Jade Plus", url:"https://blockstream.com/jade", img:"assets/products/hw-jade-plus.webp"},
   {label:"Keepkey",               url:"https://www.keepkey.com",   img:"assets/products/hw-keepkey.png"},
-  {label:"Andere",                url:"",                          img:"assets/products/hw-generic.png"}
+  {label:"Andere",                url:"",                          img:"assets/products/hw-generic.png", antiPhish:true}
 ];
 // Von ClavaStack empfohlene Kauf-Stellen zuerst, danach die zuvor gelisteten Boersen. kyc:true = mit Verifizierung.
 // hasSeed:true = Dienst hat eigene self-custodial Wallet mit Seedphrase. custodial:true = kein Seed, nur Account-Recovery.
@@ -1263,6 +1331,12 @@ var COMPANION_APPS = [
   {label:"Bull Bitcoin",    url:"https://www.bullbitcoin.com", img:"assets/apps/bull-bitcoin.webp"},
   {label:"BlueWallet",      url:"https://bluewallet.io",       img:"assets/apps/bluewallet.webp"},
   {label:"Bitcoin Keeper",  url:"https://bitcoinkeeper.app",   img:"assets/apps/bitcoin-keeper.png"},
+  // Herstellereigene Companion-Apps (nur mit dem jeweiligen Geraet des Herstellers nutzbar).
+  {label:"BitBoxApp (BitBox)",   url:"https://bitbox.swiss/bitboxapp/",      img:""},
+  {label:"Trezor Suite",         url:"https://trezor.io/trezor-suite",       img:""},
+  {label:"Ledger Live",          url:"https://www.ledger.com/ledger-live",   img:""},
+  {label:"Foundation Envoy (Passport)", url:"https://foundationdevices.com/envoy/", img:""},
+  {label:"Blockstream Green (Jade)",    url:"https://blockstream.com/green", img:""},
   {label:"Andere",          url:"",                            img:""}
 ];
 function getCompanion(label){ for(var i=0;i<COMPANION_APPS.length;i++){ if(COMPANION_APPS[i].label===label) return COMPANION_APPS[i]; } return null; }
@@ -1359,12 +1433,12 @@ function defaultState(){ return {
   devices: [],
   seeds: [],
   addrTypes: [ADDR_DEFAULT],
-  sw: {pc:0, phone:0, pcModels:[], phoneModels:[], pcB85:[], pcSeed:[], pcIdx:[], pcWords:[], phoneB85:[], phoneSeed:[], phoneIdx:[], phoneWords:[]},
-  ex: {count:0, names:[]},
+  sw: {pc:0, phone:0, pcModels:[], pcModelsCustom:[], phoneModels:[], phoneModelsCustom:[], pcB85:[], pcSeed:[], pcIdx:[], pcWords:[], phoneB85:[], phoneSeed:[], phoneIdx:[], phoneWords:[]},
+  ex: {count:0, names:[], namesCustom:[]},
   multisigs: [],
   lianaMode: null,      // null = unbeantwortet, "single" = Liana Single-Sig, "multi" = Liana Multi-Sig
   lianaWallets: [],
-  pwm: {use:null, app:""},
+  pwm: {use:null, app:"", appCustom:""},
   book: {use:null},
   dig: {use:null, enc:null},
   timelock: {use:false, ritrek:false, fromW:"", toW:"", toCustom:"", store:{ritrek:false, pwm:false, other:""}},
@@ -1427,6 +1501,7 @@ function ensureArrayLen(arr, len, fill) {
 function isValidFingerprint(v){ return /^[0-9A-Fa-f]{8}$/.test((v || '').trim()); }
 function syncSwKind(kind, len) {
  state.sw[kind + 'Models'] = ensureArrayLen(state.sw[kind + 'Models'], len, '');
+ state.sw[kind + 'ModelsCustom'] = ensureArrayLen(state.sw[kind + 'ModelsCustom'], len, '');
  state.sw[kind + 'B85'] = ensureArrayLen(state.sw[kind + 'B85'], len, false);
  state.sw[kind + 'Seed'] = ensureArrayLen(state.sw[kind + 'Seed'], len, '');
  state.sw[kind + 'Idx'] = ensureArrayLen(state.sw[kind + 'Idx'], len, '');
@@ -1446,12 +1521,16 @@ function swMeta(kind, i) {
  words: (state.sw[kind + 'Words'] || [])[i] || 12
  };
 }
-function hotWalletList(){ var out=[]; for(var i=0;i<state.sw.pc;i++){ out.push({id:"pc-"+i, label:(state.sw.pcModels[i]||("Computer-Wallet "+(i+1)))+" (PC)"}); } for(var j=0;j<state.sw.phone;j++){ out.push({id:"phone-"+j, label:(state.sw.phoneModels[j]||("Smartphone-Wallet "+(j+1)))+" (Handy)"}); } return out; }
+function swModelName(kind,i){ var raw=(state.sw[kind+"Models"]||[])[i]||""; var custom=(state.sw[kind+"ModelsCustom"]||[])[i]||""; return (raw==="Andere" && custom) ? custom : raw; }
+function hotWalletList(){ var out=[]; for(var i=0;i<state.sw.pc;i++){ out.push({id:"pc-"+i, label:(swModelName("pc",i)||("Computer-Wallet "+(i+1)))+" (PC)"}); } for(var j=0;j<state.sw.phone;j++){ out.push({id:"phone-"+j, label:(swModelName("phone",j)||("Smartphone-Wallet "+(j+1)))+" (Handy)"}); } return out; }
 function hotLabelById(id){ var l=hotWalletList(); for(var i=0;i<l.length;i++){ if(l[i].id===id) return l[i].label; } return id; }
 function seedName(i){ var s=state.seeds[i]; return s ? (s.name||("Seed #"+(i+1))) : ("Seed #"+(i+1)); }
-function newDevice(){ return {model:"", smartcards:0, smartcardNames:[], companions:[]}; }
-function newCompanion(){ return {app:"", platform:"", model:""}; }
-function newBackup(){ return {type:"paper", brand:"", smartcard:"", bagDigital:true, bagNo:"", descriptorWithBackup:false}; }
+function newDevice(){ return {model:"", modelCustom:"", smartcards:0, smartcardNames:[], companions:[]}; }
+function newCompanion(){ return {app:"", appCustom:"", platform:"", model:""}; }
+function newBackup(){ return {type:"paper", brand:"", brandCustom:"", smartcard:"", bagDigital:true, bagNo:"", descriptorWithBackup:false}; }
+function deviceModelName(dv){ return (dv && dv.model==="Andere" && dv.modelCustom) ? dv.modelCustom : (dv?dv.model:""); }
+function companionAppName(cp){ return (cp && cp.app==="Andere" && cp.appCustom) ? cp.appCustom : (cp?cp.app:""); }
+function backupBrandName(bk){ return (bk && bk.brand==="Andere" && bk.brandCustom) ? bk.brandCustom : (bk?bk.brand:""); }
 // Jede Passphrase ist ein eigenes Wallet mit eigenen Accounts.
 // Adressformat-Index (0=Native,1=Taproot,2=Nested,3=Legacy). Accounts werden je Format gruppiert.
 function availIdx(){ var out=[]; for(var i=0;i<ADDR_TYPES.length;i++){ if(state.addrTypes.indexOf(ADDR_TYPES[i])>=0) out.push(i); } if(!out.length)out.push(0); return out; }
@@ -1459,7 +1538,7 @@ function defFmt(){ return availIdx()[0]; }
 function newWallet(){ var d=defFmt(); var o={fp:"",fmts:[d],acc:{},pur:{}}; o.acc[d]=1; o.pur[d]=[]; return o; }
 function walletOf(i,p){ var s=state.seeds[i]; return p<0 ? s.wallet : s.pp[p]; }
 function totalAccounts(s){ var t=0; var ws=[s.wallet]; for(var p=0;p<s.pp.length;p++) ws.push(s.pp[p]); for(var w=0;w<ws.length;w++){ var ww=ws[w]; for(var f=0;f<ww.fmts.length;f++){ t+=(ww.acc[ww.fmts[f]]||1); } } return t; }
-function newSeed(){ return {name:"", backups:[newBackup()], devices:[], deviceOpts:{}, wallet:newWallet(), passphrases:0, pp:[], multisig:false}; }
+function newSeed(){ return {name:"", backups:[newBackup()], devices:[], deviceOpts:{}, wallet:newWallet(), passphrases:0, pp:[]}; }
 function devOpt(s,d){ if(!s.deviceOpts) s.deviceOpts={}; if(!s.deviceOpts[d]) s.deviceOpts[d]={pin:false, withSc:false, sc:"", sdCard:false}; return s.deviceOpts[d]; }
 
 // Seed-Phrase- / Passphrase- / Account-Strukturen – fuer das presigned-Transaction-Dropdown (Timelock Recovery / RITREK).
@@ -1477,15 +1556,16 @@ function seedStructures(){
   return out;
 }
 function multisigLabels(){ var o=[]; for(var i=0;i<state.multisigs.length;i++){ var ms=state.multisigs[i]; o.push(Lf('pdfMsLabel',ms.name,i,ms.m,ms.n)); } return o; }
+function seedInMultisig(si){ for(var i=0;i<state.multisigs.length;i++){ if(state.multisigs[i].seeds.indexOf(si)>=0) return true; } return false; }
 function softwareWalletLabels(){ var o=[]; var h=hotWalletList(); for(var i=0;i<h.length;i++) o.push(h[i].label); return o; }
 function deviceLabels(){ var o=[]; for(var d=0;d<state.devices.length;d++) o.push(deviceLabel(d)); return o; }
-function exchangeLabels(){ var o=[]; for(var i=0;i<state.ex.count;i++){ o.push(Lf('pdfExLabel',state.ex.names[i],i)); } return o; }
+function exchangeLabels(){ var o=[]; for(var i=0;i<state.ex.count;i++){ o.push(Lf('pdfExLabel',exDisplayName(i),i)); } return o; }
 function ogOpts(label,arr,sel){ if(!arr.length) return ""; var h='<optgroup label="'+esc(label)+'">'; for(var i=0;i<arr.length;i++){ h+='<option value="'+esc(arr[i])+'"'+(arr[i]===sel?" selected":"")+'>'+esc(arr[i])+'</option>'; } return h+'</optgroup>'; }
 function timelockSourceOpts(sel){ return ogOpts(L('pdfTlGroupSeeds'), seedStructures(), sel) + ogOpts(L('pdfTlGroupMultisig'), multisigLabels(), sel); }
 function timelockDestOpts(sel){ return ogOpts(L('pdfTlGroupSeeds'), seedStructures(), sel) + ogOpts(L('pdfTlGroupSW'), softwareWalletLabels(), sel) + ogOpts(L('pdfTlGroupHW'), deviceLabels(), sel) + ogOpts(L('pdfTlGroupMultisig'), multisigLabels(), sel) + ogOpts(L('pdfTlGroupEx'), exchangeLabels(), sel); }
 function esc(s){ return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function getModel(label){ for (var i=0;i<HW_MODELS.length;i++){ if (HW_MODELS[i].label===label) return HW_MODELS[i]; } return null; }
-function deviceLabel(d){ var dv=state.devices[d]; if(!dv) return ""; return Lf('pdfDeviceLabel',d,dv.model||""); }
+function deviceLabel(d){ var dv=state.devices[d]; if(!dv) return ""; return Lf('pdfDeviceLabel',d,deviceModelName(dv)||""); }
 function allSmartcards(){
   var out=[];
   for (var d=0; d<state.devices.length; d++){
@@ -1670,6 +1750,8 @@ function screens(){
   return arr;
 }
 function go(d){ var list=screens(); pos+=d; if(pos<0)pos=0; if(pos>=list.length)pos=list.length-1; render(); window.scrollTo(0,0); }
+function screenIndexFor(key,idx){ var list=screens(); for(var i=0;i<list.length;i++){ var sc=list[i]; if(sc.k===key && (idx==null || sc.i===idx)) return i; } return -1; }
+function gotoScreen(key,idx){ var p=screenIndexFor(key,idx); if(p>=0){ pos=p; render(); window.scrollTo(0,0); } }
 function render(){
   var list=screens();
   if(pos>=list.length)pos=list.length-1; if(pos<0)pos=0;
@@ -1765,7 +1847,12 @@ function renderDev(i){
   h+='<div class="wizard-question">'+Lf('hwDevice',i+1,state.devices.length)+'</div>';
   h+='<div class="form-group"><label class="form-label">'+L('whichModel')+'</label>'
     +'<select class="form-control" onchange="setDevModel('+i+',this.value)"><option value="">'+L('pleaseSelect')+'</option>'+modelOpts(dv.model)+'</select></div>';
+  if(dv.model==="Andere"){
+    h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+L('customNameLabel')+'</label>'
+      +'<input class="form-control" type="text" value="'+esc(dv.modelCustom||"")+'" placeholder="'+L('customNamePh')+'" oninput="setDevModelCustom('+i+',this.value)"></div>';
+  }
   if(m && m.img){ h+='<div class="wizard-device-preview"><img src="'+m.img+'" alt="'+esc(m.label)+'"></div>'; }
+  if(m && dv.model && !m.antiPhish){ h+='<p class="mini-note">'+Lf('antiPhishNotSupported',esc(dv.model))+'</p>'; }
   if(m && m.specter && m.shield){
     h+='<div class="sub-block"><label class="form-label">'+L('smartcardCountLabel')+'</label>';
     h+='<p class="mini-note">'+L('smartcardNote')+'</p>';
@@ -1781,12 +1868,17 @@ function renderDev(i){
   if(m){
     h+='<div class="sub-block"><label class="form-label">'+L('companionLabel')+'</label>';
     h+='<p class="mini-note">'+L('companionNote')+'</p>';
+    h+='<p class="mini-note">'+L('companionOptionalNote')+'</p>';
     h+=pills(dv.companions.length,0,4,"setCompanionCount("+i+",");
     for(var c=0;c<dv.companions.length;c++){
       var cp=dv.companions[c]; var ca=getCompanion(cp.app);
       h+='<div class="seed-card" style="margin-top:10px;background:var(--specter-dark-secondary);"><h4>'+Lf('companionApp',c+1)+'</h4>';
       h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+L('appLabel')+'</label>'
         +'<select class="form-control" onchange="setCompApp('+i+','+c+',this.value)"><option value="">'+L('selectSmall')+'</option>'+compOpts(cp.app)+'</select></div>';
+      if(cp.app==="Andere"){
+        h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+L('customNameLabel')+'</label>'
+          +'<input class="form-control" type="text" value="'+esc(cp.appCustom||"")+'" placeholder="'+L('customNamePh')+'" oninput="setCompAppCustom('+i+','+c+',this.value)"></div>';
+      }
       if(ca && ca.img){ h+='<div class="wizard-device-preview"><img src="'+ca.img+'" alt="'+esc(ca.label)+'" style="height:60px;"></div>'; }
       h+='<label class="form-label" style="margin-top:8px;">'+L('onWhichDevice')+'</label><div class="chip-group">';
       h+='<span class="chip '+(cp.platform==="PC"?"selected":"")+'" onclick="setCompPlatform('+i+','+c+',\'PC\')">PC</span>';
@@ -1804,10 +1896,12 @@ function renderDev(i){
 }
 function compOpts(sel){ var h=""; for(var i=0;i<COMPANION_APPS.length;i++){ var l=COMPANION_APPS[i].label; h+='<option value="'+esc(COMPANION_APPS[i].label)+'"'+(COMPANION_APPS[i].label===sel?" selected":"")+'>'+esc(l)+'</option>'; } return h; }
 function setDevModel(i,v){ state.devices[i].model=v; var m=getModel(v); if(!(m&&m.shield)) state.devices[i].smartcards=0; render(); }
+function setDevModelCustom(i,v){ state.devices[i].modelCustom=v; }
 function setDevSmartcards(i,n){ state.devices[i].smartcards=n; render(); }
 function setSmartcardName(i,sc,v){ var dv=state.devices[i]; if(!dv.smartcardNames)dv.smartcardNames=[]; dv.smartcardNames[sc]=v; }
 function setCompanionCount(i,n){ var dv=state.devices[i]; while(dv.companions.length<n)dv.companions.push(newCompanion()); while(dv.companions.length>n)dv.companions.pop(); render(); }
 function setCompApp(i,c,v){ state.devices[i].companions[c].app=v; render(); }
+function setCompAppCustom(i,c,v){ state.devices[i].companions[c].appCustom=v; }
 function setCompPlatform(i,c,v){ state.devices[i].companions[c].platform=v; render(); }
 function setCompModel(i,c,v){ state.devices[i].companions[c].model=v; }
 
@@ -1896,8 +1990,9 @@ var h='<div class="section-card"><div class="section-card-body">';
   }
   h+='</div>';
 
-  h+='<div class="sub-block"><label class="chk-row"><input type="checkbox" '+(s.multisig?"checked":"")+' onchange="toggleSeedMultisig('+idx+')"> '+L('inMultisigLabel')+'</label>';
-  h+='<p class="mini-note">'+L('multisigNoteSmall')+'</p></div>';
+  if(seedInMultisig(idx)){
+    h+='<div class="sub-block"><p class="mini-note">'+L('inMultisigLabel')+'</p></div>';
+  }
 
   h+='</div>';
   h+=nav();
@@ -1917,6 +2012,10 @@ function renderBackup(idx,b){
   if(bk.type==="metal"){
     h+='<div class="form-group"><label class="form-label">'+L('metalBrand')+'</label>'
       +'<select class="form-control" onchange="setBackupBrand('+idx+','+b+',this.value)"><option value="">'+L('pleaseSelectSmall')+'</option>'+optList(METAL_BRANDS,bk.brand)+'</select></div>';
+    if(bk.brand==="Andere"){
+      h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+L('customNameLabel')+'</label>'
+        +'<input class="form-control" type="text" value="'+esc(bk.brandCustom||"")+'" placeholder="'+L('customNamePh')+'" oninput="setBackupBrandCustom('+idx+','+b+',this.value)"></div>';
+    }
   }
   if(bk.type==="smartcard"){
     var cards=allSmartcards();
@@ -1928,7 +2027,7 @@ function renderBackup(idx,b){
     }
     h+='<p class="mini-note">'+L('scNote')+'</p>';
   } else {
-    h+='<label class="chk-row"><input type="checkbox" '+(bk.bagDigital?"checked":"")+' onchange="toggleBackupDigital('+idx+','+b+')"> '+L('bagDigital')+'</label>';
+    h+='<label class="chk-row"><input type="checkbox" '+(bk.bagDigital?"checked":"")+' onchange="toggleBackupDigital('+idx+','+b+')"> '+L(bk.type==="metal"?'bagDigitalMetal':'bagDigital')+'</label>';
     if(bk.bagDigital){
       h+='<div class="form-group"><label class="form-label">'+L('bagNoLabel')+'</label>'
         +'<input class="form-control" type="text" value="'+esc(bk.bagNo)+'" placeholder="'+L('bagNoPh')+'" oninput="setBackupBagNo('+idx+','+b+',this.value)"></div>';
@@ -1977,7 +2076,8 @@ function setWFp(i,p,v){ walletOf(i,p).fp=(v||'').trim().toUpperCase(); render();
 function setSeedName(i,v){ state.seeds[i].name=v; }
 function setBackupCount(i,n){ var s=state.seeds[i]; while(s.backups.length<n)s.backups.push(newBackup()); while(s.backups.length>n)s.backups.pop(); render(); }
 function setBackupType(i,b,t){ state.seeds[i].backups[b].type=t; render(); }
-function setBackupBrand(i,b,v){ state.seeds[i].backups[b].brand=v; }
+function setBackupBrand(i,b,v){ state.seeds[i].backups[b].brand=v; render(); }
+function setBackupBrandCustom(i,b,v){ state.seeds[i].backups[b].brandCustom=v; }
 function setBackupSmartcard(i,b,v){ state.seeds[i].backups[b].smartcard=v; }
 function toggleBackupDigital(i,b){ var bk=state.seeds[i].backups[b]; bk.bagDigital=!bk.bagDigital; render(); }
 function setBackupBagNo(i,b,v){ state.seeds[i].backups[b].bagNo=v; }
@@ -1988,10 +2088,9 @@ function toggleDevSc(i,d){ var op=devOpt(state.seeds[i],d); op.withSc=!op.withSc
 function toggleDevSd(i,d){ var op=devOpt(state.seeds[i],d); op.sdCard=!op.sdCard; render(); }
 function setDevSc(i,d,v){ devOpt(state.seeds[i],d).sc=v; }
 function setSeedPassphrases(i,n){ var s=state.seeds[i]; s.passphrases=n; while(s.pp.length<n){ s.pp.push(newWallet()); } s.pp.length=n; render(); }
-function toggleSeedMultisig(i){ state.seeds[i].multisig=!state.seeds[i].multisig; render(); }
 
-function bip85Block(kind,i){
-  var b85 = state.sw[kind+"B85"]||[]; var seedA=state.sw[kind+"Seed"]||[]; var idxA=state.sw[kind+"Idx"]||[];
+function bip85Block(kind,i,skipWords){
+  var b85 = state.sw[kind+"B85"]||[]; var seedA=state.sw[kind+"Seed"]||[]; var idxA=state.sw[kind+"Idx"]||[]; var wordsA=state.sw[kind+"Words"]||[];
   var on = !!b85[i];
   var h='<label class="chk-row" style="margin-left:4px;"><input type="checkbox" '+(on?"checked":"")+' onchange="toggleSwB85(\''+kind+'\','+i+')"> '+L('bip85Derived')+'</label>';
   if(on){
@@ -1999,6 +2098,12 @@ function bip85Block(kind,i){
       +'<select class="form-control" onchange="setSwB85Seed(\''+kind+'\','+i+',this.value)"><option value="">'+L('pleaseSelectSmall')+'</option>'+seedOpts(seedA[i])+'</select></div>';
     h+='<div class="form-group" style="margin-left:28px;"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+L('bip85Index')+'</label>'
       +'<input class="form-control" type="text" value="'+esc(idxA[i]||"")+'" placeholder="e.g. 0" oninput="setSwB85Idx(\''+kind+'\','+i+',this.value)"></div>';
+    if(!skipWords){
+      h+='<div class="form-group" style="margin-left:28px;"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+L('swWordsQ')+'</label><div class="chip-group">'
+        +'<span class="chip '+(Number(wordsA[i])===12?"selected":"")+'" onclick="setSwWords(\''+kind+'\','+i+',12)">12</span>'
+        +'<span class="chip '+(Number(wordsA[i])===24?"selected":"")+'" onclick="setSwWords(\''+kind+'\','+i+',24)">24</span>'
+        +'</div></div>';
+    }
   }
   return h;
 }
@@ -2020,6 +2125,10 @@ function renderSw(){
     var meta=swMeta('pc',i);
     h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+Lf('swPcWallet',i+1)+'</label>'
       +'<select class="form-control" onchange="setSwPcModel('+i+',this.value)"><option value="">'+L('pleaseSelectSmall')+'</option>'+swOpts(state.sw.pcModels[i]||"")+'</select></div>';
+    if((state.sw.pcModels[i]||"")==="Andere"){
+      h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+L('customNameLabel')+'</label>'
+        +'<input class="form-control" type="text" value="'+esc(state.sw.pcModelsCustom[i]||"")+'" placeholder="'+L('customNamePh')+'" oninput="setSwPcModelCustom('+i+',this.value)"></div>';
+    }
     if(_swpc && _swpc.img){ h+='<div class="wizard-device-preview"><img src="'+_swpc.img+'" alt="'+esc(_swpc.label)+'" style="height:48px;"></div>'; }
     if(_swpc && _swpc.dualMode){
       h+='<div class="sub-block">';
@@ -2038,7 +2147,7 @@ function renderSw(){
           +'<input class="form-control" type="text" value="'+esc(meta.recoveryValue||"")+'" placeholder="'+(LANG==='de' ? 'z. B. name@domain.de oder +49...' : 'e.g. name@domain.com or +49...')+'" oninput="setSwRecoveryValue(\'pc\','+i+',this.value)"></div>';
       } else if(meta.mode==="noncustodial"){
         h+='<p class="mini-note">'+esc(_swpc.recoveryNC || (LANG==='de' ? 'Non-Custodial: Wiederherstellung über Seedphrase. Falls per BIP85 abgeleitet, hier Quell-Seedphrase und Index notieren.' : 'Non-custodial: recover via seed phrase. If derived with BIP85, note the source seed phrase and index here.'))+'</p>';
-        h+=bip85Block('pc',i);
+        h+=bip85Block('pc',i,true);
         h+='<div class="form-group" style="margin-top:8px;"><label class="form-label">'+L('swWordsQ')+'</label><div class="chip-group">';
         h+='<span class="chip '+(Number(meta.words)===12?"selected":"")+'" onclick="setSwWords(\'pc\','+i+',12)">12</span>';
         h+='<span class="chip '+(Number(meta.words)===24?"selected":"")+'" onclick="setSwWords(\'pc\','+i+',24)">24</span>';
@@ -2057,6 +2166,10 @@ function renderSw(){
     var meta2=swMeta('phone',j);
     h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+Lf('swPhoneWallet',j+1)+'</label>'
       +'<select class="form-control" onchange="setSwPhoneModel('+j+',this.value)"><option value="">'+L('pleaseSelectSmall')+'</option>'+swOpts(state.sw.phoneModels[j]||"")+'</select></div>';
+    if((state.sw.phoneModels[j]||"")==="Andere"){
+      h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+L('customNameLabel')+'</label>'
+        +'<input class="form-control" type="text" value="'+esc(state.sw.phoneModelsCustom[j]||"")+'" placeholder="'+L('customNamePh')+'" oninput="setSwPhoneModelCustom('+j+',this.value)"></div>';
+    }
     if(_swph && _swph.img){ h+='<div class="wizard-device-preview"><img src="'+_swph.img+'" alt="'+esc(_swph.label)+'" style="height:48px;"></div>'; }
     if(_swph && _swph.dualMode){
       h+='<div class="sub-block">';
@@ -2075,7 +2188,7 @@ function renderSw(){
           +'<input class="form-control" type="text" value="'+esc(meta2.recoveryValue||"")+'" placeholder="'+(LANG==='de' ? 'z. B. name@domain.de oder +49...' : 'e.g. name@domain.com or +49...')+'" oninput="setSwRecoveryValue(\'phone\','+j+',this.value)"></div>';
       } else if(meta2.mode==="noncustodial"){
         h+='<p class="mini-note">'+esc(_swph.recoveryNC || (LANG==='de' ? 'Non-Custodial: Wiederherstellung über Seedphrase. Falls per BIP85 abgeleitet, hier Quell-Seedphrase und Index notieren.' : 'Non-custodial: recover via seed phrase. If derived with BIP85, note the source seed phrase and index here.'))+'</p>';
-        h+=bip85Block('phone',j);
+        h+=bip85Block('phone',j,true);
         h+='<div class="form-group" style="margin-top:8px;"><label class="form-label">'+L('swWordsQ')+'</label><div class="chip-group">';
         h+='<span class="chip '+(Number(meta2.words)===12?"selected":"")+'" onclick="setSwWords(\'phone\','+j+',12)">12</span>';
         h+='<span class="chip '+(Number(meta2.words)===24?"selected":"")+'" onclick="setSwWords(\'phone\','+j+',24)">24</span>';
@@ -2095,7 +2208,9 @@ function renderSw(){
 function setSwPc(n){ state.sw.pc=n; syncSwKind("pc",n); render(); }
 function setSwPhone(n){ state.sw.phone=n; syncSwKind("phone",n); render(); }
 function setSwPcModel(i,v){ state.sw.pcModels[i]=v; render(); }
+function setSwPcModelCustom(i,v){ state.sw.pcModelsCustom[i]=v; }
 function setSwPhoneModel(i,v){ state.sw.phoneModels[i]=v; render(); }
+function setSwPhoneModelCustom(i,v){ state.sw.phoneModelsCustom[i]=v; }
 function setSwMode(k,i,v){ syncSwKind(k,k==="pc"?state.sw.pc:state.sw.phone); state.sw[k+"Mode"][i]=v; render(); }
 function setSwWords(k,i,v){ syncSwKind(k,k==="pc"?state.sw.pc:state.sw.phone); state.sw[k+"Words"][i]=parseInt(v,10)||12; render(); }
 function setSwRecoveryType(k,i,v){ syncSwKind(k,k==="pc"?state.sw.pc:state.sw.phone); state.sw[k+"RecoveryType"][i]=v; render(); }
@@ -2113,6 +2228,10 @@ function renderEx(){
       +'<select class="form-control" onchange="setExName('+i+',this.value)"><option value="">'+L('pleaseSelectSmall')+'</option>';
     for(var e=0;e<EXCHANGES.length;e++){ var l=EXCHANGES[e].label; h+='<option value="'+esc(l)+'"'+(l===(state.ex.names[i]||"")?" selected":"")+'>'+esc(l)+'</option>'; }
     h+='</select></div>';
+    if((state.ex.names[i]||"")==="Andere"){
+      h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+L('customNameLabel')+'</label>'
+        +'<input class="form-control" type="text" value="'+esc((state.ex.namesCustom||[])[i]||"")+'" placeholder="'+L('customNamePh')+'" oninput="setExNameCustom('+i+',this.value)"></div>';
+    }
     var exo=null; for(var z=0;z<EXCHANGES.length;z++){ if(EXCHANGES[z].label===(state.ex.names[i]||"")) exo=EXCHANGES[z]; }
     if(exo){
       if(exo.img){ h+='<div class="wizard-device-preview"><img src="'+exo.img+'" alt="'+esc(exo.label)+'" style="height:48px;"></div>'; }
@@ -2123,8 +2242,10 @@ function renderEx(){
   h+='</div></div>';
   return h;
 }
-function setExCount(n){ state.ex.count=n; state.ex.names.length=n; render(); }
+function setExCount(n){ state.ex.count=n; state.ex.names.length=n; state.ex.namesCustom=ensureArrayLen(state.ex.namesCustom,n,''); render(); }
 function setExName(i,v){ state.ex.names[i]=v; render(); }
+function setExNameCustom(i,v){ if(!state.ex.namesCustom)state.ex.namesCustom=[]; state.ex.namesCustom[i]=v; }
+function exDisplayName(i){ var nm=state.ex.names[i]; var custom=(state.ex.namesCustom||[])[i]; return (nm==="Andere" && custom) ? custom : nm; }
 
 function renderPwm(){
   var h='<div class="section-card"><div class="section-card-body">';
@@ -2138,13 +2259,19 @@ function renderPwm(){
       +'<select class="form-control" onchange="setPwmApp(this.value)"><option value="">'+L('pleaseSelectSmall')+'</option>';
     for(var i=0;i<PASSWORD_MANAGERS.length;i++){ var l=PASSWORD_MANAGERS[i].label; h+='<option value="'+esc(l)+'"'+(l===state.pwm.app?" selected":"")+'>'+esc(l)+'</option>'; }
     h+='</select></div>';
+    if(state.pwm.app==="Andere"){
+      h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+L('customNameLabel')+'</label>'
+        +'<input class="form-control" type="text" value="'+esc(state.pwm.appCustom||"")+'" placeholder="'+L('customNamePh')+'" oninput="setPwmAppCustom(this.value)"></div>';
+    }
   }
   h+=nav();
   h+='</div></div>';
   return h;
 }
 function setPwm(v){ state.pwm.use=v; render(); }
-function setPwmApp(v){ state.pwm.app=v; }
+function setPwmApp(v){ state.pwm.app=v; render(); }
+function setPwmAppCustom(v){ state.pwm.appCustom=v; }
+function pwmDisplayName(){ return (state.pwm.app==="Andere" && state.pwm.appCustom) ? state.pwm.appCustom : state.pwm.app; }
 
 function renderBook(){
   var h='<div class="section-card"><div class="section-card-body">';
@@ -2664,7 +2791,7 @@ function lwDescriptorBackupSection(i){
   h+='</div>';
 
   h+='<div style="margin-top:10px;"><label class="form-label">Weitere Aufbewahrungsorte des Wallet-Descriptors</label>';
-  h+='<label class="chk-row"><input type="checkbox" '+(lw.dbPwm?"checked":"")+' onchange="toggleLwDbPwm('+i+')"> Im Passwort-Manager'+((state.pwm&&state.pwm.app)?(" ("+state.pwm.app+")"):"")+'</label>';
+  h+='<label class="chk-row"><input type="checkbox" '+(lw.dbPwm?"checked":"")+' onchange="toggleLwDbPwm('+i+')"> Im Passwort-Manager'+((state.pwm&&state.pwm.app)?(" ("+esc(pwmDisplayName())+")"):"")+'</label>';
   h+='<label class="chk-row"><input type="checkbox" '+(lw.dbBook?"checked":"")+' onchange="toggleLwDbBook('+i+')"> Im Passwort-Heft / Notizbuch</label>';
   h+='<label class="chk-row"><input type="checkbox" '+(lw.descriptorInPasswordManager?"checked":"")+' onchange="toggleLwDescriptorInPwmDirect('+i+')"> Wallet-Descriptor selbst im Passwort-Manager gespeichert</label>';
 
@@ -2717,7 +2844,7 @@ function renderTimelock(){
     if(state.timelock.ritrek){
       h+='<label class="chk-row"><input type="checkbox" '+(state.timelock.store.ritrek?"checked":"")+' onchange="toggleTimelockStoreRitrek()"> RITREK App</label>';
     }
-    h+='<label class="chk-row"><input type="checkbox" '+(state.timelock.store.pwm?"checked":"")+' onchange="toggleTimelockStorePwm()"> '+L('timelockStorePwm')+((state.pwm.use===true&&state.pwm.app)?' ('+esc(state.pwm.app)+')':'')+'</label>';
+    h+='<label class="chk-row"><input type="checkbox" '+(state.timelock.store.pwm?"checked":"")+' onchange="toggleTimelockStorePwm()"> '+L('timelockStorePwm')+((state.pwm.use===true&&state.pwm.app)?' ('+esc(pwmDisplayName())+')':'')+'</label>';
     h+='<div class="form-group" style="margin-top:8px;"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+L('timelockStoreOther')+'</label>'
       +'<input class="form-control" type="text" value="'+esc(state.timelock.store.other)+'" placeholder="'+L('timelockStoreOtherPh')+'" oninput="setTimelockStoreOther(this.value)"></div>';
     h+='</div>';
@@ -2755,6 +2882,81 @@ function renderDig(){
 function setDig(v){ state.dig.use=v; if(!v)state.dig.enc=null; render(); }
 function setEnc(v){ state.dig.enc=v; render(); }
 
+// ===== VOLLSTAENDIGKEITS-CHECK =====
+function buildIncompleteItems(){
+  var items=[];
+  function add(label,key,idx){ items.push({label:label, key:key, idx:(idx==null?null:idx)}); }
+
+  for(var d=0; d<state.devices.length; d++){
+    var dv=state.devices[d];
+    if(!dv.model){ add(Lf('incDevNoModel',d+1), 'dev', d); }
+    else if(dv.model==='Andere' && !dv.modelCustom){ add(Lf('incDevNoModelCustom',d+1), 'dev', d); }
+    for(var c=0;c<(dv.companions||[]).length;c++){
+      var cp=dv.companions[c];
+      if(!cp.app){ add(Lf('incCompNoApp',d+1,c+1), 'dev', d); }
+      else if(cp.app==='Andere' && !cp.appCustom){ add(Lf('incCompNoAppCustom',d+1,c+1), 'dev', d); }
+    }
+  }
+
+  for(var s=0; s<state.seeds.length; s++){
+    var sd=state.seeds[s]; var snm=esc(sd.name||('Seed-Phrase '+(s+1)));
+    for(var b=0;b<sd.backups.length;b++){
+      var bk=sd.backups[b];
+      if(bk.type==='metal' && !bk.brand){ add(Lf('incMetalNoBrand',snm,b+1), 'seed', s); }
+      else if(bk.type==='metal' && bk.brand==='Andere' && !bk.brandCustom){ add(Lf('incMetalNoBrandCustom',snm,b+1), 'seed', s); }
+      if(bk.type==='smartcard' && !bk.smartcard){ add(Lf('incScNoCard',snm,b+1), 'seed', s); }
+    }
+  }
+
+  for(var i=0;i<state.sw.pc;i++){
+    if(!state.sw.pcModels[i]){ add(Lf('incSwNoApp',i+1), 'sw'); }
+    else if(state.sw.pcModels[i]==='Andere' && !state.sw.pcModelsCustom[i]){ add(Lf('incSwNoAppCustom',i+1), 'sw'); }
+  }
+  for(var j=0;j<state.sw.phone;j++){
+    if(!state.sw.phoneModels[j]){ add(Lf('incSwPhoneNoApp',j+1), 'sw'); }
+    else if(state.sw.phoneModels[j]==='Andere' && !state.sw.phoneModelsCustom[j]){ add(Lf('incSwPhoneNoAppCustom',j+1), 'sw'); }
+  }
+
+  for(var e=0;e<state.ex.count;e++){
+    if(!state.ex.names[e]){ add(Lf('incExNoName',e+1), 'ex'); }
+    else if(state.ex.names[e]==='Andere' && !(state.ex.namesCustom||[])[e]){ add(Lf('incExNoNameCustom',e+1), 'ex'); }
+  }
+
+  if(state.pwm.use===true){
+    if(!state.pwm.app){ add(L('incPwmNoApp'), 'pwm'); }
+    else if(state.pwm.app==='Andere' && !state.pwm.appCustom){ add(L('incPwmNoAppCustom'), 'pwm'); }
+  }
+
+  for(var mi=0; mi<state.multisigs.length; mi++){
+    var ms=state.multisigs[mi]; var msnm=esc(ms.name||('Multisig '+(mi+1)));
+    var own=ms.seeds.length+ms.hot.length;
+    if(own+ms.cosigners.length < ms.n){ add(Lf('incMsKeys',msnm,own+ms.cosigners.length,ms.n), 'multisig'); }
+    for(var cci=0; cci<ms.cosigners.length; cci++){
+      if(!ms.cosigners[cci].name){ add(Lf('incMsCosignerNoName',msnm,cci+1), 'multisig'); }
+    }
+  }
+
+  if(state.timelock.use){
+    if(!state.timelock.fromW){ add(L('incTimelockNoFrom'), 'timelock'); }
+    if(!state.timelock.toW){ add(L('incTimelockNoTo'), 'timelock'); }
+    else if(state.timelock.toW==='__custom__' && !state.timelock.toCustom){ add(L('incTimelockNoCustom'), 'timelock'); }
+  }
+
+  return items;
+}
+function renderIncompleteBlock(){
+  var items=buildIncompleteItems();
+  if(!items.length) return '';
+  var h='<div class="warning-banner warning-yellow" style="display:block;margin-top:20px;">';
+  h+='<div style="display:flex;gap:14px;align-items:flex-start;"><div class="warning-banner-icon">&#9888;</div><div class="warning-banner-text" style="flex:1;"><strong>'+Lf('incompleteTitle',items.length)+'</strong>'+L('incompleteHint')+'</div></div>';
+  h+='<ul style="list-style:none;padding:0;margin:10px 0 0;">';
+  for(var i=0;i<items.length;i++){
+    var it=items[i];
+    h+='<li style="margin:4px 0;"><a href="#" onclick="gotoScreen(\''+it.key+'\','+(it.idx==null?'null':it.idx)+'); return false;" style="color:var(--specter-primary);text-decoration:none;font-size:0.85rem;">&#8594; '+it.label+'</a></li>';
+  }
+  h+='</ul></div>';
+  return h;
+}
 function renderSummary(){
   var h='<div class="section-card"><div class="section-card-header"><div class="section-card-title">'+L('summary')+'</div></div><div class="section-card-body">';
   h+='<ul class="summary-list">';
@@ -2763,12 +2965,13 @@ function renderSummary(){
   var sc=allSmartcards().length; h+='<li><span>'+L('smartcards')+'</span><span>'+sc+'</span></li>';
   h+='<li><span>'+L('softwareWallets')+'</span><span>'+(state.sw.pc+state.sw.phone)+'</span></li>';
   h+='<li><span>'+L('exchanges')+'</span><span>'+state.ex.count+'</span></li>';
-  var ms=0; for(var i=0;i<state.seeds.length;i++){ if(state.seeds[i].multisig)ms++; }
+  var ms=0; for(var i=0;i<state.seeds.length;i++){ if(seedInMultisig(i))ms++; }
   h+='<li><span>'+L('seedsInMultisig')+'</span><span>'+ms+'</span></li>';
-  h+='<li><span>'+L('passwordManager')+'</span><span>'+(state.pwm.use===true?(state.pwm.app||L('yes')):L('no'))+'</span></li>';
+  h+='<li><span>'+L('passwordManager')+'</span><span>'+(state.pwm.use===true?(pwmDisplayName()||L('yes')):L('no'))+'</span></li>';
   h+='<li><span>'+L('timelockRecovery')+'</span><span>'+(state.timelock.use?(state.timelock.ritrek?L('timelockRitrek'):L('yes')):L('no'))+'</span></li>';
   h+='<li><span>Liana Wallets</span><span>'+(anyLianaCompanion()?(state.lianaWallets.length+(state.lianaMode?" ("+(state.lianaMode==="multi"?"Multi-Sig":"Single-Sig")+")":"")):L('no'))+'</span></li>';
   h+='</ul>';
+  h+=renderIncompleteBlock();
   h+='<button class="btn btn-pdf" onclick="buildAndPrint()" style="margin-top:28px;">'+L('createPDF')+'</button>';
   h+=renderPostPdfStorageBlock();
   h+='<div style="text-align:center;margin-top:20px;">';
@@ -3017,19 +3220,6 @@ function buildRecommendations() {
         {text: 'Liana Wallet', url: LIANA_WEBSITE}
       ]
     });
-  }
-
-  var NO_DISPLAY_MODELS = ['BitBox01'];
-  var noDisplayFound = [];
-  for (var i = 0; i < state.devices.length; i++) {
-    var m9 = state.devices[i].model || '';
-    if (NO_DISPLAY_MODELS.indexOf(m9) >= 0 && noDisplayFound.indexOf(m9) < 0) noDisplayFound.push(m9);
-  }
-  if (noDisplayFound.length > 0) {
-    tips.push({ title:L('secTitle9'), body:Lf('secBody9fn',esc(noDisplayFound.join(', '))), links:[
-      {text:'Specter Shield Lite', url:shopUrl('products/specter-shield-lite')},
-      {text:'Specter Shield', url:shopUrl('products/specter-shield')}
-    ], warn:true });
   }
 
   var NO_SE_MODELS = ['Trezor One', 'Trezor T'];
@@ -3364,7 +3554,7 @@ function descriptorBackupSection(i){
 
   // 3) Weitere Orte mit neuen Feldern
   h+='<div style="margin-top:10px;"><label class="form-label">Weitere Aufbewahrungsorte des Wallet-Descriptors</label>';
-  h+='<label class="chk-row"><input type="checkbox" '+(ms.dbPwm?"checked":"")+' onchange="toggleMsDbPwm('+i+')"> Im Passwort-Manager'+((state.pwm&&state.pwm.app)?(" ("+state.pwm.app+")"):"")+'</label>';
+  h+='<label class="chk-row"><input type="checkbox" '+(ms.dbPwm?"checked":"")+' onchange="toggleMsDbPwm('+i+')"> Im Passwort-Manager'+((state.pwm&&state.pwm.app)?(" ("+esc(pwmDisplayName())+")"):"")+'</label>';
   h+='<label class="chk-row"><input type="checkbox" '+(ms.dbBook?"checked":"")+' onchange="toggleMsDbBook('+i+')"> Im Passwort-Heft / Notizbuch</label>';
   h+='<label class="chk-row"><input type="checkbox" '+(ms.descriptorInPasswordManager?"checked":"")+' onchange="toggleMsDescriptorInPwmDirect('+i+')"> Wallet-Descriptor selbst im Passwort-Manager gespeichert (z. B. alsPasswort-Anmerkung &bdquo;Multisig-Descriptor&ldquo;)</label>';
 
@@ -3453,10 +3643,12 @@ function fRow(lbl,val){
   return '<div class="pdf-field-row"><span class="pdf-field-label">'+lbl+'</span><span class="pdf-field-line"></span></div>';
 }
 function eRow(lbl){ return '<div class="pdf-field-row"><span class="pdf-field-label">'+lbl+'</span><span class="pdf-field-line"></span></div>'; }
+// Wie eRow(), markiert das Feld aber zusaetzlich als besonders sensibel (PIN/Passwort/Passphrase) mit einem kleinen Schloss-Symbol. Erklaerung dazu steht einmalig im Glossar.
+function secRow(lbl){ return eRow(lbl+' <span style="color:#b85c00;" title="Sensible Angabe">&#128274;</span>'); }
 function todayStr(){ var d=new Date(); return String(d.getDate()).padStart(2,"0")+"."+String(d.getMonth()+1).padStart(2,"0")+"."+d.getFullYear(); }
 function backupTypeLabel(k){ for(var i=0;i<BACKUP_TYPES.length;i++){ if(BACKUP_TYPES[i].key===k) return BACKUP_TYPES[i].label; } return k; }
 function bagTable(bk){
-  var h='<table class="pdf-backup-table"><thead><tr><th style="width:45%;">'+L('bagColNumber')+'</th><th style="width:30%;">'+L('bagColDate')+'</th><th style="width:25%;">'+L('bagColValid')+'</th></tr></thead><tbody>';
+  var h='<table class="pdf-backup-table"><thead><tr><th style="width:45%;">'+(bk.type==="metal"?L('pdfTEBagMetal'):L('bagColNumber'))+'</th><th style="width:30%;">'+L('bagColDate')+'</th><th style="width:25%;">'+L('bagColValid')+'</th></tr></thead><tbody>';
   for(var r=0;r<5;r++){
     var no = (r===0 && bk.bagNo) ? esc(bk.bagNo) : "";
     var dt = (r===0 && bk.bagNo) ? todayStr() : "";
@@ -3468,9 +3660,9 @@ function bagTable(bk){
 function bip85Row(kind,i){
   if(!state.bip85) return "";
   if(!(state.sw[kind+"B85"]||[])[i]) return eRow(L('pdfBip85Empty'));
-  var si=(state.sw[kind+"Seed"]||[])[i]; var idx=(state.sw[kind+"Idx"]||[])[i];
+  var si=(state.sw[kind+"Seed"]||[])[i]; var idx=(state.sw[kind+"Idx"]||[])[i]; var words=(state.sw[kind+"Words"]||[])[i];
   var nm = (si!=="" && si!=null) ? seedName(parseInt(si)) : "";
-  return fRow(L('pdfBip85Label'), Lf('pdfBip85Val',nm,idx!=null&&idx!==""?esc(idx):null));
+  return fRow(L('pdfBip85Label'), Lf('pdfBip85Val',nm,idx!=null&&idx!==""?esc(idx):null,words||null));
 }
 function twofaChecks(){
   return '<div style="font-size:8pt;font-weight:700;color:#0C1A27;margin:3pt 0 1pt;">'+L('pdf2FALabel')+'</div>'
@@ -3478,7 +3670,7 @@ function twofaChecks(){
 }
 function storageChecks(){
   var parts=['&#9744; '+L('pdfStoreDoc')];
-  if(state.pwm.use===true) parts.push('&#9744; '+L('pdfStorePWM')+(state.pwm.app?' ('+esc(state.pwm.app)+')':''));
+  if(state.pwm.use===true) parts.push('&#9744; '+L('pdfStorePWM')+(state.pwm.app?' ('+esc(pwmDisplayName())+')':''));
   if(state.book.use===true) parts.push('&#9744; '+L('pdfStoreBook'));
   parts.push('&#9744; '+L('pdfStoreOther'));
   return '<div style="font-size:7.5pt;color:#1a1a1a;margin:1pt 0 6pt;">'+parts.join(' &nbsp;&nbsp; ')+'</div>';
@@ -3486,7 +3678,7 @@ function storageChecks(){
 function walletAccountsBlock(title, w, isPp){
   var h='<div class="pdf-smartcard-block"><div class="pdf-smartcard-title">'+title+'</div>';
   if(isPp){
-    h+=eRow(L('pdfPpEnter'));
+    h+=secRow(L('pdfPpEnter'));
     h+=eRow(L('pdfPpLocation'));
     h+='<div style="font-size:8pt;font-weight:700;color:#0C1A27;margin:3pt 0 1pt;">'+L('pdfPpNoted')+'</div>';
     h+=storageChecks();
@@ -3558,6 +3750,7 @@ function buildAndPrint(){
     h+='<dt>Wallet-Descriptor</dt><dd>Technische Beschreibung, wie ein Wallet aufgebaut ist (Schl&uuml;ssel, Adresstyp, bei Multisig die Kombination). <strong>Ohne den Descriptor l&auml;sst sich besonders ein Multisig-Wallet nicht wiederherstellen</strong> &ndash; auch nicht mit allen Seed-Phrasen. Daher mehrfach sichern.</dd>';
     h+='<dt>Multisig</dt><dd>Wallet, das mehrere Schl&uuml;ssel zum Senden ben&ouml;tigt (z.&thinsp;B. 2 von 3). Erfordert die Zusammenarbeit mehrerer Schl&uuml;sselhalter.</dd>';
     h+='<dt>Zwei-Faktor-Authentifizierung (2FA)</dt><dd>Zus&auml;tzliche Login-Sicherung neben dem Passwort. Arten: Authenticator-App/TOTP (z.&thinsp;B. Google Authenticator), SMS, E-Mail oder ein Hardware-Key (z.&thinsp;B. YubiKey). Ohne den zweiten Faktor ist kein Login m&ouml;glich.</dd>';
+    h+='<dt>'+L('pdfLockGlossaryTitle')+'</dt><dd>'+L('pdfLockGlossaryBody')+'</dd>';
   } else {
     h+='<dt>Seed Phrase</dt><dd>A sequence of 12 or 24 words – the master backup of a wallet. Anyone who knows it has full access. Therefore never written in this document.</dd>';
     h+='<dt>Tamper-Evident Bag</dt><dd>A tamper-proof security bag with a printed unique number. If opened, this is permanently visible – so you can tell if someone had access before. This document only contains the bag number or storage location, never the contents.</dd>';
@@ -3570,6 +3763,7 @@ function buildAndPrint(){
     h+='<dt>Wallet Descriptor</dt><dd>A technical description of how a wallet is constructed (keys, address type, for multisig the combination). <strong>Without the descriptor a multisig wallet in particular cannot be restored</strong> – not even with all seed phrases. Back it up multiple times.</dd>';
     h+='<dt>Multisig</dt><dd>A wallet that requires multiple keys to send (e.g. 2 of 3). Requires the cooperation of multiple key holders.</dd>';
     h+='<dt>Two-Factor Authentication (2FA)</dt><dd>Additional login security beyond the password. Types: authenticator app/TOTP (e.g. Google Authenticator), SMS, email or a hardware key (e.g. YubiKey). Without the second factor, no login is possible.</dd>';
+    h+='<dt>'+L('pdfLockGlossaryTitle')+'</dt><dd>'+L('pdfLockGlossaryBody')+'</dd>';
   }
   h+='</dl>';
 
@@ -3580,7 +3774,7 @@ function buildAndPrint(){
   if(state.seeds.length===0){ h+='<tr><td colspan="'+(showLianaCol?6:5)+'" class="td-empty"></td></tr>'; }
   for(var i=0;i<state.seeds.length;i++){
     var s=state.seeds[i];
-    h+='<tr><td>'+esc(s.name||("Seed #"+(i+1)))+'</td><td>'+s.backups.length+'</td><td>'+totalAccounts(s)+'</td><td>'+s.passphrases+'</td><td>'+(s.multisig?L('yes'):L('no'))+'</td>'+(showLianaCol?('<td>'+(seedInAnyLiana(i)?L('yes'):L('no'))+'</td>'):'')+'</tr>';
+    h+='<tr><td>'+esc(s.name||("Seed #"+(i+1)))+'</td><td>'+s.backups.length+'</td><td>'+totalAccounts(s)+'</td><td>'+s.passphrases+'</td><td>'+(seedInMultisig(i)?L('yes'):L('no'))+'</td>'+(showLianaCol?('<td>'+(seedInAnyLiana(i)?L('yes'):L('no'))+'</td>'):'')+'</tr>';
   }
   h+='</tbody></table>';
 
@@ -3591,12 +3785,12 @@ function buildAndPrint(){
     for(var d=0;d<state.devices.length;d++){
       var dv=state.devices[d]; var m=getModel(dv.model);
       h+='<div class="pdf-wallet-block">';
-      h+='<div class="pdf-wallet-block-title">'+Lf('pdfDeviceTitle',d,dv.model)+'</div>';
-      if(m){ h+=fRow('Website:', m.url||null); if(m.img){ h+='<img class="pdf-device-img" src="'+m.img+'" alt="'+esc(dv.model)+'">'; } }
+      h+='<div class="pdf-wallet-block-title">'+Lf('pdfDeviceTitle',d,esc(deviceModelName(dv)))+'</div>';
+      if(m){ h+=fRow('Website:', m.url||null); if(m.img){ h+='<img class="pdf-device-img" src="'+m.img+'" alt="'+esc(deviceModelName(dv))+'">'; } }
       h+=eRow(L('pdfDeviceName'));
       h+=eRow(L('pdfDeviceLocation'));
-      h+=eRow(L('pdfDevicePIN'));
-      h+=eRow(L('pdfDeviceAntiPhishing'));
+      h+=secRow(L('pdfDevicePIN'));
+      if(m && m.antiPhish){ h+=eRow(L('pdfDeviceAntiPhishing')); }
       if(m && m.shield && dv.smartcards>0){
         h+='<div class="pdf-field-label" style="font-size:8.5pt;margin:8pt 0 2pt;">'+L('pdfSmartcardsOf')+'</div>';
         h+='<img class="pdf-device-img" src="assets/products/smartcard.png" alt="Smartcard">';
@@ -3606,7 +3800,7 @@ function buildAndPrint(){
           if(!scNm) h+=eRow(L('pdfSmartcardName'));
           h+=eRow(L('pdfSmartcardSeedName'));
           h+=eRow(L('pdfSmartcardAntiPhishing'));
-          h+=eRow(L('pdfSmartcardPIN'));
+          h+=secRow(L('pdfSmartcardPIN'));
           h+='</div>';
         }
       } else if(m && m.specter && !m.shield){
@@ -3614,13 +3808,14 @@ function buildAndPrint(){
       }
       if((dv.companions||[]).length>0){
         h+='<div class="pdf-field-label" style="font-size:8.5pt;margin:8pt 0 2pt;">'+L('pdfCompanionApps')+'</div>';
+        h+='<p class="pdf-tamper-note">'+L('pdfCompanionOptionalNote')+'</p>';
         for(var cc=0;cc<dv.companions.length;cc++){
-          var cp=dv.companions[cc]; var ca=getCompanion(cp.app);
+          var cp=dv.companions[cc]; var ca=getCompanion(cp.app); var cpName=companionAppName(cp);
           h+='<div class="pdf-smartcard-block">';
-          h+='<div class="pdf-smartcard-title">'+Lf('pdfCompanionTitle',cp.app,cc,cp.platform,cp.model)+'</div>';
-          if(ca && ca.img) h+='<img class="pdf-device-img" src="'+ca.img+'" alt="'+esc(cp.app)+'" style="max-height:40pt;">';
+          h+='<div class="pdf-smartcard-title">'+Lf('pdfCompanionTitle',esc(cpName),cc,cp.platform,cp.model)+'</div>';
+          if(ca && ca.img) h+='<img class="pdf-device-img" src="'+ca.img+'" alt="'+esc(cpName)+'" style="max-height:40pt;">';
           if(ca && ca.url) h+=fRow('Website:', ca.url);
-          h+=eRow(L('pdfAppPIN'));
+          h+=secRow(L('pdfAppPIN'));
           h+='<div style="font-size:8pt;font-weight:700;color:#0C1A27;margin:3pt 0 1pt;">'+L('pdfPINNoted')+'</div>'+storageChecks();
           h+='</div>';
         }
@@ -3655,7 +3850,7 @@ function buildAndPrint(){
         for(var bi=0;bi<sd.backups.length;bi++){
           var bk=sd.backups[bi];
           h+='<div class="pdf-smartcard-block">';
-          h+='<div class="pdf-smartcard-title">'+Lf('pdfBackupTitle',bi,backupTypeLabel(bk.type),(bk.type==="metal"&&bk.brand?bk.brand:""))+'</div>';
+          h+='<div class="pdf-smartcard-title">'+Lf('pdfBackupTitle',bi,backupTypeLabel(bk.type),(bk.type==="metal"&&bk.brand?esc(backupBrandName(bk)):""))+'</div>';
           if(bk.type==="smartcard"){
             h+=fRow(L('pdfSCBackupStored'), bk.smartcard?scLabelById(bk.smartcard):null);
             h+='<p class="pdf-tamper-note" style="margin:2pt 0 4pt;">'+L('pdfSCBackupNote')+'</p>';
@@ -3665,7 +3860,7 @@ function buildAndPrint(){
             h+=eRow(L('pdfBackupLocation'));
             h+=eRow(L('pdfBackupNotes'));
             if(backupIsPlain(bk.type)){
-              h+='<div class="pdf-field-label" style="font-size:8pt;margin:5pt 0 2pt;">'+L('pdfTEBag')+'</div>';
+              h+='<div class="pdf-field-label" style="font-size:8pt;margin:5pt 0 2pt;">'+(bk.type==="metal"?L('pdfTEBagMetal'):L('pdfTEBag'))+'</div>';
               if(bk.bagDigital){ h+=bagTable(bk); }
               else { h+=eRow(L('pdfBagLocationHandwritten')); h+=eRow(L('pdfBagNumber')); }
             }
@@ -3677,28 +3872,28 @@ function buildAndPrint(){
       for(var pp=0;pp<sd.passphrases;pp++){
         h+=walletAccountsBlock(Lf('pdfHiddenWallet',pp,sd.name||("#"+(si+1))), sd.pp[pp], true);
       }
-      if(sd.multisig){ h+='<div class="pdf-info-hint">'+L('pdfSeedMultisigNote')+'</div>'; }
+      if(seedInMultisig(si)){ h+='<div class="pdf-info-hint">'+L('pdfSeedMultisigNote')+'</div>'; }
       h+='</div>';
     }
   }
 
   
-// 5. Software-Wallets if(state.sw.pc>0 || state.sw.phone>0){ h+='<h2 class="pdf-h2">Software-Wallets</h2>'; h+='<p class="pdf-text">Apps auf Computer oder Smartphone. Self-custodial Wallets können mit der Seedphrase wiederhergestellt werden'+(state.bip85?' oder wurden per BIP85 abgeleitet':'')+'. Custodiale Wallets laufen über Account-Login.</p>'; function swBlock(label, idx, kind){ var sw=getSwWallet(label); var meta=swMeta(kind,idx); var t='<div class="pdf-wallet-block">'; t+='<div class="pdf-wallet-block-title">'+Lf('pdfSwTitle',kind,idx,label)+'</div>'; if(sw){ if(sw.dualMode){ if(meta.mode==='custodial'){ t+='<div style="font-size:7.5pt;background:#f5f5f5;border-left:3px solid #999;padding:4pt 6pt;margin:4pt 0 5pt;color:#444;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+(LANG==='de'?'Custodial:':'Custodial:')+'</strong> '+esc(sw.recovery||'')+'</div>'; t+=fRow(LANG==='de'?'Wiederhergestellt per:':'Recovered via:', meta.recoveryType ? (meta.recoveryType==='email' ? (LANG==='de'?'E-Mail':'Email') : (LANG==='de'?'Telefonnummer':'Phone number')) : null); t+=meta.recoveryValue ? fRow(LANG==='de'?'E-Mail-Adresse / Telefonnummer:':'Email address or phone number:', meta.recoveryValue) : eRow(LANG==='de'?'E-Mail-Adresse / Telefonnummer:':'Email address or phone number:'); } else if(meta.mode==='noncustodial'){ t+='<div style="font-size:7.5pt;background:#e8f4fd;border-left:3px solid #1F99E5;padding:4pt 6pt;margin:4pt 0 5pt;color:#0c3d6b;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+(LANG==='de'?'Non-Custodial:':'Non-custodial:')+'</strong> '+esc(sw.recoveryNC||'')+'</div>'; if(meta.b85){ t+=fRow(L('pdfBip85Label'), Lf('pdfBip85Val', meta.seed, meta.idx)); } } else if(sw.recovery){ t+='<div style="font-size:7.5pt;background:#f5f5f5;border-left:3px solid #999;padding:4pt 6pt;margin:4pt 0 5pt;color:#444;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+L('pdfCustodialLabel')+'</strong> '+esc(sw.recovery)+'</div>'; } } else if(sw.custodial){ t+='<div style="font-size:7.5pt;background:#f5f5f5;border-left:3px solid #999;padding:4pt 6pt;margin:4pt 0 5pt;color:#444;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+L('pdfCustodialLabel')+'</strong> '+esc(sw.recovery)+'</div>'; } else if(sw.noSeed){ t+='<div style="font-size:7.5pt;background:#fff3cd;border-left:3px solid #f5b41e;padding:4pt 6pt;margin:4pt 0 5pt;color:#5a4000;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+L('pdfNoSeedLabel')+'</strong> '+esc(sw.recovery)+'</div>'; } else { t+='<div style="font-size:7.5pt;background:#e8f4fd;border-left:3px solid #1F99E5;padding:4pt 6pt;margin:4pt 0 5pt;color:#0c3d6b;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+L('pdfCustodialLabel')+'</strong> '+esc(sw.recovery)+'</div>'; } } if(sw && sw.seed && !sw.dualMode && state.bip85){ t+=fRow(L('pdfBip85Label'), Lf('pdfBip85Val', (state.sw[kind+"Seed"]||[])[idx]||'', (state.sw[kind+"Idx"]||[])[idx]||'')); } else if(sw && sw.seed && sw.dualMode && meta.mode==='noncustodial' && !meta.b85 && state.bip85){ t+=fRow(L('pdfBip85Label'), Lf('pdfBip85Val', meta.seed, meta.idx)); } t+='</div>'; return t; } for(var pi=0;pi<state.sw.pc.length;pi++){ h+=swBlock(state.sw.pcModels[pi]||'', pi, 'pc'); } for(var si=0;si<state.sw.phone.length;si++){ h+=swBlock(state.sw.phoneModels[si]||'', si, 'phone'); } }
+// 5. Software-Wallets if(state.sw.pc>0 || state.sw.phone>0){ h+='<h2 class="pdf-h2">Software-Wallets</h2>'; h+='<p class="pdf-text">Apps auf Computer oder Smartphone. Self-custodial Wallets können mit der Seedphrase wiederhergestellt werden'+(state.bip85?' oder wurden per BIP85 abgeleitet':'')+'. Custodiale Wallets laufen über Account-Login.</p>'; function swBlock(label, idx, kind, displayLabel){ var sw=getSwWallet(label); var meta=swMeta(kind,idx); var dl=displayLabel||label; var t='<div class="pdf-wallet-block">'; t+='<div class="pdf-wallet-block-title">'+Lf('pdfSwTitle',kind,idx,esc(dl))+'</div>'; if(sw){ if(sw.dualMode){ if(meta.mode==='custodial'){ t+='<div style="font-size:7.5pt;background:#f5f5f5;border-left:3px solid #999;padding:4pt 6pt;margin:4pt 0 5pt;color:#444;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+(LANG==='de'?'Custodial:':'Custodial:')+'</strong> '+esc(sw.recovery||'')+'</div>'; t+=fRow(LANG==='de'?'Wiederhergestellt per:':'Recovered via:', meta.recoveryType ? (meta.recoveryType==='email' ? (LANG==='de'?'E-Mail':'Email') : (LANG==='de'?'Telefonnummer':'Phone number')) : null); t+=meta.recoveryValue ? fRow(LANG==='de'?'E-Mail-Adresse / Telefonnummer:':'Email address or phone number:', meta.recoveryValue) : eRow(LANG==='de'?'E-Mail-Adresse / Telefonnummer:':'Email address or phone number:'); } else if(meta.mode==='noncustodial'){ t+='<div style="font-size:7.5pt;background:#e8f4fd;border-left:3px solid #1F99E5;padding:4pt 6pt;margin:4pt 0 5pt;color:#0c3d6b;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+(LANG==='de'?'Non-Custodial:':'Non-custodial:')+'</strong> '+esc(sw.recoveryNC||'')+'</div>'; if(meta.b85){ t+=fRow(L('pdfBip85Label'), Lf('pdfBip85Val', meta.seed, meta.idx, meta.words)); } } else if(sw.recovery){ t+='<div style="font-size:7.5pt;background:#f5f5f5;border-left:3px solid #999;padding:4pt 6pt;margin:4pt 0 5pt;color:#444;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+L('pdfCustodialLabel')+'</strong> '+esc(sw.recovery)+'</div>'; } } else if(sw.custodial){ t+='<div style="font-size:7.5pt;background:#f5f5f5;border-left:3px solid #999;padding:4pt 6pt;margin:4pt 0 5pt;color:#444;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+L('pdfCustodialLabel')+'</strong> '+esc(sw.recovery)+'</div>'; } else if(sw.noSeed){ t+='<div style="font-size:7.5pt;background:#fff3cd;border-left:3px solid #f5b41e;padding:4pt 6pt;margin:4pt 0 5pt;color:#5a4000;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+L('pdfNoSeedLabel')+'</strong> '+esc(sw.recovery)+'</div>'; } else { t+='<div style="font-size:7.5pt;background:#e8f4fd;border-left:3px solid #1F99E5;padding:4pt 6pt;margin:4pt 0 5pt;color:#0c3d6b;-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+L('pdfCustodialLabel')+'</strong> '+esc(sw.recovery)+'</div>'; } } if(sw && sw.seed && !sw.dualMode && state.bip85){ t+=fRow(L('pdfBip85Label'), Lf('pdfBip85Val', (state.sw[kind+"Seed"]||[])[idx]||'', (state.sw[kind+"Idx"]||[])[idx]||'', (state.sw[kind+"Words"]||[])[idx]||'')); } else if(sw && sw.seed && sw.dualMode && meta.mode==='noncustodial' && !meta.b85 && state.bip85){ t+=fRow(L('pdfBip85Label'), Lf('pdfBip85Val', meta.seed, meta.idx, meta.words)); } t+='</div>'; return t; } for(var pi=0;pi<state.sw.pc;pi++){ h+=swBlock(state.sw.pcModels[pi]||'', pi, 'pc', swModelName('pc',pi)); } for(var si=0;si<state.sw.phone;si++){ h+=swBlock(state.sw.phoneModels[si]||'', si, 'phone', swModelName('phone',si)); } }
 // 6. Exchanges
   if(state.ex.count>0){
     h+='<h2 class="pdf-h2">'+L('pdfEx')+'</h2>';
     h+='<p class="pdf-text">'+L('pdfExDetail')+'</p>';
     for(var ei=0;ei<state.ex.count;ei++){
-      var nm=state.ex.names[ei]||""; var ex=null;
+      var nm=state.ex.names[ei]||""; var dnm=exDisplayName(ei)||""; var ex=null;
       for(var z=0;z<EXCHANGES.length;z++){ if(EXCHANGES[z].label===nm) ex=EXCHANGES[z]; }
-      h+='<div class="pdf-wallet-block"><div class="pdf-wallet-block-title">'+Lf('pdfExTitle',ei,nm)+'</div>';
+      h+='<div class="pdf-wallet-block"><div class="pdf-wallet-block-title">'+Lf('pdfExTitle',ei,esc(dnm))+'</div>';
       if(ex){
-        if(ex.img) h+='<img class="pdf-device-img" src="'+ex.img+'" alt="'+esc(nm)+'" style="max-height:36pt;">';
+        if(ex.img) h+='<img class="pdf-device-img" src="'+ex.img+'" alt="'+esc(dnm)+'" style="max-height:36pt;">';
         h+=fRow('Website:', ex.url||null);
         h+=fRow(L('pdfKYC'), ex.kyc?(ex.kycFull?L('pdfKYCFull'):L('pdfKYCYes')):L('pdfKYCNo'));
         if(ex.recovery){ h+='<div style="font-size:7.5pt;background:'+(ex.hasSeed?"#e8f4fd":"#f5f5f5")+';border-left:3px solid '+(ex.hasSeed?"#1F99E5":"#999")+';padding:4pt 6pt;margin:4pt 0 5pt;color:'+(ex.hasSeed?"#0c3d6b":"#444")+';-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+(ex.hasSeed?"Recovery:":"&#8505; Custodial:")+'</strong> '+esc(ex.recovery)+'</div>'; }
       }
-      h+=eRow(L('pdfLoginLabel')); h+=eRow(L('pdfPassword3'));
+      h+=eRow(L('pdfLoginLabel')); h+=secRow(L('pdfPassword3'));
       h+=eRow(L('pdfTwoFAQ'));
       h+=twofaChecks();
       h+=eRow(L('pdfTwoFABackup'));
@@ -3710,8 +3905,8 @@ function buildAndPrint(){
   // 7. Password Manager
   if(state.pwm.use===true){
     h+='<h2 class="pdf-h2">'+L('pdfPwm')+'</h2>';
-    h+=fRow(L('pdfPwmApp'), state.pwm.app||null);
-    h+=eRow(L('pdfDeviceLabel3')); h+=eRow(L('pdfLoginPIN')); h+=eRow(L('pdfMasterPassword'));
+    h+=fRow(L('pdfPwmApp'), pwmDisplayName()||null);
+    h+=eRow(L('pdfDeviceLabel3')); h+=secRow(L('pdfLoginPIN')); h+=secRow(L('pdfMasterPassword'));
   }
 
   // 8. Digital backup
@@ -3719,7 +3914,7 @@ function buildAndPrint(){
     h+='<h2 class="pdf-h2">'+L('pdfDigTitle')+'</h2>';
     h+='<p class="pdf-text">'+Lf('pdfDigDetail',state.dig.enc)+'</p>';
     h+=eRow(L('pdfDigLocation'));
-    if(state.dig.enc){ h+=eRow(L('pdfDigPassword')); }
+    if(state.dig.enc){ h+=secRow(L('pdfDigPassword')); }
   }
 
   // 9. Multisig
@@ -3852,7 +4047,7 @@ function buildAndPrint(){
     h+= tlDest ? fRow(L('pdfToWallet'), tlDest) : eRow(L('pdfToWallet'));
     var tlStore=[];
     if(state.timelock.store.ritrek) tlStore.push("RITREK App");
-    if(state.timelock.store.pwm) tlStore.push(L('timelockStorePwm')+((state.pwm.use===true&&state.pwm.app)?" ("+state.pwm.app+")":""));
+    if(state.timelock.store.pwm) tlStore.push(L('timelockStorePwm')+((state.pwm.use===true&&state.pwm.app)?" ("+pwmDisplayName()+")":""));
     if((state.timelock.store.other||"").trim()) tlStore.push(state.timelock.store.other.trim());
     h+= tlStore.length ? fRow(L('pdfPresignedStored'), tlStore.join(', ')) : eRow(L('pdfPresignedStored'));
     h+='<div class="pdf-info-hint">'+L('pdfTimelockHeirsNote')+'</div>';
