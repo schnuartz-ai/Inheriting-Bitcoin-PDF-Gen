@@ -1,68 +1,73 @@
-# ClavaStack – Bitcoin-Nachlassplan-Tool
+# ClavaStack – Bitcoin Inheritance Plan Tool
 
 [![Live Demo](https://img.shields.io/badge/demo-clavastack.com-1e88e5)](https://clavastack.com/inheritance-planner)
 [![Last commit](https://img.shields.io/github/last-commit/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen)](https://github.com/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen/commits/master)
 [![Open issues](https://img.shields.io/github/issues/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen)](https://github.com/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen/issues)
 [![Stars](https://img.shields.io/github/stars/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen)](https://github.com/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen/stargazers)
 
-> A single-file, self-contained browser tool that walks Bitcoin holders through a structured
-> inheritance plan and turns it into a print-ready PDF — no server, no build step, no secrets ever
-> typed into the page. German docs below; the app itself is fully bilingual (EN/DE).
+A single-file, self-contained browser tool that walks Bitcoin holders through a structured
+**inheritance plan** and turns it into a print-ready **PDF** (via the browser's print function).
+A functional clone of the Marc Steiner inheritance-plan tool, styled with **Specter** branding and
+the **ClavaStack** logo. The app itself is fully bilingual (EN/DE, switchable in the header).
 
 ![Screenshot of the ClavaStack Bitcoin Inheritance Plan tool](assets/screenshot-tool.png)
 
-Ein eigenständiges, browserbasiertes Tool, mit dem man einen strukturierten **Bitcoin-Nachlassplan**
-ausfüllt und als druckfertiges **PDF** (über die Browser-Druckfunktion) erzeugt. Funktionaler Klon des
-Marc-Steiner-Nachlassplan-Tools, gestaltet im **Specter**-Branding mit **ClavaStack**-Logo.
+## Usage
 
-## Nutzung
+1. Open `index.html` in a browser (Chrome recommended) – no server, no build step required.
+2. Fill out the wizard. Sections/devices you don't need can simply be toggled off.
+3. Click **"Create PDF"** → the browser's print dialog opens.
+4. Choose **"Save as PDF"** as the destination. Also works with the **"Margins: None"** print
+   setting.
 
-1. `index.html` im Browser öffnen (Chrome empfohlen) – kein Server, kein Build nötig.
-2. Den Wizard ausfüllen. Nicht benötigte Abschnitte einfach deaktivieren (Toggle je Sektion).
-3. Auf **„PDF erstellen"** klicken → der Druckdialog öffnet sich.
-4. Als Ziel **„Als PDF speichern"** wählen. Funktioniert auch mit Druckeinstellung **„Ränder: Keine"**.
+## Features
 
-## Funktionen
+- **Modular wizard** – only the sections/devices you select end up in the PDF:
+  - General information + up to 2 trusted contacts (contact details and a relationship note are
+    captured directly in the wizard; empty fields remain a blank handwriting line in the PDF)
+  - Hardware wallets (dynamic, with a 24-word seed grid per device)
+  - Software wallets (computer & smartphone)
+  - Online exchanges, incl. 2FA device
+  - Password manager app
+  - Multisig wallet (with co-signers)
+- **Password-protected save & load** – wizard input can be saved as an **encrypted** file at the
+  end and reloaded later to continue. Encryption uses **AES-256-GCM** (key derivation via
+  PBKDF2-SHA256 from a self-chosen password, through the Web Crypto API). The password is
+  requested on save (with confirmation) and on load; a wrong password fails cleanly. Older,
+  unencrypted plan files can still be loaded. *Without the password there is no recovery – keep the
+  file and password safe/offline.*
+- **Predefined device/exchange lists** with automatic filling of the official URLs.
+- **Automatic quick-overview table** built from all entries.
+- **Print-optimized PDF layout**: a running header (colored ClavaStack logo + URL) and footer
+  (branding + page number) on every page, even margins on all four sides, no
+  cut-off/overlapping content from page 2 onward (thead/tfoot spacer technique).
 
-- **Modularer Wizard** – nur ausgewählte Abschnitte/Geräte landen im PDF:
-  - Allgemeine Informationen + bis zu 2 Vertrauenskontakte (Kontaktdaten und ein Hinweis zur
-    Beziehung werden direkt im Wizard erfasst; leere Felder bleiben als Handschrift-Linie im PDF)
-  - Hardware-Wallets (dynamisch, mit 24-Wort-Seed-Gitter je Gerät)
-  - Software-Wallets (Computer & Smartphone)
-  - Online-Exchanges (Börsen) inkl. 2FA-Gerät
-  - Passwortmanager-App
-  - Multisignatur-Wallet (mit Mitunterzeichnern)
-- **Passwortgeschütztes Speichern & Laden** – die Wizard-Eingaben lassen sich am Ende als
-  **verschlüsselte** Datei speichern und am Anfang wieder laden, um später weiterzuarbeiten.
-  Die Verschlüsselung erfolgt mit **AES-256-GCM** (Schlüsselableitung per PBKDF2-SHA256 aus einem
-  selbst gewählten Passwort, über die Web Crypto API). Das Passwort wird beim Speichern (mit
-  Bestätigung) und beim Laden abgefragt; ein falsches Passwort schlägt sauber fehl. Ältere,
-  unverschlüsselte Plandateien lassen sich weiterhin laden. *Ohne das Passwort gibt es keine
-  Wiederherstellung – Datei und Passwort sicher/offline aufbewahren.*
-- **Vordefinierte Geräte-/Börsenlisten** mit automatischem Ausfüllen der offiziellen URLs.
-- **Automatische Schnellübersicht**-Tabelle aus allen erfassten Einträgen.
-- **Druckoptimiertes PDF-Layout**: laufender Header (farbiges ClavaStack-Logo + URL) und Footer
-  (Branding + Seitenzahl) auf jeder Seite, gleichmäßige Ränder auf allen vier Seiten, kein
-  abgeschnittener/überlappender Inhalt ab Seite 2 (thead/tfoot-Spacer-Technik).
+## What the PDF looks like
 
-## Aufbau
+The generated document never contains secrets – seed phrases, PINs and passwords stay as blank
+handwriting lines, filled in by hand only after printing.
 
-| Datei | Zweck |
-|-------|-------|
-| `index.html` | Komplette App (HTML, CSS, Vanilla-JS) – self-contained, Logo als Base64 eingebettet |
-| `sw.js` / `site.webmanifest` | Service Worker + PWA-Manifest für den Offline-Modus („Make available offline") |
-| `assets/clavastack-logo.png` | ClavaStack-Logo (Quelle) |
-| `.github/workflows/sync-to-clavastack.yml` | CI: spiegelt `index.html` bei jedem Push automatisch in die ClavaStack-Website |
-| `.gitignore` | OS-/Editor-Artefakte |
+![Sample page of the generated PDF – general info and trusted contacts](assets/screenshot-pdf-1.png)
+![Sample page of the generated PDF – hardware device section](assets/screenshot-pdf-2.png)
 
-Keine externen Abhängigkeiten außer dem Google-Fonts-Link (Montserrat).
+## Project layout
 
-## Live-Version
+| File | Purpose |
+|------|---------|
+| `index.html` | Complete app (HTML, CSS, vanilla JS) – self-contained, logo embedded as base64 |
+| `sw.js` / `site.webmanifest` | Service worker + PWA manifest for offline mode ("Make available offline") |
+| `assets/clavastack-logo.png` | ClavaStack logo (source) |
+| `.github/workflows/sync-to-clavastack.yml` | CI: mirrors `index.html` to the ClavaStack website on every push |
+| `.gitignore` | OS/editor artifacts |
 
-Die aktuelle `index.html` läuft live unter **[clavastack.com/inheritance-planner](https://clavastack.com/inheritance-planner)**
-(wird bei jedem Push automatisch synchronisiert, siehe CI-Workflow oben).
+No external dependencies besides the Google Fonts link (Montserrat).
 
-## Sicherheitshinweis
+## Live version
 
-Dieses Dokument enthält hochsensible Daten (PINs, Passwörter, Seed-Phrasen). Fülle es nur auf einem
-vertrauenswürdigen Gerät aus, speichere/drucke es offline und bewahre Ausdrucke sicher auf.
+The current `index.html` runs live at **[clavastack.com/inheritance-planner](https://clavastack.com/inheritance-planner)**
+(auto-synced on every push, see the CI workflow above).
+
+## Security notice
+
+This document contains highly sensitive data (PINs, passwords, seed phrases) once filled in by
+hand. Only fill it out on a trusted device, save/print it offline, and store printouts securely.
