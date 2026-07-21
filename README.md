@@ -1,6 +1,7 @@
 # ClavaStack – Bitcoin Inheritance Plan Tool
 
 [![Live Demo](https://img.shields.io/badge/demo-clavastack.com-1e88e5)](https://clavastack.com/inheritance-planner)
+[![License](https://img.shields.io/github/license/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen)](LICENSE)
 [![Last commit](https://img.shields.io/github/last-commit/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen)](https://github.com/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen/commits/master)
 [![Open issues](https://img.shields.io/github/issues/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen)](https://github.com/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen/issues)
 [![Stars](https://img.shields.io/github/stars/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen)](https://github.com/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen/stargazers)
@@ -71,3 +72,13 @@ The current `index.html` runs live at **[clavastack.com/inheritance-planner](htt
 
 This document contains highly sensitive data (PINs, passwords, seed phrases) once filled in by
 hand. Only fill it out on a trusted device, save/print it offline, and store printouts securely.
+
+## License
+
+Licensed under the [Common Public Attribution License 1.0 (CPAL-1.0)](LICENSE). Unlike a
+plain MIT/Apache license, CPAL contractually requires visible attribution: if you embed,
+redistribute, or build on this tool — including on your own website — [Exhibit B of the
+LICENSE](LICENSE) requires the single word **"ClavaStack"**, prominently and legibly
+displayed in the user interface, as an active hyperlink to https://clavastack.com. No logo
+or additional wording is required — but it must be there, not buried in a source file or
+credits page.
