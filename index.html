@@ -1868,7 +1868,6 @@ function renderDev(i){
   if(m){
     h+='<div class="sub-block"><label class="form-label">'+L('companionLabel')+'</label>';
     h+='<p class="mini-note">'+L('companionNote')+'</p>';
-    h+='<p class="mini-note">'+L('companionOptionalNote')+'</p>';
     h+=pills(dv.companions.length,0,4,"setCompanionCount("+i+",");
     for(var c=0;c<dv.companions.length;c++){
       var cp=dv.companions[c]; var ca=getCompanion(cp.app);
@@ -3214,7 +3213,7 @@ function buildRecommendations() {
   // 8d. Liana ohne Taproot -> Privacy-Hinweis (Tapscript)
   if (state.lianaWallets.length > 0 && anyLianaCompanion() && state.addrTypes.indexOf('Taproot (bc1p…)') < 0) {
     tips.push({
-      title: 'Privatsph&auml;re: Liana Wallet mit Taproot statt Native SegWit nutzen',
+      title: 'Privatsphäre: Liana Wallet mit Taproot statt Native SegWit nutzen',
       body: 'Deine Liana Wallet nutzt aktuell kein Taproot-Adressformat. Bei Taproot wird die Miniscript-Policy als sogenannter <strong>Tapscript</strong>-Baum abgelegt: Beim Ausgeben wird nur der tats&auml;chlich genutzte Spending Path (z.&thinsp;B. der Prim&auml;rpfad) auf der Blockchain sichtbar &ndash; alle anderen Pfade (z.&thinsp;B. die Recovery-Pfade samt deren Schl&uuml;sseln und Timelocks) bleiben verborgen, solange sie nicht verwendet werden. Ohne Taproot (z.&thinsp;B. bei Native SegWit/wsh) wird dagegen bei jeder Ausgabe die <strong>komplette Policy inkl. aller Pfade</strong> offengelegt &ndash; unabh&auml;ngig davon, welcher Pfad tats&auml;chlich genutzt wird. Das verr&auml;t Au&szlig;enstehenden mehr &uuml;ber deine Vererbungsstruktur (Anzahl Recovery-Pfade, Timelocks, beteiligte Schl&uuml;ssel) als n&ouml;tig. Empfehlung: Taproot-Adressformat aktivieren.',
       links: [
         {text: 'Liana Wallet', url: LIANA_WEBSITE}
@@ -3257,13 +3256,13 @@ function buildRecommendations() {
       var st7b = msDescStatus(mb7b);
       if (st7b.level === 'err') {
         tips.push({
-          title: 'Multisig „' + esc(msb7b.name || ('Multisig ' + (mb7b + 1))) + '": Wallet-Descriptor bei jedem Backup erg&auml;nzen',
+          title: 'Multisig „' + esc(msb7b.name || ('Multisig ' + (mb7b + 1))) + '": Wallet-Descriptor bei jedem Backup ergänzen',
           body: st7b.msg,
           warn: true
         });
       } else if (st7b.level === 'warn') {
         tips.push({
-          title: 'Multisig „' + esc(msb7b.name || ('Multisig ' + (mb7b + 1))) + '": Wallet-Descriptor bei Seed-Phrase-Backups erg&auml;nzen',
+          title: 'Multisig „' + esc(msb7b.name || ('Multisig ' + (mb7b + 1))) + '": Wallet-Descriptor bei Seed-Phrase-Backups ergänzen',
           body: 'Bei <strong>' + esc(msb7b.name || ('Multisig ' + (mb7b + 1))) + '</strong> (' + msb7b.m + '-von-' + msb7b.n + '): ' + st7b.msg,
           warn: true
         });
