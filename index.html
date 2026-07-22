@@ -106,6 +106,7 @@ select.form-control option { background: var(--specter-dark-accent); }
 #pdf-document { display: none; }
 @media print {
   #app-ui { display: none !important; }
+  #offline-status-badge, .github-footer { display: none !important; }
   #pdf-document { display: block !important; }
   @page { size: A4; margin: 0; }
   body { background: #fff; }
