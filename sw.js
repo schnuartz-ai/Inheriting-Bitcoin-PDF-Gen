@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bitcoin-inheritance-offline-v1';
+const CACHE_NAME = 'bitcoin-inheritance-offline-v2';
 const CORE_URLS = ['./', './index.html', './assets/clavastack-logo.png', './assets/products/smartcard.png', './site.webmanifest'];
 
 self.addEventListener('install', event => {

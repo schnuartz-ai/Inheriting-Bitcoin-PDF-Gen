@@ -5,6 +5,7 @@ desktop.ini
 *~
 .vscode/
 .idea/
+.claude/
 
 # Build / temp helper (logo data-uri is embedded into index.html)
 assets/logo-datauri.txt
