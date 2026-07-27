@@ -2,9 +2,8 @@ name: Sync index.html to ClavaStack website
 
 on:
   push:
-    paths:
-      - index.html
-      - assets/**
+    branches:
+      - master
   workflow_dispatch: {}
 
 jobs:
