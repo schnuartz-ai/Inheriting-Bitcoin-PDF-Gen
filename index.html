@@ -938,8 +938,8 @@ var STRINGS = {
     appLabel:'App', selectSmall:'-- select --', onWhichDevice:'On which device?',
     deviceModelLabel:'Device model (optional)',
     deviceModelPh:'e.g. MacBook Air, iPhone 14',
-    seedCountQ:'How many seed phrases do you have?',
-    seedCountHint:"A seed phrase is the backup of a wallet (12 or 24 words). We'll go through each one separately shortly.",
+    seedCountQ:'How many cold-storage seed phrases do you have?',
+    seedCountHint:"A seed phrase is the backup of a wallet (12 or 24 words). This only counts the seed phrases of your hardware wallets (cold storage) - seed phrases of software wallets or exchanges are covered in their own steps later. We'll go through each cold-storage seed phrase separately shortly.",
     seedPhrase:function(i,n){ return 'Seed Phrase '+i+' of '+n; },
     seedHint:'Everything here applies to exactly this one seed phrase. You do NOT type in words, PIN, passphrase and anti-phishing words.',
     seedNameLabel:'Name of this seed phrase', seedNamePh:'e.g. Main Seed, Cold Storage',
@@ -970,6 +970,8 @@ var STRINGS = {
     noBagNote:'The PDF will show an empty line for the storage location of the bag (handwritten).',
     fpLabel:function(pp){ return 'Fingerprint '+(pp<0?'of this seed phrase':'(Seed + Passphrase)')+' (optional)'; },
     fpPh:'e.g. 1A2B3C4D', fpWarnInvalid:'Invalid fingerprint: enter 8 hex characters (e.g. 1A2B3C4D).',
+    derivPathLabel:'Derivation path (optional)', derivPathPh:"e.g. m/84'/0'/0'",
+    xpubLabel:'xPub (Watch-Only, optional)', xpubPh:'zpub... / xpub...',
     bitSquiggleHint:'Visual fingerprint icons (BitSquiggle) per signer &ndash; for a quick check, e.g. against what a hardware wallet displays.',
     addrFormatNote:'Choose the address formats of this wallet (default: Native SegWit). Per format you choose the accounts.',
     accCount:'How many accounts? (starting at #0)',
@@ -1142,6 +1144,7 @@ var STRINGS = {
     pdfEx:'Exchanges / Services',
     pdfPwm:'Password Manager',
     pdfBook:'Password Book',
+    pdfBookLocation:'Storage location of the password book:',
     pdfDig:'Digital inheritance plan (SD / USB)',
     pdfContacts:'Trusted Contacts',
     pdfConclusion:'Final Note',
@@ -1197,7 +1200,7 @@ var STRINGS = {
     pdfCustodialLabel:'ℹ Custodial Wallet:', pdfNoSeedLabel:'⚠ No Standard BIP39 Seed:',
     pdfDevicePC:'Device / Computer:', pdfDevicePhone:'Smartphone:',
     pdfLoginEmail:'Login (email or phone number):', pdfPassword2:'Password:',
-    pdfTwoFAQ:'2FA enabled? (Yes / No):', pdfTwoFABackup:'2FA backup / recovery code stored where:',
+    pdfTwoFABackup:'2FA backup / recovery code stored where:',
     pdfTwoFASmsNumber:'Phone number for SMS 2FA:', pdfTwoFAEmailAddr:'Email address for 2FA (if different from login):',
     pdfRecoveryCode:'Recovery code stored where (e.g. password manager, safe):',
     pdfEmergencyKit:'Emergency kit secured where (e.g. USB, safe):',
@@ -1370,8 +1373,8 @@ var STRINGS = {
     appLabel:'App', selectSmall:'-- wählen --', onWhichDevice:'Auf welchem Gerät?',
     deviceModelLabel:'Geräte-Modell (optional)',
     deviceModelPh:'z. B. MacBook Air, iPhone 14',
-    seedCountQ:'Wie viele Seed-Phrasen hast du?',
-    seedCountHint:'Eine Seed-Phrase ist das Backup eines Wallets (12 oder 24 Wörter). Jede gehen wir gleich einzeln durch.',
+    seedCountQ:'Wie viele Cold-Storage-Seed-Phrasen hast du?',
+    seedCountHint:'Eine Seed-Phrase ist das Backup eines Wallets (12 oder 24 Wörter). Gemeint sind hier ausschließlich die Seed-Phrasen deiner Hardware-Wallets (Cold Storage) – Seed-Phrasen von Software-Wallets oder Börsen werden in eigenen späteren Schritten erfasst. Jede Cold-Storage-Seed-Phrase gehen wir gleich einzeln durch.',
     seedPhrase:function(i,n){ return 'Seed-Phrase '+i+' von '+n; },
     seedHint:'Alles hier gilt für genau diese eine Seed-Phrase. Wörter, PIN, Passphrase und Anti-Phishing-Wörter tippst du NICHT ein.',
     seedNameLabel:'Name dieser Seed-Phrase', seedNamePh:'z. B. Haupt-Seed, Cold Storage',
@@ -1402,6 +1405,8 @@ var STRINGS = {
     noBagNote:'Im PDF erscheint eine leere Zeile für den Aufbewahrungsort der Bag (handschriftlich).',
     fpLabel:function(pp){ return 'Fingerprint '+(pp<0?'dieser Seed-Phrase':'(Seed + Passphrase)')+' (optional)'; },
     fpPh:'z. B. 1A2B3C4D', fpWarnInvalid:'Ungültiger Fingerprint: Bitte 8 Hex-Zeichen eintragen (z. B. 1A2B3C4D).',
+    derivPathLabel:'Derivation Path (optional)', derivPathPh:"z. B. m/84'/0'/0'",
+    xpubLabel:'xPub (Watch-Only, optional)', xpubPh:'zpub... / xpub...',
     bitSquiggleHint:'Visuelle Fingerprint-Symbole (BitSquiggle) je Unterzeichner &ndash; zum schnellen Abgleich, z.&nbsp;B. gegen die Anzeige einer Hardware-Wallet.',
     addrFormatNote:'Wähle die Adressformate dieses Wallets (Standard: Native SegWit). Pro Format wählst du die Accounts.',
     accCount:'Wie viele Accounts? (ab #0)',
@@ -1573,6 +1578,7 @@ var STRINGS = {
     pdfEx:'Börsen / Dienste',
     pdfPwm:'Passwort-Manager',
     pdfBook:'Passwort-Buch',
+    pdfBookLocation:'Aufbewahrungsort des Passwort-Buchs:',
     pdfDig:'Digitaler Nachlassplan (SD / USB)',
     pdfContacts:'Vertrauenswürdige Kontakte',
     pdfConclusion:'Schlusswort',
@@ -1628,7 +1634,7 @@ var STRINGS = {
     pdfCustodialLabel:'ℹ Custodial Wallet:', pdfNoSeedLabel:'⚠ Kein Standard-BIP39-Seed:',
     pdfDevicePC:'Gerät / Computer:', pdfDevicePhone:'Smartphone:',
     pdfLoginEmail:'Login (E-Mail oder Telefonnummer):', pdfPassword2:'Passwort:',
-    pdfTwoFAQ:'2FA aktiviert? (Ja / Nein):', pdfTwoFABackup:'2FA-Backup / Recovery-Code hinterlegt wo:',
+    pdfTwoFABackup:'2FA-Backup / Recovery-Code hinterlegt wo:',
     pdfTwoFASmsNumber:'Telefonnummer für SMS-2FA:', pdfTwoFAEmailAddr:'E-Mail-Adresse für 2FA (falls abweichend vom Login):',
     pdfRecoveryCode:'Recovery-Code hinterlegt wo (z. B. Passwort-Manager, Tresor):',
     pdfEmergencyKit:'Emergency Kit gesichert wo (z. B. USB, Safe):',
@@ -2114,6 +2120,17 @@ function newDevice(){ return {model:"", modelCustom:"", smartcards:0, smartcardN
 function newCompanion(){ return {app:"", appCustom:"", platform:"", model:""}; }
 function newBackup(){ return {type:"paper", brand:"", brandCustom:"", smartcard:"", bagDigital:true, bagNo:"", descriptorWithBackup:false}; }
 function deviceModelName(dv){ return (dv && dv.model==="Andere" && dv.modelCustom) ? dv.modelCustom : (dv?dv.model:""); }
+// A few catalog labels carry a purchase-time variant tag in parentheses (e.g. "BitBox02
+// (Bitcoin-only)", "Specter Shield (Metal)") that only matters when choosing which product to
+// buy - it's not needed to identify or recover the device later, so the printed PDF drops it.
+// The selection dropdown keeps the full label since it still needs to disambiguate variants there.
+var PDF_MODEL_LABEL_STRIP = [' (Bitcoin-only)', ' (Metal)'];
+function pdfDeviceModelName(dv){
+  var nm = deviceModelName(dv);
+  for(var i=0;i<PDF_MODEL_LABEL_STRIP.length;i++){ nm = nm.split(PDF_MODEL_LABEL_STRIP[i]).join(''); }
+  return nm;
+}
+function pdfDeviceLabel(d){ var dv=state.devices[d]; if(!dv) return ""; return Lf('pdfDeviceLabel',d,pdfDeviceModelName(dv)||""); }
 function companionAppName(cp){ return (cp && cp.app==="Andere" && cp.appCustom) ? cp.appCustom : (cp?cp.app:""); }
 function backupBrandName(bk){ return (bk && bk.brand==="Andere" && bk.brandCustom) ? bk.brandCustom : (bk?bk.brand:""); }
 // Jede Passphrase ist ein eigenes Wallet mit eigenen Accounts.
@@ -2298,11 +2315,19 @@ function waitForPdfImages(root){
   var pending = [];
   for(var i=0;i<imgs.length;i++){
     (function(img){
-      if(img.complete && img.naturalWidth>0) return;
       pending.push(new Promise(function(resolve){
         var done = false;
         function finish(){ if(done) return; done = true; resolve(); }
-        img.addEventListener('load', finish, {once:true});
+        // img.complete/naturalWidth only means the bytes arrived, not that the browser
+        // has finished decoding the bitmap - printing right after that race could still
+        // paginate around a not-yet-painted image. decode() waits for the real thing;
+        // fall back to the load/error events on older browsers without it.
+        if(img.complete && img.naturalWidth>0){
+          if(img.decode){ img.decode().then(finish).catch(finish); } else { finish(); }
+          setTimeout(finish, 3000);
+          return;
+        }
+        img.addEventListener('load', function(){ if(img.decode){ img.decode().then(finish).catch(finish); } else { finish(); } }, {once:true});
         img.addEventListener('error', finish, {once:true});
         setTimeout(finish, 3000);
       }));
@@ -2638,6 +2663,14 @@ function renderWalletAcc(i,p){
   if((w.fp||'').trim() && !isValidFingerprint(w.fp)){
     h+='<div class="mini-note" style="color:#f5b41e;">'+L('fpWarnInvalid')+'</div>';
   }
+  // Derivation path / xPub are watch-only data (see offline hint) - like the fingerprint above,
+  // only typeable in offline mode; otherwise the PDF leaves a handwritten line instead.
+  if(state.offline){
+    h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+L('derivPathLabel')+'</label>'
+      +'<input class="form-control" type="text" value="'+esc(w.derivPath||"")+'" placeholder="'+L('derivPathPh')+'" oninput="setWDerivPath('+i+','+p+',this.value)"></div>';
+    h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+L('xpubLabel')+'</label>'
+      +'<input class="form-control" type="text" value="'+esc(w.xpub||"")+'" placeholder="'+L('xpubPh')+'" oninput="setWXpub('+i+','+p+',this.value)"></div>';
+  }
   if(avail.length>=2){
     h+='<p class="mini-note">'+L('addrFormatNote')+'</p>';
     h+='<div class="chip-group">';
@@ -2660,6 +2693,8 @@ function toggleWFmt(i,p,f){ var w=walletOf(i,p); var k=w.fmts.indexOf(f); if(k>=
 function setWAcc(i,p,f,n){ var w=walletOf(i,p); w.acc[f]=n; if(!w.pur[f])w.pur[f]=[]; w.pur[f].length=n; render(); }
 function setWPur(i,p,f,a,v){ var w=walletOf(i,p); if(!w.pur[f])w.pur[f]=[]; w.pur[f][a]=v; }
 function setWFp(i,p,v){ walletOf(i,p).fp=(v||'').trim().toUpperCase(); render(); }
+function setWDerivPath(i,p,v){ walletOf(i,p).derivPath=v; }
+function setWXpub(i,p,v){ walletOf(i,p).xpub=v; }
 function setSeedName(i,v){ state.seeds[i].name=v; }
 function setBackupCount(i,n){ var s=state.seeds[i]; while(s.backups.length<n)s.backups.push(newBackup()); while(s.backups.length>n)s.backups.pop(); render(); }
 function setBackupType(i,b,t){ state.seeds[i].backups[b].type=t; render(); }
@@ -4323,7 +4358,11 @@ function walletAccountsBlock(title, w, isPp){
   } else {
     h+=eRow(L('pdfFingerprintEmpty'));
   }
-  if(state.offline){ h+=eRow('Derivation Path:'); h+=eRow('xPub (Watch-Only):'); }
+  if(state.offline){
+    h+= (w && w.derivPath) ? fRow('Derivation Path:', w.derivPath) : eRow('Derivation Path:');
+    if(w && w.xpub){ h+=fRow('xPub (Watch-Only):', cleanForQr(w.xpub)); h+=xpubQrBlock(w.xpub); }
+    else { h+=eRow('xPub (Watch-Only):'); }
+  }
   var fmts = (w&&w.fmts&&w.fmts.length)? w.fmts : [defFmt()];
   for(var fi=0;fi<fmts.length;fi++){
     var f=fmts[fi]; var cnt=(w.acc&&w.acc[f])||1; var pur=(w.pur&&w.pur[f])||[];
@@ -4355,8 +4394,42 @@ function pdfLwPathRows(p){
   return h;
 }
 
+// ===== GLOSSARY CONDITIONS =====
+// Each glossary entry should only print if the concept it explains actually appears
+// somewhere else in this PDF - otherwise heirs are handed definitions for things
+// (e.g. Multisig) that were never used. These helpers mirror the exact conditions
+// under which each concept is printed elsewhere in buildAndPrint().
+function exchangeAt(i){ var nm=state.ex.names[i]; for(var z=0;z<EXCHANGES.length;z++){ if(EXCHANGES[z].label===nm) return EXCHANGES[z]; } return null; }
+function hasKycFull(){ for(var i=0;i<state.ex.count;i++){ var ex=exchangeAt(i); if(ex && ex.kyc && ex.kycFull) return true; } return false; }
+function hasKycLite(){ for(var i=0;i<state.ex.count;i++){ var ex=exchangeAt(i); if(ex && ex.kyc && !ex.kycFull) return true; } return false; }
+function hasNoKyc(){ for(var i=0;i<state.ex.count;i++){ var ex=exchangeAt(i); if(ex && !ex.kyc) return true; } return false; }
+function hasSeedPhraseConcept(){
+  if(state.seeds.length>0) return true;
+  if(state.sw.pc>0 || state.sw.phone>0) return true;
+  for(var i=0;i<state.ex.count;i++){ var ex=exchangeAt(i); if(ex && ex.hasSeed) return true; }
+  return false;
+}
+function hasSmartcardUsed(){ for(var i=0;i<state.devices.length;i++){ var dv=state.devices[i]; var m=getModel(dv.model); if(m && m.shield && dv.smartcards>0) return true; } return false; }
+function hasAntiPhishingUsed(){ for(var i=0;i<state.devices.length;i++){ var m=getModel(state.devices[i].model); if(m && m.antiPhish) return true; } return false; }
+function hasPassphraseUsed(){ for(var i=0;i<state.seeds.length;i++){ if(state.seeds[i].passphrases>0) return true; } return false; }
+function hasDescriptorConcept(){ return state.multisigs.length>0 || (state.lianaWallets.length>0 && anyLianaCompanion()); }
+function hasMultisigConcept(){ return state.multisigs.length>0 || (state.lianaMode==="multi" && state.lianaWallets.length>0 && anyLianaCompanion()); }
+function hasLockIconUsed(){ return state.devices.length>0 || state.ex.count>0 || hasPassphraseUsed() || state.pwm.use===true || (state.dig.use===true && !!state.dig.enc); }
+
 // ===== PDF BUILD =====
+// Guard against re-entrant calls: a double-click (or a click while the previous
+// print dialog is still open/rendering) used to fire buildAndPrint() twice, racing
+// two innerHTML writes and two window.print() calls against the same #pdf-body -
+// the print preview then showed a half-built document that "broke off" once you
+// scrolled it. The flag is released once the print dialog has actually opened
+// (afterprint) or, as a fallback, after a timeout in case afterprint never fires.
+var pdfBuildInProgress = false;
 function buildAndPrint(){
+  if(pdfBuildInProgress) return;
+  pdfBuildInProgress = true;
+  var releaseGuard = function(){ pdfBuildInProgress = false; };
+  window.addEventListener("afterprint", releaseGuard, {once:true});
+  setTimeout(releaseGuard, 15000);
   var h='';
   // 1. General
   h+='<h1 class="pdf-h1">'+L('pdfTitle')+'</h1>';
@@ -4375,48 +4448,68 @@ function buildAndPrint(){
     else { h+='<em class="c-label">'+L('pdfContactRelLabel')+'</em><span class="pdf-field-line-wide"></span>'; }
     h+='</div>';
   }
-  // Glossary
+  // Glossary - each entry is gated on the corresponding hasXxx() condition so heirs
+  // never get a definition for a concept (Multisig, KYC, ...) that isn't actually
+  // used anywhere else in this particular PDF.
+  var gHw = state.devices.length>0;
+  var gSw = state.sw.pc>0 || state.sw.phone>0;
+  var gEx = state.ex.count>0;
+  var gKycFull = hasKycFull();
+  var gKycLite = hasKycLite();
+  var gNoKyc = hasNoKyc();
+  var gSeed = hasSeedPhraseConcept();
+  var gBag = state.seeds.length>0;
+  var gSmartcard = hasSmartcardUsed();
+  var gAntiPhish = hasAntiPhishingUsed();
+  var gPassphrase = hasPassphraseUsed();
+  var gAccount = state.seeds.length>0;
+  var gAddrType = state.seeds.length>0;
+  var gFingerprint = state.seeds.length>0;
+  var gDescriptor = hasDescriptorConcept();
+  var gMultisig = hasMultisigConcept();
+  var g2fa = gEx;
+  var gLock = hasLockIconUsed();
   h+='<h3 class="pdf-h3">'+L('pdfGlossary')+'</h3><dl class="pdf-gloss">';
   if(LANG==='de'){
     h+='<dt>Wallet</dt><dd>Software oder Ger&auml;t, das die privaten Schl&uuml;ssel zu euren Bitcoin verwaltet und damit Transaktionen erm&ouml;glicht. Sie speichert kein Bitcoin selbst, sondern nur den Zugriffsschl&uuml;ssel darauf.</dd>';
-    h+='<dt>Hardware-Wallet</dt><dd>Physisches Ger&auml;t (z.&thinsp;B. Specter Shield, Coldcard, Ledger), das die Seed-Phrase offline speichert und Transaktionen signiert, ohne die Schl&uuml;ssel jemals mit einem Computer oder Smartphone zu teilen. Gilt als besonders sicher (&bdquo;Cold Storage&ldquo;). Seed-Phrase und Passphrase werden ausschlie&szlig;lich direkt am Ger&auml;t eingegeben, niemals am PC oder Smartphone, da sie sonst kompromittiert werden k&ouml;nnten.</dd>';
-    h+='<dt>Software-Wallet</dt><dd>App auf PC oder Smartphone (z.&thinsp;B. Sparrow, BlueWallet), &uuml;ber die ihr Bitcoin verwaltet. Da der Schl&uuml;ssel auf einem internetf&auml;higen Ger&auml;t liegt, gilt sie als &bdquo;Hot Wallet&ldquo;, also weniger sicher als eine Hardware-Wallet, aber praktisch f&uuml;r kleinere Betr&auml;ge oder als zus&auml;tzlicher Schl&uuml;ssel in einem Multisig.</dd>';
-    h+='<dt>Exchange (B&ouml;rse)</dt><dd>Online-Dienst zum Kaufen, Verkaufen oder Tauschen von Bitcoin (z.&thinsp;B. Kraken, Coinbase, Relai). Die meisten Exchanges sind custodial, sie verwahren die Bitcoin f&uuml;r euch, es gibt also keine Seed-Phrase, sondern nur Zugangsdaten (E-Mail, Passwort, 2FA). Wer diese Zugangsdaten kennt und Zugriff auf die Konto-Wiederherstellung hat, kommt an das Guthaben.</dd>';
-    h+='<dt>KYC-Bitcoin</dt><dd>Bitcoin, die bei einem Dienst mit vollst&auml;ndiger Identit&auml;tspr&uuml;fung gekauft wurden (Ausweis und Selfie, sogenanntes &bdquo;Full KYC&ldquo;). Der Kauf ist eindeutig auf den Namen der Person registriert.</dd>';
-    h+='<dt>KYC-Bitcoin Lite</dt><dd>Bitcoin, die bei einem Dienst mit reduzierter Identit&auml;tspr&uuml;fung gekauft wurden, zum Beispiel nur mit Ausweis, ohne Selfie oder weitere Pr&uuml;fung. Es findet eine teilweise Identifizierung statt, jedoch nicht so umfassend wie bei Full KYC.</dd>';
-    h+='<dt>No-KYC-Bitcoin</dt><dd>Bitcoin, die ohne Identit&auml;tspr&uuml;fung erworben wurden, zum Beispiel &uuml;ber Bitcoin-Automaten ohne Ausweispflicht oder Peer-to-Peer-K&auml;ufe. Sie sind anonym und nicht auf den Namen der Person registriert. Der Verkauf sollte daher strategisch &uuml;berlegt werden, bevorzugt durch erneutes &Uuml;berdenken der Nutzung oder durch Peer-to-Peer-Verkauf an eine Privatperson statt &uuml;ber eine B&ouml;rse.</dd>';
-    h+='<dt>Seed-Phrase</dt><dd>Folge von 12 oder 24 W&ouml;rtern, das Master-Backup eines Wallets. Wer sie kennt, hat vollen Zugriff. Steht daher nie in diesem Dokument. Die Seed-Phrase wird ausschlie&szlig;lich direkt am Hardware-Wallet eingegeben, niemals an einem Computer, Smartphone oder in einer Website beziehungsweise App.</dd>';
-    h+='<dt>Tamper-Evident-Bag</dt><dd>Manipulationssichere Sicherheitst&uuml;te mit aufgedruckter, eindeutiger Nummer. Wird sie ge&ouml;ffnet, ist das dauerhaft sichtbar &ndash; so erkennt ihr, ob jemand vorher Zugriff hatte. In diesem Dokument steht nur die Bag-Nummer bzw. der Aufbewahrungsort, niemals der Inhalt.</dd>';
-    h+='<dt>Smartcard</dt><dd>Chipkarte f&uuml;r Specter-Ger&auml;te (Shield / Shield Lite) mit einer gespeicherten Seed-Phrase, eigenem PIN und eigenen Anti-Phishing-W&ouml;rtern.</dd>';
-    h+='<dt>Anti-Phishing-W&ouml;rter</dt><dd>Pers&ouml;nliche W&ouml;rter, die das Ger&auml;t bzw. die Smartcard beim Entsperren anzeigt, damit ihr ein echtes Ger&auml;t von einer F&auml;lschung unterscheiden k&ouml;nnt. Sie sind <strong>immer einzigartig &ndash; je Ger&auml;t und je Smartcard eigene W&ouml;rter</strong>. Stimmen sie nicht, ist Vorsicht geboten.</dd>';
-    h+='<dt>Passphrase</dt><dd>Zus&auml;tzliches Wort/Satz zur Seed-Phrase. Erzeugt ein separates, verstecktes Wallet.</dd>';
-    h+='<dt>Account</dt><dd>Unterkonto innerhalb eines Wallets, oft mit eigenem Zweck (z.&thinsp;B. Sparen, NoKYC). Die Nummerierung beginnt bei #0.</dd>';
-    h+='<dt>Adresstyp (Adressformat)</dt><dd>Format der Empfangsadressen eines Wallets. H&auml;ufig: Native SegWit (beginnt mit bc1q), Taproot (bc1p), Nested SegWit (3) und Legacy (1). Zum Wiederherstellen muss der richtige Adresstyp gew&auml;hlt werden, sonst erscheint das Guthaben nicht.</dd>';
-    h+='<dt>Fingerprint (Master Key Fingerprint)</dt><dd>Kurzes Erkennungsk&uuml;rzel einer Seed-Phrase aus 8 Hex-Zeichen (z.&thinsp;B. 1A2B3C4D). Kein Geheimnis &ndash; es hilft nur, die richtige Seed-Phrase bzw. das richtige Wallet eindeutig zuzuordnen. Mit Passphrase entsteht ein anderer Fingerprint.</dd>';
-    h+='<dt>Wallet-Descriptor</dt><dd>Technische Beschreibung, wie ein Wallet aufgebaut ist (Schl&uuml;ssel, Adresstyp, bei Multisig die Kombination). <strong>Ohne den Descriptor l&auml;sst sich besonders ein Multisig-Wallet nicht wiederherstellen</strong> &ndash; auch nicht mit allen Seed-Phrasen. Daher mehrfach sichern.</dd>';
-    h+='<dt>Multisig</dt><dd>Wallet, das mehrere Schl&uuml;ssel zum Senden ben&ouml;tigt (z.&thinsp;B. 2 von 3). Erfordert die Zusammenarbeit mehrerer Schl&uuml;sselhalter.</dd>';
-    h+='<dt>Zwei-Faktor-Authentifizierung (2FA)</dt><dd>Zus&auml;tzliche Login-Sicherung neben dem Passwort. Arten: Authenticator-App/TOTP (z.&thinsp;B. Google Authenticator), SMS, E-Mail oder ein Hardware-Key (z.&thinsp;B. YubiKey). Ohne den zweiten Faktor ist kein Login m&ouml;glich.</dd>';
-    h+='<dt>'+L('pdfLockGlossaryTitle')+'</dt><dd>'+L('pdfLockGlossaryBody')+'</dd>';
+    if(gHw) h+='<dt>Hardware-Wallet</dt><dd>Physisches Ger&auml;t (z.&thinsp;B. Specter Shield, Coldcard, Ledger), das die Seed-Phrase offline speichert und Transaktionen signiert, ohne die Schl&uuml;ssel jemals mit einem Computer oder Smartphone zu teilen. Gilt als besonders sicher (&bdquo;Cold Storage&ldquo;). Seed-Phrase und Passphrase werden ausschlie&szlig;lich direkt am Ger&auml;t eingegeben, niemals am PC oder Smartphone, da sie sonst kompromittiert werden k&ouml;nnten.</dd>';
+    if(gSw) h+='<dt>Software-Wallet</dt><dd>App auf PC oder Smartphone (z.&thinsp;B. Sparrow, BlueWallet), &uuml;ber die ihr Bitcoin verwaltet. Da der Schl&uuml;ssel auf einem internetf&auml;higen Ger&auml;t liegt, gilt sie als &bdquo;Hot Wallet&ldquo;, also weniger sicher als eine Hardware-Wallet, aber praktisch f&uuml;r kleinere Betr&auml;ge oder als zus&auml;tzlicher Schl&uuml;ssel in einem Multisig.</dd>';
+    if(gEx) h+='<dt>Exchange (B&ouml;rse)</dt><dd>Online-Dienst zum Kaufen, Verkaufen oder Tauschen von Bitcoin (z.&thinsp;B. Kraken, Coinbase, Relai). Die meisten Exchanges sind custodial, sie verwahren die Bitcoin f&uuml;r euch, es gibt also keine Seed-Phrase, sondern nur Zugangsdaten (E-Mail, Passwort, 2FA). Wer diese Zugangsdaten kennt und Zugriff auf die Konto-Wiederherstellung hat, kommt an das Guthaben.</dd>';
+    if(gKycFull) h+='<dt>KYC-Bitcoin</dt><dd>Bitcoin, die bei einem Dienst mit vollst&auml;ndiger Identit&auml;tspr&uuml;fung gekauft wurden (Ausweis und Selfie, sogenanntes &bdquo;Full KYC&ldquo;). Der Kauf ist eindeutig auf den Namen der Person registriert.</dd>';
+    if(gKycLite) h+='<dt>KYC-Bitcoin Lite</dt><dd>Bitcoin, die bei einem Dienst mit reduzierter Identit&auml;tspr&uuml;fung gekauft wurden, zum Beispiel nur mit Ausweis, ohne Selfie oder weitere Pr&uuml;fung. Es findet eine teilweise Identifizierung statt, jedoch nicht so umfassend wie bei Full KYC.</dd>';
+    if(gNoKyc) h+='<dt>No-KYC-Bitcoin</dt><dd>Bitcoin, die ohne Identit&auml;tspr&uuml;fung erworben wurden, zum Beispiel &uuml;ber Bitcoin-Automaten ohne Ausweispflicht oder Peer-to-Peer-K&auml;ufe. Sie sind anonym und nicht auf den Namen der Person registriert. Der Verkauf sollte daher strategisch &uuml;berlegt werden, bevorzugt durch erneutes &Uuml;berdenken der Nutzung oder durch Peer-to-Peer-Verkauf an eine Privatperson statt &uuml;ber eine B&ouml;rse.</dd>';
+    if(gSeed) h+='<dt>Seed-Phrase</dt><dd>Folge von 12 oder 24 W&ouml;rtern, das Master-Backup eines Wallets. Wer sie kennt, hat vollen Zugriff. Steht daher nie in diesem Dokument. Die Seed-Phrase wird ausschlie&szlig;lich direkt am Hardware-Wallet eingegeben, niemals an einem Computer, Smartphone oder in einer Website beziehungsweise App.</dd>';
+    if(gBag) h+='<dt>Tamper-Evident-Bag</dt><dd>Manipulationssichere Sicherheitst&uuml;te mit aufgedruckter, eindeutiger Nummer. Wird sie ge&ouml;ffnet, ist das dauerhaft sichtbar &ndash; so erkennt ihr, ob jemand vorher Zugriff hatte. In diesem Dokument steht nur die Bag-Nummer bzw. der Aufbewahrungsort, niemals der Inhalt.</dd>';
+    if(gSmartcard) h+='<dt>Smartcard</dt><dd>Chipkarte f&uuml;r Specter-Ger&auml;te (Shield / Shield Lite) mit einer gespeicherten Seed-Phrase, eigenem PIN und eigenen Anti-Phishing-W&ouml;rtern.</dd>';
+    if(gAntiPhish) h+='<dt>Anti-Phishing-W&ouml;rter</dt><dd>Pers&ouml;nliche W&ouml;rter, die das Ger&auml;t bzw. die Smartcard beim Entsperren anzeigt, damit ihr ein echtes Ger&auml;t von einer F&auml;lschung unterscheiden k&ouml;nnt. Sie sind <strong>immer einzigartig &ndash; je Ger&auml;t und je Smartcard eigene W&ouml;rter</strong>. Stimmen sie nicht, ist Vorsicht geboten.</dd>';
+    if(gPassphrase) h+='<dt>Passphrase</dt><dd>Zus&auml;tzliches Wort/Satz zur Seed-Phrase. Erzeugt ein separates, verstecktes Wallet.</dd>';
+    if(gAccount) h+='<dt>Account</dt><dd>Unterkonto innerhalb eines Wallets, oft mit eigenem Zweck (z.&thinsp;B. Sparen, NoKYC). Die Nummerierung beginnt bei #0.</dd>';
+    if(gAddrType) h+='<dt>Adresstyp (Adressformat)</dt><dd>Format der Empfangsadressen eines Wallets. H&auml;ufig: Native SegWit (beginnt mit bc1q), Taproot (bc1p), Nested SegWit (3) und Legacy (1). Zum Wiederherstellen muss der richtige Adresstyp gew&auml;hlt werden, sonst erscheint das Guthaben nicht.</dd>';
+    if(gFingerprint) h+='<dt>Fingerprint (Master Key Fingerprint)</dt><dd>Kurzes Erkennungsk&uuml;rzel einer Seed-Phrase aus 8 Hex-Zeichen (z.&thinsp;B. 1A2B3C4D). Kein Geheimnis &ndash; es hilft nur, die richtige Seed-Phrase bzw. das richtige Wallet eindeutig zuzuordnen. Mit Passphrase entsteht ein anderer Fingerprint.</dd>';
+    if(gDescriptor) h+='<dt>Wallet-Descriptor</dt><dd>Technische Beschreibung, wie ein Wallet aufgebaut ist (Schl&uuml;ssel, Adresstyp, bei Multisig die Kombination). <strong>Ohne den Descriptor l&auml;sst sich besonders ein Multisig-Wallet nicht wiederherstellen</strong> &ndash; auch nicht mit allen Seed-Phrasen. Daher mehrfach sichern.</dd>';
+    if(gMultisig) h+='<dt>Multisig</dt><dd>Wallet, das mehrere Schl&uuml;ssel zum Senden ben&ouml;tigt (z.&thinsp;B. 2 von 3). Erfordert die Zusammenarbeit mehrerer Schl&uuml;sselhalter.</dd>';
+    if(g2fa) h+='<dt>Zwei-Faktor-Authentifizierung (2FA)</dt><dd>Zus&auml;tzliche Login-Sicherung neben dem Passwort. Arten: Authenticator-App/TOTP (z.&thinsp;B. Google Authenticator), SMS, E-Mail oder ein Hardware-Key (z.&thinsp;B. YubiKey). Ohne den zweiten Faktor ist kein Login m&ouml;glich.</dd>';
+    if(gLock) h+='<dt>'+L('pdfLockGlossaryTitle')+'</dt><dd>'+L('pdfLockGlossaryBody')+'</dd>';
   } else {
     h+='<dt>Wallet</dt><dd>Software or a device that manages the private keys to your bitcoin and enables transactions with them. It does not store bitcoin itself, only the key that grants access to it.</dd>';
-    h+='<dt>Hardware Wallet</dt><dd>A physical device (e.g. Specter Shield, Coldcard, Ledger) that stores the seed phrase offline and signs transactions without ever sharing the keys with a computer or smartphone. Considered especially secure ("cold storage"). Seed phrase and passphrase are entered only directly on the device, never on a PC or smartphone, since they could otherwise be compromised.</dd>';
-    h+='<dt>Software Wallet</dt><dd>An app on a PC or smartphone (e.g. Sparrow, BlueWallet) used to manage bitcoin. Since the key resides on an internet-connected device, it is considered a "hot wallet", so less secure than a hardware wallet, but convenient for smaller amounts or as an extra key in a multisig setup.</dd>';
-    h+='<dt>Exchange</dt><dd>An online service for buying, selling or trading bitcoin (e.g. Kraken, Coinbase, Relai). Most exchanges are custodial, meaning they hold the bitcoin for you, so there is no seed phrase, only login credentials (email, password, 2FA). Whoever knows those credentials and has access to the account recovery can access the funds.</dd>';
-    h+='<dt>KYC Bitcoin</dt><dd>Bitcoin purchased through a service with full identity verification (ID and selfie, so called "full KYC"). The purchase is clearly registered under the person\'s name.</dd>';
-    h+='<dt>KYC Bitcoin Lite</dt><dd>Bitcoin purchased through a service with reduced identity verification, for example only an ID, without a selfie or further checks. Some identification takes place, but not as extensive as with full KYC.</dd>';
-    h+='<dt>No-KYC Bitcoin</dt><dd>Bitcoin acquired without identity verification, for example via Bitcoin ATMs that do not require an ID, or peer-to-peer purchases. It is anonymous and not registered under the person\'s name. Selling it should therefore be considered strategically first, preferably by reconsidering its intended use or by selling it peer to peer to a private individual instead of through an exchange.</dd>';
-    h+='<dt>Seed Phrase</dt><dd>A sequence of 12 or 24 words, the master backup of a wallet. Anyone who knows it has full access. Therefore never written in this document. The seed phrase is entered only directly on the hardware wallet, never on a computer, smartphone, or in any website or app.</dd>';
-    h+='<dt>Tamper-Evident Bag</dt><dd>A tamper-proof security bag with a printed unique number. If opened, this is permanently visible – so you can tell if someone had access before. This document only contains the bag number or storage location, never the contents.</dd>';
-    h+='<dt>Smartcard</dt><dd>A chip card for Specter devices (Shield / Shield Lite) storing one seed phrase, its own PIN and anti-phishing words.</dd>';
-    h+='<dt>Anti-Phishing Words</dt><dd>Personal words displayed by the device or smartcard when unlocking, so you can distinguish a genuine device from a fake. They are <strong>always unique – separate words for each device and each smartcard</strong>. If they don\'t match, be cautious.</dd>';
-    h+='<dt>Passphrase</dt><dd>An additional word/phrase added to the seed phrase. Creates a separate, hidden wallet.</dd>';
-    h+='<dt>Account</dt><dd>A sub-account within a wallet, often with a specific purpose (e.g. savings, NoKYC). Numbering starts at #0.</dd>';
-    h+='<dt>Address Type (Address Format)</dt><dd>The format of receive addresses of a wallet. Common types: Native SegWit (starts with bc1q), Taproot (bc1p), Nested SegWit (3) and Legacy (1). The correct address type must be selected when restoring, otherwise the balance will not appear.</dd>';
-    h+='<dt>Fingerprint (Master Key Fingerprint)</dt><dd>A short identifier for a seed phrase (e.g. 1A2B3C4D). Not a secret – it only helps to uniquely identify the correct seed phrase or wallet. A passphrase creates a different fingerprint.</dd>';
-    h+='<dt>Wallet Descriptor</dt><dd>A technical description of how a wallet is constructed (keys, address type, for multisig the combination). <strong>Without the descriptor a multisig wallet in particular cannot be restored</strong> – not even with all seed phrases. Back it up multiple times.</dd>';
-    h+='<dt>Multisig</dt><dd>A wallet that requires multiple keys to send (e.g. 2 of 3). Requires the cooperation of multiple key holders.</dd>';
-    h+='<dt>Two-Factor Authentication (2FA)</dt><dd>Additional login security beyond the password. Types: authenticator app/TOTP (e.g. Google Authenticator), SMS, email or a hardware key (e.g. YubiKey). Without the second factor, no login is possible.</dd>';
-    h+='<dt>'+L('pdfLockGlossaryTitle')+'</dt><dd>'+L('pdfLockGlossaryBody')+'</dd>';
+    if(gHw) h+='<dt>Hardware Wallet</dt><dd>A physical device (e.g. Specter Shield, Coldcard, Ledger) that stores the seed phrase offline and signs transactions without ever sharing the keys with a computer or smartphone. Considered especially secure ("cold storage"). Seed phrase and passphrase are entered only directly on the device, never on a PC or smartphone, since they could otherwise be compromised.</dd>';
+    if(gSw) h+='<dt>Software Wallet</dt><dd>An app on a PC or smartphone (e.g. Sparrow, BlueWallet) used to manage bitcoin. Since the key resides on an internet-connected device, it is considered a "hot wallet", so less secure than a hardware wallet, but convenient for smaller amounts or as an extra key in a multisig setup.</dd>';
+    if(gEx) h+='<dt>Exchange</dt><dd>An online service for buying, selling or trading bitcoin (e.g. Kraken, Coinbase, Relai). Most exchanges are custodial, meaning they hold the bitcoin for you, so there is no seed phrase, only login credentials (email, password, 2FA). Whoever knows those credentials and has access to the account recovery can access the funds.</dd>';
+    if(gKycFull) h+='<dt>KYC Bitcoin</dt><dd>Bitcoin purchased through a service with full identity verification (ID and selfie, so called "full KYC"). The purchase is clearly registered under the person\'s name.</dd>';
+    if(gKycLite) h+='<dt>KYC Bitcoin Lite</dt><dd>Bitcoin purchased through a service with reduced identity verification, for example only an ID, without a selfie or further checks. Some identification takes place, but not as extensive as with full KYC.</dd>';
+    if(gNoKyc) h+='<dt>No-KYC Bitcoin</dt><dd>Bitcoin acquired without identity verification, for example via Bitcoin ATMs that do not require an ID, or peer-to-peer purchases. It is anonymous and not registered under the person\'s name. Selling it should therefore be considered strategically first, preferably by reconsidering its intended use or by selling it peer to peer to a private individual instead of through an exchange.</dd>';
+    if(gSeed) h+='<dt>Seed Phrase</dt><dd>A sequence of 12 or 24 words, the master backup of a wallet. Anyone who knows it has full access. Therefore never written in this document. The seed phrase is entered only directly on the hardware wallet, never on a computer, smartphone, or in any website or app.</dd>';
+    if(gBag) h+='<dt>Tamper-Evident Bag</dt><dd>A tamper-proof security bag with a printed unique number. If opened, this is permanently visible – so you can tell if someone had access before. This document only contains the bag number or storage location, never the contents.</dd>';
+    if(gSmartcard) h+='<dt>Smartcard</dt><dd>A chip card for Specter devices (Shield / Shield Lite) storing one seed phrase, its own PIN and anti-phishing words.</dd>';
+    if(gAntiPhish) h+='<dt>Anti-Phishing Words</dt><dd>Personal words displayed by the device or smartcard when unlocking, so you can distinguish a genuine device from a fake. They are <strong>always unique – separate words for each device and each smartcard</strong>. If they don\'t match, be cautious.</dd>';
+    if(gPassphrase) h+='<dt>Passphrase</dt><dd>An additional word/phrase added to the seed phrase. Creates a separate, hidden wallet.</dd>';
+    if(gAccount) h+='<dt>Account</dt><dd>A sub-account within a wallet, often with a specific purpose (e.g. savings, NoKYC). Numbering starts at #0.</dd>';
+    if(gAddrType) h+='<dt>Address Type (Address Format)</dt><dd>The format of receive addresses of a wallet. Common types: Native SegWit (starts with bc1q), Taproot (bc1p), Nested SegWit (3) and Legacy (1). The correct address type must be selected when restoring, otherwise the balance will not appear.</dd>';
+    if(gFingerprint) h+='<dt>Fingerprint (Master Key Fingerprint)</dt><dd>A short identifier for a seed phrase (e.g. 1A2B3C4D). Not a secret – it only helps to uniquely identify the correct seed phrase or wallet. A passphrase creates a different fingerprint.</dd>';
+    if(gDescriptor) h+='<dt>Wallet Descriptor</dt><dd>A technical description of how a wallet is constructed (keys, address type, for multisig the combination). <strong>Without the descriptor a multisig wallet in particular cannot be restored</strong> – not even with all seed phrases. Back it up multiple times.</dd>';
+    if(gMultisig) h+='<dt>Multisig</dt><dd>A wallet that requires multiple keys to send (e.g. 2 of 3). Requires the cooperation of multiple key holders.</dd>';
+    if(g2fa) h+='<dt>Two-Factor Authentication (2FA)</dt><dd>Additional login security beyond the password. Types: authenticator app/TOTP (e.g. Google Authenticator), SMS, email or a hardware key (e.g. YubiKey). Without the second factor, no login is possible.</dd>';
+    if(gLock) h+='<dt>'+L('pdfLockGlossaryTitle')+'</dt><dd>'+L('pdfLockGlossaryBody')+'</dd>';
   }
   h+='</dl>';
 
@@ -4438,8 +4531,8 @@ function buildAndPrint(){
     for(var d=0;d<state.devices.length;d++){
       var dv=state.devices[d]; var m=getModel(dv.model);
       h+='<div class="pdf-wallet-block">';
-      h+='<div class="pdf-wallet-block-title">'+Lf('pdfDeviceTitle',d,esc(deviceModelName(dv)))+'</div>';
-      if(m){ h+=fRow('Website:', m.url||null); if(m.img){ h+='<img class="pdf-device-img" src="'+m.img+'" alt="'+esc(deviceModelName(dv))+'">'; } }
+      h+='<div class="pdf-wallet-block-title">'+Lf('pdfDeviceTitle',d,esc(pdfDeviceModelName(dv)))+'</div>';
+      if(m){ h+=fRow('Website:', m.url||null); if(m.img){ h+='<img class="pdf-device-img" src="'+m.img+'" alt="'+esc(pdfDeviceModelName(dv))+'">'; } }
       h+=eRow(L('pdfDeviceName'));
       h+=eRow(L('pdfDeviceLocation'));
       h+=secRow(L('pdfDevicePIN'));
@@ -4493,7 +4586,7 @@ function buildAndPrint(){
             if(op.withSc)tags.push(LANG==='de'?"mit Smartcard verschlüsselt":"encrypted with smartcard");
             if(op.pin)tags.push(LANG==='de'?"PIN-verschlüsselt auf Gerät":"PIN-encrypted on device");
             if(op.sdCard)tags.push(LANG==='de'?"mit SD-Karte verschlüsselt":"SD card encrypted");
-            dn.push(deviceLabel(di)+(tags.length?" ["+tags.join("; ")+"]":""));
+            dn.push(pdfDeviceLabel(di)+(tags.length?" ["+tags.join("; ")+"]":""));
           }
         }
         if(dn.length) h+=fRow(L('pdfStoredOn'), dn.join('; '));
@@ -4547,7 +4640,6 @@ function buildAndPrint(){
         if(ex.recovery){ h+='<div style="font-size:7.5pt;background:'+(ex.hasSeed?"#e8f4fd":"#f5f5f5")+';border-left:3px solid '+(ex.hasSeed?"#1F99E5":"#999")+';padding:4pt 6pt;margin:4pt 0 5pt;color:'+(ex.hasSeed?"#0c3d6b":"#444")+';-webkit-print-color-adjust:exact;print-color-adjust:exact;"><strong>'+(ex.hasSeed?"Recovery:":"&#8505; Custodial:")+'</strong> '+esc(ex.recovery)+'</div>'; }
       }
       h+=eRow(L('pdfLoginLabel')); h+=secRow(L('pdfPassword3'));
-      h+=eRow(L('pdfTwoFAQ'));
       h+=twofaChecks(ei);
       h+=eRow(L('pdfTwoFABackup'));
       if(ex && ex.hasSeed){ h+=eRow(L('pdfSeedWalletLocation')); }
@@ -4560,6 +4652,13 @@ function buildAndPrint(){
     h+='<h2 class="pdf-h2">'+L('pdfPwm')+'</h2>';
     h+=fRow(L('pdfPwmApp'), pwmDisplayName()||null);
     h+=eRow(L('pdfDeviceLabel3')); h+=secRow(L('pdfLoginPIN')); h+=secRow(L('pdfMasterPassword'));
+  }
+
+  // 7b. Password Book - referenced as a storage option throughout (2FA backup codes, PINs,
+  // master passwords via storageChecks()), but the book itself needs its own location noted once.
+  if(state.book.use===true){
+    h+='<h2 class="pdf-h2">'+L('pdfBook')+'</h2>';
+    h+=eRow(L('pdfBookLocation'));
   }
 
   // 8. Digital backup
@@ -4595,7 +4694,7 @@ function buildAndPrint(){
       if(state.offline && state.multisigs.length>0){
         ensureMsDb(ms);
         // Hardware-Wallets (dbDevices)
-        var pdfDbDevices=[]; for(var pd=0;pd<(ms.dbDevices||[]).length;pd++){ if(state.devices[ms.dbDevices[pd]]) pdfDbDevices.push(deviceLabel(ms.dbDevices[pd])); }
+        var pdfDbDevices=[]; for(var pd=0;pd<(ms.dbDevices||[]).length;pd++){ if(state.devices[ms.dbDevices[pd]]) pdfDbDevices.push(pdfDeviceLabel(ms.dbDevices[pd])); }
         if(pdfDbDevices.length) h+=fRow('Registriert auf HW:', pdfDbDevices.join(', '));
         else h+=eRow('Registriert auf HW:');
         // Seed-Phrase-Backups (dbBackups)
@@ -4656,7 +4755,7 @@ function buildAndPrint(){
 
       h+='<div class="pdf-field-label" style="font-size:8.5pt;margin:8pt 0 2pt;">Wallet-Descriptor &ndash; wo &uuml;berall hinterlegt:</div>';
       if(state.offline){
-        var pdfDevs=[]; for(var pd=0; pd<(lw.dbDevices||[]).length; pd++){ if(state.devices[lw.dbDevices[pd]]) pdfDevs.push(deviceLabel(lw.dbDevices[pd])); }
+        var pdfDevs=[]; for(var pd=0; pd<(lw.dbDevices||[]).length; pd++){ if(state.devices[lw.dbDevices[pd]]) pdfDevs.push(pdfDeviceLabel(lw.dbDevices[pd])); }
         if(pdfDevs.length) h+=fRow('Registriert auf HW:', pdfDevs.join(', '));
         else h+=eRow('Registriert auf HW:');
         var pdfBackups=[], pxall=lwBackupRefs(li);
@@ -4684,7 +4783,7 @@ function buildAndPrint(){
   // 10. Sell Bitcoin
   h+='<h2 class="pdf-h2">'+L('pdfSellTitle')+'</h2>';
   h+='<p class="pdf-text">'+L('pdfSellText')+'</p>';
-  h+='<div class="pdf-info-hint">'+L('pdfSellNoKycWarning')+'</div>';
+  if(gNoKyc) h+='<div class="pdf-info-hint">'+L('pdfSellNoKycWarning')+'</div>';
   h+='<p class="pdf-text" style="font-size:8pt;color:#555;">'+L('pdfSellDisclaimer')+'</p>';
 
   // 11. Conclusion
@@ -4735,7 +4834,13 @@ pdfBody.innerHTML=h;
   state.postPdfStorageVisible = true;
   render();
   window.addEventListener("afterprint", function(){ if(!state.postPdfStorageVisible){ state.postPdfStorageVisible = true; render(); } }, {once:true});
-  Promise.all([(document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve(), waitForPdfImages(pdfBody)]).then(function(){ requestAnimationFrame(function(){ window.print(); }); });
+  Promise.all([(document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve(), waitForPdfImages(pdfBody)]).then(function(){
+    // A single requestAnimationFrame only guarantees a frame was *scheduled* - for a
+    // long, image-heavy document the browser can still be mid-layout when it fires.
+    // Nesting two rAFs waits for a full layout+paint cycle to actually finish first,
+    // so print pagination runs against the final layout instead of a half-finished one.
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ window.print(); }); });
+  });
 }
 
 // ===== SPEICHERN / LADEN (JSON) =====
