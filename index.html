@@ -809,6 +809,24 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     return '<div class="pdf-qr pdf-qr-sm"><div class="pdf-qr-img">'+svg+'</div>'
          + '<div class="pdf-qr-cap">'+cap("pdfXpubQrCaption","xPub scannen")+'</div></div>';
   };
+  // Derivation-Path-QR-Block (Klartext) - gleiches Muster wie xpubQrBlock.
+  window.derivPathQrBlock = function(path){
+    var p = (path||"").trim();
+    if(!p) return "";
+    var svg = qrSvg(p, "Byte", "M", 4);
+    if(!svg) return "";
+    return '<div class="pdf-qr pdf-qr-sm"><div class="pdf-qr-img">'+svg+'</div>'
+         + '<div class="pdf-qr-cap">'+cap("pdfDerivPathQrCaption","Derivation Path scannen")+'</div></div>';
+  };
+  // ClavaStack-Tutorial-QR fuer Specter-Geraete (Klartext-URL, Sprache waehlt der Aufrufer per LANG).
+  window.manualQrBlock = function(url){
+    var u = (url||"").trim();
+    if(!u) return "";
+    var svg = qrSvg(u, "Byte", "M", 4);
+    if(!svg) return "";
+    return '<div class="pdf-qr pdf-qr-sm"><div class="pdf-qr-img">'+svg+'</div>'
+         + '<div class="pdf-qr-cap">'+cap("pdfManualQrCaption","Tutorials für diese Hardware Wallet")+'<br>'+u+'</div></div>';
+  };
   // Zusaetzlicher Klartext-Descriptor-QR (fuer Wallets ohne BC-UR-Unterstuetzung)
   window.descriptorPlainQrBlock = function(desc){
     var d = cleanForQr(desc);
@@ -1165,7 +1183,7 @@ var STRINGS = {
     pdfGlossary:'Glossary – Key Terms',
     pdfOverviewTable:'Seed Phrase', pdfOvBackups:'Backups', pdfOvAccounts:'Accounts', pdfOvPassphrases:'Passphrases', pdfOvMultisig:'Multisig',
     pdfDevicesDetail:'Here are my devices with PIN and anti-phishing words (handwritten). Which seed phrase is on which device is listed in the "Seed Phrases" section.',
-    pdfDeviceTitle:function(n,m){ return 'Device '+(n+1)+(m?' – '+m:''); },
+    pdfDeviceTitle:function(n,m){ return 'Hardware Wallet '+(n+1)+(m?' – '+m:''); },
     pdfDeviceName:'Name / description of device:',
     pdfDeviceLocation:'Where is the device:',
     pdfDevicePIN:'Device PIN:',
@@ -1182,7 +1200,7 @@ var STRINGS = {
     pdfAppPIN:'PIN / password of the app:',
     pdfPINNoted:'PIN noted (check):',
     pdfCredsNoted:'Credentials noted (check):',
-    pdfSeedsDetail:'Each seed phrase is the backup of a wallet. <strong>The words themselves are NOT here</strong> – they are sealed in tamper-evident bags. Check whether the printed bag number matches the noted number and the bag is intact.',
+    pdfSeedsDetail:'Each seed phrase is the backup of a wallet. <strong>The words themselves are NOT here</strong> – they are sealed in tamper-evident bags. Check whether the printed bag number matches the noted number and the bag is intact. <strong>Under no circumstances enter this seed phrase into a device connected to the internet</strong> (computer, smartphone, website, or app) – it is entered only directly on the hardware wallet itself.',
     pdfStoredOn:'Stored on:',
     pdfBackupsOf:'Backups of this seed phrase',
     pdfBackupTitle:function(n,type,brand){ return 'Backup '+(n+1)+' – '+type+(brand?' ('+brand+')':''); },
@@ -1236,10 +1254,12 @@ var STRINGS = {
     pdfBitSquiggleNote:'Visual icons per master-key fingerprint found in the descriptor &ndash; for comparing against a hardware wallet or companion app that also displays BitSquiggles.',
     pdfDescriptorQrCaption:'Alternative: BC-UR format for air-gapped import (e.g. Sparrow airgap workflow, Keystone, Passport, Jade)',
     pdfXpubQrCaption:'Scan the QR to read in this xPub',
+    pdfDerivPathQrCaption:'Scan the QR to read in this derivation path',
+    pdfManualQrCaption:'Tutorials for this hardware wallet:',
     pdfDescriptorQrPlainCaption:'Scan the QR: watch-only import – compatible with most wallets (BlueWallet, Sparrow, Nunchuk, Specter, Wasabi, and others)',
     qrPreviewUr:'BC-UR / Sparrow airgap', qrPreviewPlain:'Plain text (recommended)', qrPreviewXpub:'xPub', qrPreviewTooLong:'Too long for a single QR',
     pdfSellTitle:'Selling Bitcoin',
-    pdfSellText:'To convert Bitcoin to conventional money, ideally use one of the exchanges mentioned above where I already have an account, or transfer the coins directly to another person. Check every destination address twice, transactions are irreversible.',
+    pdfSellText:'To convert Bitcoin to conventional money, ideally use one of the exchanges mentioned above where I already have an account, or transfer the coins directly to another person. Check every destination address twice, transactions are irreversible. <strong>The hardware wallet\'s seed phrase must never be entered into a phone or any other internet-connected device for this.</strong> It is clearly recommended to use the existing hardware wallet(s) to sign the transaction. Only deviate from this if you really know exactly what you are doing.',
     pdfSellNoKycWarning:'Important: Bitcoin marked as No-KYC (see glossary) must not simply be sold on an exchange. Since these coins are anonymous and were never registered under my name, selling them should be considered strategically first. Preferably reconsider the intended use of No-KYC bitcoin first, or sell it peer to peer directly to a private individual instead of through an exchange.',
     pdfSellDisclaimer:'Note: This document covers exclusively the <strong>technical recovery and access</strong>. It is not tax or legal advice. Clarify tax and inheritance questions with a professional.',
     pdfTimelockTitle:'Timelock / Wallet Recovery',
@@ -1267,8 +1287,8 @@ var STRINGS = {
     pdfFingerprintEmpty:'Fingerprint (Master Key Fingerprint, 8 hex characters, e.g. 1A2B3C4D):',
     pdfAddrFormatRow:function(f){ return 'Address format: '+f; },
     pdfAccountRow:function(ac){ return 'Account #'+ac+' (purpose):'; },
-    pdfDeviceLabel:function(n,m){ return 'Device '+(n+1)+(m?' – '+m:' (no model)'); },
-    pdfScLabel:function(d,s,nm){ return 'Device '+(d+1)+' / Smartcard '+s+(nm?' ('+nm+')':''); },
+    pdfDeviceLabel:function(n,m){ return 'Hardware Wallet '+(n+1)+(m?' – '+m:' (no model)'); },
+    pdfScLabel:function(d,s,nm){ return 'Hardware Wallet '+(d+1)+' / Smartcard '+s+(nm?' ('+nm+')':''); },
     pdfScSmall:function(s,nm){ return 'Smartcard '+s+(nm?' ('+nm+')':''); },
     pdfMsLabel:function(name,i,m,n){ return (name||('Multisig '+(i+1)))+' – '+m+' of '+n; },
     pdfExLabel:function(nm,i){ return nm||('Exchange '+(i+1)); },
@@ -1325,10 +1345,10 @@ var STRINGS = {
     pdfLockGlossaryBody:'Marks fields with especially sensitive data (PIN, password, passphrase). Fill in by hand only – never store digitally, photograph, or type in.',
     incompleteTitle:function(n){ return 'Not yet fully filled in ('+n+')'; },
     incompleteHint:'These items are still missing – click to jump straight to the relevant step.',
-    incDevNoModel:function(n){ return 'Device '+n+': no model selected'; },
-    incDevNoModelCustom:function(n){ return 'Device '+n+': model name missing ("Other")'; },
-    incCompNoApp:function(d,c){ return 'Device '+d+', companion app '+c+': no app selected'; },
-    incCompNoAppCustom:function(d,c){ return 'Device '+d+', companion app '+c+': app name missing ("Other")'; },
+    incDevNoModel:function(n){ return 'Hardware Wallet '+n+': no model selected'; },
+    incDevNoModelCustom:function(n){ return 'Hardware Wallet '+n+': model name missing ("Other")'; },
+    incCompNoApp:function(d,c){ return 'Hardware Wallet '+d+', companion app '+c+': no app selected'; },
+    incCompNoAppCustom:function(d,c){ return 'Hardware Wallet '+d+', companion app '+c+': app name missing ("Other")'; },
     incMetalNoBrand:function(seed,b){ return seed+', backup '+b+': no metal-backup brand selected'; },
     incMetalNoBrandCustom:function(seed,b){ return seed+', backup '+b+': brand name missing ("Other")'; },
     incScNoCard:function(seed,b){ return seed+', backup '+b+': no smartcard selected'; },
@@ -1599,7 +1619,7 @@ var STRINGS = {
     pdfGlossary:'Glossar – wichtige Begriffe',
     pdfOverviewTable:'Seed-Phrase', pdfOvBackups:'Backups', pdfOvAccounts:'Accounts', pdfOvPassphrases:'Passphrasen', pdfOvMultisig:'Multisig',
     pdfDevicesDetail:'Hier sind meine Geräte samt PIN und Anti-Phishing-Wörtern (handschriftlich). Welche Seed-Phrase auf welchem Gerät liegt, steht im Abschnitt „Seed-Phrasen".',
-    pdfDeviceTitle:function(n,m){ return 'Gerät '+(n+1)+(m?' – '+m:''); },
+    pdfDeviceTitle:function(n,m){ return 'Hardware-Wallet '+(n+1)+(m?' – '+m:''); },
     pdfDeviceName:'Name / Bezeichnung des Geräts:',
     pdfDeviceLocation:'Wo befindet sich das Gerät:',
     pdfDevicePIN:'Geräte-PIN:',
@@ -1616,7 +1636,7 @@ var STRINGS = {
     pdfAppPIN:'PIN / Passwort der App:',
     pdfPINNoted:'PIN notiert (ankreuzen):',
     pdfCredsNoted:'Zugangsdaten notiert (ankreuzen):',
-    pdfSeedsDetail:'Jede Seed-Phrase ist das Backup eines Wallets. <strong>Die Wörter selbst stehen NICHT hier</strong> – sie liegen versiegelt in Tamper-Evident-Bags. Prüft jeweils, ob die aufgedruckte Bag-Nummer mit der notierten Nummer übereinstimmt und die Tüte unversehrt ist.',
+    pdfSeedsDetail:'Jede Seed-Phrase ist das Backup eines Wallets. <strong>Die Wörter selbst stehen NICHT hier</strong> – sie liegen versiegelt in Tamper-Evident-Bags. Prüft jeweils, ob die aufgedruckte Bag-Nummer mit der notierten Nummer übereinstimmt und die Tüte unversehrt ist. <strong>Diese Seed-Phrase auf keinen Fall in ein Gerät eingeben, das mit dem Internet verbunden ist</strong> (Computer, Smartphone, Website oder App) – sie wird ausschließlich direkt am Hardware-Wallet selbst eingegeben.',
     pdfStoredOn:'Gespeichert auf:',
     pdfBackupsOf:'Backups dieser Seed-Phrase',
     pdfBackupTitle:function(n,type,brand){ return 'Backup '+(n+1)+' – '+type+(brand?' ('+brand+')':''); },
@@ -1670,10 +1690,12 @@ var STRINGS = {
     pdfBitSquiggleNote:'Visuelle Symbole je im Descriptor gefundenem Master-Key-Fingerprint &ndash; zum Abgleich mit einer Hardware-Wallet oder Companion-App, die ebenfalls BitSquiggles anzeigt.',
     pdfDescriptorQrCaption:'Alternative: BC-UR-Format für Air-Gapped-Import (z. B. Sparrow-Airgap-Workflow, Keystone, Passport, Jade)',
     pdfXpubQrCaption:'QR scannen, um diesen xPub einzulesen',
+    pdfDerivPathQrCaption:'QR scannen, um diesen Derivation Path einzulesen',
+    pdfManualQrCaption:'Tutorials für diese Hardware Wallet:',
     pdfDescriptorQrPlainCaption:'QR scannen: Watch-Only-Import – kompatibel mit den meisten Wallets (BlueWallet, Sparrow, Nunchuk, Specter, Wasabi u. a.)',
     qrPreviewUr:'BC-UR / Sparrow-Airgap', qrPreviewPlain:'Klartext (empfohlen)', qrPreviewXpub:'xPub', qrPreviewTooLong:'Zu lang für einen einzelnen QR',
     pdfSellTitle:'Verkaufen der Bitcoin',
-    pdfSellText:'Um Bitcoin in herkömmliches Geld umzuwandeln, verwendet am besten eine der oben genannten Börsen, bei der ich bereits ein Konto habe, oder übertragt die Coins direkt an eine andere Person. Prüft jede Zieladresse doppelt, Transaktionen sind unwiderruflich.',
+    pdfSellText:'Um Bitcoin in herkömmliches Geld umzuwandeln, verwendet am besten eine der oben genannten Börsen, bei der ich bereits ein Konto habe, oder übertragt die Coins direkt an eine andere Person. Prüft jede Zieladresse doppelt, Transaktionen sind unwiderruflich. <strong>Die Seed-Phrase der Hardware-Wallet darf dabei auf keinen Fall in ein Handy oder ein anderes internetfähiges Gerät eingegeben werden.</strong> Es wird klar empfohlen, für die Transaktion die vorhandene(n) Hardware-Wallet(s) zu verwenden und damit zu signieren. Nur wer wirklich genau weiß, was er oder sie tut, sollte davon abweichen.',
     pdfSellNoKycWarning:'Wichtig: Bitcoin, die als No-KYC markiert sind (siehe Glossar), dürfen nicht einfach auf einer Börse verkauft werden. Da diese Coins anonym sind und nie auf meinen Namen registriert wurden, sollte der Verkauf zunächst strategisch überlegt werden. Am besten die Nutzung von No-KYC-Bitcoin zunächst noch einmal überdenken oder sie stattdessen peer-to-peer direkt an eine Privatperson verkaufen, statt über eine Börse.',
     pdfSellDisclaimer:'Hinweis: Dieses Dokument behandelt ausschliesslich die <strong>technische Wiederherstellung und den Zugriff</strong>. Es ist keine Steuer- oder Rechtsberatung. Klärt steuerliche und erbrechtliche Fragen mit einer Fachperson.',
     pdfTimelockTitle:'Timelock / Wallet Recovery',
@@ -1701,8 +1723,8 @@ var STRINGS = {
     pdfFingerprintEmpty:'Fingerprint (Master Key Fingerprint, 8 Hex-Zeichen, z.&thinsp;B. 1A2B3C4D):',
     pdfAddrFormatRow:function(f){ return 'Adressformat: '+f; },
     pdfAccountRow:function(ac){ return 'Account #'+ac+' (Zweck):'; },
-    pdfDeviceLabel:function(n,m){ return 'Gerät '+(n+1)+(m?' – '+m:' (kein Modell)'); },
-    pdfScLabel:function(d,s,nm){ return 'Gerät '+(d+1)+' / Smartcard '+s+(nm?' ('+nm+')':''); },
+    pdfDeviceLabel:function(n,m){ return 'Hardware-Wallet '+(n+1)+(m?' – '+m:' (kein Modell)'); },
+    pdfScLabel:function(d,s,nm){ return 'Hardware-Wallet '+(d+1)+' / Smartcard '+s+(nm?' ('+nm+')':''); },
     pdfScSmall:function(s,nm){ return 'Smartcard '+s+(nm?' ('+nm+')':''); },
     pdfMsLabel:function(name,i,m,n){ return (name||('Multisig '+(i+1)))+' – '+m+' von '+n; },
     pdfExLabel:function(nm,i){ return nm||('Börse '+(i+1)); },
@@ -1759,10 +1781,10 @@ var STRINGS = {
     pdfLockGlossaryBody:'Kennzeichnet Felder mit besonders sensiblen Angaben (PIN, Passwort, Passphrase). Diese ausschlie&szlig;lich handschriftlich eintragen – niemals digital speichern, fotografieren oder abtippen.',
     incompleteTitle:function(n){ return 'Noch nicht vollst&auml;ndig ausgef&uuml;llt ('+n+')'; },
     incompleteHint:'Diese Punkte fehlen noch – klicke, um direkt zum jeweiligen Schritt zu springen.',
-    incDevNoModel:function(n){ return 'Ger&auml;t '+n+': kein Modell ausgew&auml;hlt'; },
-    incDevNoModelCustom:function(n){ return 'Ger&auml;t '+n+': Modellbezeichnung fehlt ("Andere")'; },
-    incCompNoApp:function(d,c){ return 'Ger&auml;t '+d+', Companion-App '+c+': keine App ausgew&auml;hlt'; },
-    incCompNoAppCustom:function(d,c){ return 'Ger&auml;t '+d+', Companion-App '+c+': App-Name fehlt ("Andere")'; },
+    incDevNoModel:function(n){ return 'Hardware-Wallet '+n+': kein Modell ausgew&auml;hlt'; },
+    incDevNoModelCustom:function(n){ return 'Hardware-Wallet '+n+': Modellbezeichnung fehlt ("Andere")'; },
+    incCompNoApp:function(d,c){ return 'Hardware-Wallet '+d+', Companion-App '+c+': keine App ausgew&auml;hlt'; },
+    incCompNoAppCustom:function(d,c){ return 'Hardware-Wallet '+d+', Companion-App '+c+': App-Name fehlt ("Andere")'; },
     incMetalNoBrand:function(seed,b){ return seed+', Backup '+b+': keine Metal-Backup-Marke ausgew&auml;hlt'; },
     incMetalNoBrandCustom:function(seed,b){ return seed+', Backup '+b+': Marke fehlt ("Andere")'; },
     incScNoCard:function(seed,b){ return seed+', Backup '+b+': keine Smartcard ausgew&auml;hlt'; },
@@ -2010,6 +2032,9 @@ var TIMELOCK_LOGO_URL = "assets/apps/timelock-recovery.png";
 // Liana Wallet (Wizardsardine) – Miniscript-Wallet mit Primaerpfad + Recovery-Pfad(en)/Timelock.
 var LIANA_WEBSITE  = "https://wizardsardine.com/liana";
 var LIANA_LOGO_URL = "assets/apps/liana-wallet.jpg";
+// ClavaStack manual - printed as a QR code under every Specter-branded hardware wallet in the PDF.
+var CLAVASTACK_MANUAL_URL_EN = "https://clavastack.com/manual";
+var CLAVASTACK_MANUAL_URL_DE = "https://clavastack.com/de/manual";
 // Ein einzelner relativer Timelock (OP_CHECKSEQUENCEVERIFY / BIP68) ist durch Bitcoins
 // Konsensregeln hart auf 65535 Bloecke begrenzt (16-Bit-Feld in nSequence) - das ist auch
 // das technische Maximum, das Liana selbst fuer einen Recovery-Pfad anbietet.
@@ -4359,7 +4384,8 @@ function walletAccountsBlock(title, w, isPp){
     h+=eRow(L('pdfFingerprintEmpty'));
   }
   if(state.offline){
-    h+= (w && w.derivPath) ? fRow('Derivation Path:', w.derivPath) : eRow('Derivation Path:');
+    if(w && w.derivPath){ h+=fRow('Derivation Path:', w.derivPath); h+=derivPathQrBlock(w.derivPath); }
+    else { h+=eRow('Derivation Path:'); }
     if(w && w.xpub){ h+=fRow('xPub (Watch-Only):', cleanForQr(w.xpub)); h+=xpubQrBlock(w.xpub); }
     else { h+=eRow('xPub (Watch-Only):'); }
   }
@@ -4533,6 +4559,7 @@ function buildAndPrint(){
       h+='<div class="pdf-wallet-block">';
       h+='<div class="pdf-wallet-block-title">'+Lf('pdfDeviceTitle',d,esc(pdfDeviceModelName(dv)))+'</div>';
       if(m){ h+=fRow('Website:', m.url||null); if(m.img){ h+='<img class="pdf-device-img" src="'+m.img+'" alt="'+esc(pdfDeviceModelName(dv))+'">'; } }
+      if(m && m.specter){ h+=manualQrBlock(LANG==='de'?CLAVASTACK_MANUAL_URL_DE:CLAVASTACK_MANUAL_URL_EN); }
       h+=eRow(L('pdfDeviceName'));
       h+=eRow(L('pdfDeviceLocation'));
       h+=secRow(L('pdfDevicePIN'));
