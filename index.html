@@ -1080,8 +1080,8 @@ var STRINGS = {
     walletDescriptorPh:'wsh(sortedmulti(2,[..]xpub..,..))',
     descriptorWarning:'<strong>Note:</strong> The wallet descriptor allows watch-only access – with this you can <strong>see how much Bitcoin</strong> is on the wallet (no spending). Printed in the PDF under "Wallet Descriptor".',
     noDescriptorNote:'The wallet descriptor (very important for recovery) can be filled in the PDF by hand – or activate offline mode above to type it in.',
-    timelockQ:'Timelock / Wallet Recovery (timelockrecovery.com)',
-    timelockChk:'Do you use Timelock / Wallet Recovery for the case of a catastrophic event?',
+    timelockQ:'Do you use Timelock Recovery?',
+    timelockHint:'Timelock Recovery can automatically transfer Bitcoin to a designated recovery wallet after a defined waiting period if you lose access to your original wallet.',
     timelockNote1:'Timelock Recovery secures a wallet holding Bitcoin (source). You create a <strong>pre-signed transaction</strong>: if you lose access to this wallet (e.g. loss, fire, death), the pre-signed transaction can be triggered – after the timelock expires (e.g. 90 days) the Bitcoin automatically go to a new wallet (destination / secondary wallet). Until then the original owner can intervene at any time.',
     timelockWebsite:'Website:', timelockHeirs:"Heirs additionally need the separate recovery plan, which can be generated at timelockrecovery.com.",
     timelockFrom:'From which wallet does the pre-signed transaction send? (source – your secure wallet with the Bitcoin)',
@@ -1517,8 +1517,8 @@ var STRINGS = {
     walletDescriptorPh:'wsh(sortedmulti(2,[..]xpub..,..))',
     descriptorWarning:'<strong>Achtung:</strong> Der Wallet-Descriptor erlaubt Watch-Only-Zugriff – damit ist <strong>sichtbar, wie viel Bitcoin</strong> auf der Wallet liegt (kein Senden). Wird im PDF groß unter &bdquo;Wallet Descriptor&ldquo; abgedruckt.',
     noDescriptorNote:'Den Wallet-Descriptor (sehr wichtig für die Wiederherstellung) trägst du im PDF handschriftlich ein – oder aktiviere oben den Offline-Modus, um ihn einzutippen.',
-    timelockQ:'Timelock / Wallet Recovery (timelockrecovery.com)',
-    timelockChk:'Verwendest du Timelock / Wallet Recovery für den Fall eines katastrophalen Ereignisses?',
+    timelockQ:'Verwendest du Timelock Recovery?',
+    timelockHint:'Timelock Recovery kann Bitcoin nach einer festgelegten Wartezeit automatisch an eine hinterlegte Recovery-Wallet übertragen, falls du den Zugriff auf deine ursprüngliche Wallet verlierst.',
     timelockNote1:'Timelock Recovery sichert eine Wallet ab, auf der Bitcoin liegen (Quelle). Du erstellst eine <strong>voraus-signierte (presigned) Transaction</strong>: Verlierst du den Zugriff auf diese Wallet (z. B. Verlust, Brand, Tod), kannst du die presigned Transaction auslösen – nach Ablauf des Timelocks (z. B. 90 Tage) landen die Bitcoin automatisch auf einer neuen Wallet (Ziel / Secondary Wallet). Bis dahin kann der ursprüngliche Besitzer jederzeit eingreifen.',
     timelockWebsite:'Webseite:', timelockHeirs:'Erben benötigen zusätzlich den separaten Recovery-Plan, der auf timelockrecovery.com generiert werden kann.',
     timelockFrom:'Von welcher Wallet sendet die presigned Transaction? (Quelle – deine sichere Wallet mit den Bitcoin)',
@@ -2057,7 +2057,7 @@ function defaultState(){ return {
   pwm: {use:null, app:"", appCustom:""},
   book: {use:null},
   dig: {use:null, enc:null},
-  timelock: {use:false, ritrek:false, fromW:"", toW:"", toCustom:"", store:{ritrek:false, pwm:false, other:""}},
+  timelock: {use:null, ritrek:false, fromW:"", toW:"", toCustom:"", store:{ritrek:false, pwm:false, other:""}},
   postPdfStorageVisible: false
 }; }
 var state = defaultState();
@@ -2444,7 +2444,12 @@ function optList(arr,sel){
 }
 function modelOpts(sel){
   var h="";
-  for(var i=0;i<HW_MODELS.length;i++){ h+='<option value="'+esc(HW_MODELS[i].label)+'"'+(HW_MODELS[i].label===sel?" selected":"")+'>'+esc(HW_MODELS[i].label)+'</option>'; }
+  var models=HW_MODELS.slice().sort(function(a,b){
+    if(a.label==="Andere") return 1;
+    if(b.label==="Andere") return -1;
+    return a.label.localeCompare(b.label, LANG==="de"?"de":"en", {sensitivity:"base"});
+  });
+  for(var i=0;i<models.length;i++){ h+='<option value="'+esc(models[i].label)+'"'+(models[i].label===sel?" selected":"")+'>'+esc(models[i].label)+'</option>'; }
   return h;
 }
 function swOpts(sel){ var h=""; for(var i=0;i<SOFTWARE_WALLETS.length;i++){ var l=SOFTWARE_WALLETS[i].label; h+='<option value="'+esc(l)+'"'+(l===sel?" selected":"")+'>'+esc(l)+'</option>'; } return h; }
@@ -3495,12 +3500,16 @@ function lwDescriptorBackupSection(i){
 // ===== Timelock Recovery + RITREK App (presigned Transaction) =====
 function renderTimelock(){
   var h='<div class="section-card"><div class="section-card-body">';
-  h+='<div class="ritrek-head">';
+  h+='<div class="wizard-question">'+L('timelockQ')+'</div>';
+  h+='<div class="ritrek-head" style="margin-bottom:16px;">';
   h+='<a href="'+esc(TIMELOCK_WEBSITE)+'" target="_blank" rel="noopener" class="ritrek-logo-link"><img src="'+esc(TIMELOCK_LOGO_URL)+'" alt="Timelock Recovery" class="ritrek-logo" onerror="this.style.display=\'none\'"></a>';
-  h+='<div class="wizard-question" style="margin:0;">'+L('timelockQ')+'</div>';
+  h+='<p class="wizard-hint" style="margin:0;">'+L('timelockHint')+' <a href="'+esc(TIMELOCK_WEBSITE)+'" target="_blank" rel="noopener">'+esc(TIMELOCK_WEBSITE)+'</a></p>';
   h+='</div>';
-  h+='<label class="chk-row"><input type="checkbox" '+(state.timelock.use?"checked":"")+' onchange="toggleTimelock()"> '+L('timelockChk')+'</label>';
-  if(state.timelock.use){
+  h+='<div class="wizard-choice-group">';
+  h+='<button class="wizard-choice-btn '+(state.timelock.use===true?"selected":"")+'" onclick="setTimelock(true)">'+L('yes')+'</button>';
+  h+='<button class="wizard-choice-btn '+(state.timelock.use===false?"selected":"")+'" onclick="setTimelock(false)">'+L('no')+'</button>';
+  h+='</div>';
+  if(state.timelock.use===true){
     h+='<div class="sub-block">';
     h+='<p class="mini-note">'+L('timelockNote1')+'</p>';
     h+='<p class="mini-note"><strong>'+L('timelockWebsite')+'</strong> <a href="'+esc(TIMELOCK_WEBSITE)+'" target="_blank" rel="noopener">'+esc(TIMELOCK_WEBSITE)+'</a></p>';
@@ -3537,7 +3546,7 @@ function renderTimelock(){
   h+='</div></div>';
   return h;
 }
-function toggleTimelock(){ state.timelock.use=!state.timelock.use; if(!state.timelock.use){ state.timelock.ritrek=false; state.timelock.store.ritrek=false; } render(); }
+function setTimelock(v){ state.timelock.use=v; if(!v){ state.timelock.ritrek=false; state.timelock.store.ritrek=false; } render(); }
 function toggleTimelockRitrek(){ state.timelock.ritrek=!state.timelock.ritrek; if(!state.timelock.ritrek){ state.timelock.store.ritrek=false; } render(); }
 function setTimelockFrom(v){ state.timelock.fromW=v; render(); }
 function setTimelockTo(v){ state.timelock.toW=v; render(); }
