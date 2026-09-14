@@ -107,6 +107,7 @@ select.form-control option { background: var(--specter-dark-accent); }
 @media print {
   #app-ui { display: none !important; }
   #offline-status-badge, .github-footer { display: none !important; }
+  .toast { display: none !important; }
   #pdf-document { display: block !important; }
   @page { size: A4; margin: 0; }
   body { background: #fff; }
@@ -333,6 +334,7 @@ select.form-control option { background: var(--specter-dark-accent); }
 .sec-recs-consult-link { display: inline-block; font-size: 0.85rem; font-weight: 700; color: var(--specter-primary); text-decoration: none; padding: 8px 16px; border: 1px solid var(--specter-primary); border-radius: var(--radius); transition: background 0.2s, color 0.2s; }
 .sec-recs-consult-link:hover { background: var(--specter-primary); color: #fff; }
 </style>
+<link rel="stylesheet" href="diagram.css?v=20260914-22">
 </head>
 <body>
 <div id="app-ui">
@@ -369,6 +371,8 @@ select.form-control option { background: var(--specter-dark-accent); }
     <div id="wizard-host"></div>
   </div><!-- end wizard-content -->
 </div><!-- end app-ui -->
+
+<div id="diagram-view" hidden></div>
 
 <div id="pdf-document">
   <div id="pdf-rh">
@@ -818,7 +822,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     return '<div class="pdf-qr pdf-qr-sm"><div class="pdf-qr-img">'+svg+'</div>'
          + '<div class="pdf-qr-cap">'+cap("pdfDerivPathQrCaption","Derivation Path scannen")+'</div></div>';
   };
-  // ClavaStack-Tutorial-QR fuer Specter-Geraete (Klartext-URL, Sprache waehlt der Aufrufer per LANG).
+  // Tutorial-QR fuer Hardware-Wallets (Klartext-URL) - Ziel-URL pro Geraetemodell in HW_MODELS.manual.
   window.manualQrBlock = function(url){
     var u = (url||"").trim();
     if(!u) return "";
@@ -1337,6 +1341,7 @@ var STRINGS = {
     ctaBtn:'Book Free Initial Consulting',
     antiPhishNotSupported:function(model){ return 'ℹ '+model+' does not show anti-phishing words when unlocking – this field is left out of the PDF for this device.'; },
     customNameLabel:'Name (free text)', customNamePh:'e.g. your own / another one',
+    customManualLabel:'Manual / tutorial link (optional)', customManualPh:'e.g. https://manufacturer.com/manual',
     companionOptionalNote:'ℹ The app entered here is <strong>not required</strong> to access the wallet later – it only documents what you currently use. Any software that supports the same standard (BIP32/39/44/49/84, PSBT, and the matching wallet descriptor if needed) works just as well, even if the plan names a different app.',
     pdfCompanionOptionalNote:'This app is not required – any compatible software (e.g. Sparrow, Specter Desktop) works just as well, even if a different app is named here.',
     pdfTEBagMetal:'Tamper-Evident Bag / Seal Number',
@@ -1773,6 +1778,7 @@ var STRINGS = {
     ctaBtn:'Kostenloses Erstgespr&auml;ch buchen',
     antiPhishNotSupported:function(model){ return 'ℹ '+model+' zeigt beim Entsperren keine Anti-Phishing-W&ouml;rter an – im PDF entf&auml;llt dieses Feld daher f&uuml;r dieses Ger&auml;t.'; },
     customNameLabel:'Name (frei eintragen)', customNamePh:'z.&thinsp;B. eigene/andere',
+    customManualLabel:'Anleitungs-Link (optional)', customManualPh:'z.&thinsp;B. https://hersteller.com/anleitung',
     companionOptionalNote:'ℹ Die hier eingetragene App ist <strong>nicht zwingend erforderlich</strong>, um sp&auml;ter auf die Wallet zuzugreifen – sie dokumentiert nur, was du aktuell nutzt. Jede Software, die den gleichen Standard beherrscht (BIP32/39/44/49/84, PSBT, ggf. den passenden Wallet-Descriptor), funktioniert ebenso, auch wenn im Nachlassplan eine andere App genannt ist.',
     pdfCompanionOptionalNote:'Diese App ist nicht zwingend erforderlich – jede zum Ger&auml;t kompatible Software (z.&thinsp;B. Sparrow, Specter Desktop) funktioniert ebenso, auch wenn hier eine andere App genannt ist.',
     pdfTEBagMetal:'Tamper-Evident-Bag / Siegelnummer',
@@ -1860,31 +1866,34 @@ function updateHeaderLang(){
 // ===== DATEN =====
 // antiPhish:true = Geraet zeigt beim PIN-Entsperren eigene Anti-Phishing-Woerter an (recherchiert: Coldcard-, Specter- und Passport-Dokumentation).
 // Ledger, Trezor, BitBox02, Jade, Keepkey, SeedSigner und Krux haben laut offizieller Doku KEIN wortbasiertes Anti-Phishing-Feature.
+// manual = tutorial/setup-guide URL printed as a QR code under the device in the PDF.
+// manualDe overrides manual when LANG==="de" (only ClavaStack's own manual is localized;
+// vendor documentation below is linked as-is for both languages).
 var HW_MODELS = [
-  {label:"Specter DIY Snapcase", url:"https://specter.solutions", img:"assets/products/specter-diy.png", specter:true,  shield:false, antiPhish:true},
-  {label:"Specter Shield Lite",   url:"https://specter.solutions", img:"assets/products/specter-shield-lite.png",  specter:true,  shield:true, antiPhish:true},
-  {label:"Specter Shield (Metal)",url:"https://specter.solutions", img:"assets/products/specter-shield-metal.png", specter:true,  shield:true, antiPhish:true},
-  {label:"Coldcard Mk4",          url:"https://coldcard.com",      img:"assets/products/hw-coldcard-mk4.webp", antiPhish:true},
-  {label:"Coldcard Q",            url:"https://coldcard.com",      img:"assets/products/hw-coldcard-q.webp", antiPhish:true},
-  {label:"Coldcard",              url:"https://coldcard.com",      img:"assets/products/hw-coldcard.png", antiPhish:true},
-  {label:"Ledger Nano S",         url:"https://www.ledger.com",    img:"assets/products/hw-ledger.png"},
-  {label:"Ledger Nano S Plus",    url:"https://www.ledger.com",    img:"assets/products/hw-ledger-nano-s-plus.webp"},
-  {label:"Ledger Nano X",         url:"https://www.ledger.com",    img:"assets/products/hw-ledger.png"},
-  {label:"Ledger Stax",           url:"https://www.ledger.com",    img:"assets/products/hw-ledger-stax.webp"},
-  {label:"Ledger Flex",           url:"https://www.ledger.com",    img:"assets/products/hw-ledger-flex.webp"},
-  {label:"Trezor One",            url:"https://trezor.io",         img:"assets/products/hw-trezor.png"},
-  {label:"Trezor T",              url:"https://trezor.io",         img:"assets/products/hw-trezor.png"},
-  {label:"Trezor Safe 3",         url:"https://trezor.io",         img:"assets/products/hw-trezor-safe-3.webp"},
-  {label:"Trezor Safe 5",         url:"https://trezor.io",         img:"assets/products/hw-trezor-safe-5.webp"},
-  {label:"BitBox02 (Bitcoin-only)","url":"https://bitbox.swiss",      img:"assets/products/hw-bitbox02.webp"},
+  {label:"Specter DIY Snapcase", url:"https://specter.solutions", img:"assets/products/specter-diy.png", specter:true,  shield:false, antiPhish:true, manual:"https://clavastack.com/manual", manualDe:"https://clavastack.com/de/manual"},
+  {label:"Specter Shield Lite",   url:"https://specter.solutions", img:"assets/products/specter-shield-lite.png",  specter:true,  shield:true, antiPhish:true, manual:"https://clavastack.com/manual", manualDe:"https://clavastack.com/de/manual"},
+  {label:"Specter Shield (Metal)",url:"https://specter.solutions", img:"assets/products/specter-shield-metal.png", specter:true,  shield:true, antiPhish:true, manual:"https://clavastack.com/manual", manualDe:"https://clavastack.com/de/manual"},
+  {label:"Coldcard Mk4",          url:"https://coldcard.com",      img:"assets/products/hw-coldcard-mk4.webp", antiPhish:true, manual:"https://coldcard.com/docs/quick/"},
+  {label:"Coldcard Q",            url:"https://coldcard.com",      img:"assets/products/hw-coldcard-q.webp", antiPhish:true, manual:"https://coldcard.com/docs/q-quick/"},
+  {label:"Coldcard",              url:"https://coldcard.com",      img:"assets/products/hw-coldcard.png", antiPhish:true, manual:"https://coldcard.com/docs/beginner/"},
+  {label:"Ledger Nano S",         url:"https://www.ledger.com",    img:"assets/products/hw-ledger.png", manual:"https://support.ledger.com/article/360010446000-zd"},
+  {label:"Ledger Nano S Plus",    url:"https://www.ledger.com",    img:"assets/products/hw-ledger-nano-s-plus.webp", manual:"https://support.ledger.com/hc/en-us/articles/4457314683549-Ledger-Nano-S-Plus-User-manual"},
+  {label:"Ledger Nano X",         url:"https://www.ledger.com",    img:"assets/products/hw-ledger.png", manual:"https://support.ledger.com/article/360019138694-zd"},
+  {label:"Ledger Stax",           url:"https://www.ledger.com",    img:"assets/products/hw-ledger-stax.webp", manual:"https://support.ledger.com/article/8149539702301-zd"},
+  {label:"Ledger Flex",           url:"https://www.ledger.com",    img:"assets/products/hw-ledger-flex.webp", manual:"https://support.ledger.com/article/8149539702301-zd"},
+  {label:"Trezor One",            url:"https://trezor.io",         img:"assets/products/hw-trezor.png", manual:"https://trezor.io/guides/trezor-devices/trezor-model-one/get-started-with-the-model-one"},
+  {label:"Trezor T",              url:"https://trezor.io",         img:"assets/products/hw-trezor.png", manual:"https://trezor.io/guides/trezor-devices/trezor-model-t/get-started-with-the-model-t"},
+  {label:"Trezor Safe 3",         url:"https://trezor.io",         img:"assets/products/hw-trezor-safe-3.webp", manual:"https://trezor.io/guides/trezor-devices/trezor-safe-3/get-started-with-the-trezor-safe-3"},
+  {label:"Trezor Safe 5",         url:"https://trezor.io",         img:"assets/products/hw-trezor-safe-5.webp", manual:"https://trezor.io/guides/trezor-devices/trezor-safe-5/get-started-with-the-trezor-safe-5"},
+  {label:"BitBox02 (Bitcoin-only)","url":"https://bitbox.swiss",      img:"assets/products/hw-bitbox02.webp", manual:"https://support.bitbox.swiss/de_DE/bitbox02"},
 
-  {label:"SeedSigner",            url:"https://seedsigner.com",    img:"assets/products/hw-seedsigner.webp"},
-  {label:"Krux",                  url:"https://selfcustody.github.io/krux", img:"assets/products/hw-krux.webp"},
-  {label:"Passport Core",         url:"https://foundationdevices.com", img:"assets/products/hw-passport-core.webp", antiPhish:true},
-  {label:"Passport Prime",        url:"https://foundationdevices.com", img:"assets/products/hw-passport-prime.webp", antiPhish:true},
-  {label:"Blockstream Jade",      url:"https://blockstream.com/jade", img:"assets/products/hw-jade.webp"},
-  {label:"Blockstream Jade Plus", url:"https://blockstream.com/jade", img:"assets/products/hw-jade-plus.webp"},
-  {label:"Keepkey",               url:"https://www.keepkey.com",   img:"assets/products/hw-keepkey.png"},
+  {label:"SeedSigner",            url:"https://seedsigner.com",    img:"assets/products/hw-seedsigner.webp", manual:"https://github.com/econoalchemist/SeedSigner"},
+  {label:"Krux",                  url:"https://selfcustody.github.io/krux", img:"assets/products/hw-krux.webp", manual:"https://selfcustody.github.io/krux/getting-started/"},
+  {label:"Passport Core",         url:"https://foundationdevices.com", img:"assets/products/hw-passport-core.webp", antiPhish:true, manual:"https://docs.foundation.xyz/passport/setup/"},
+  {label:"Passport Prime",        url:"https://foundationdevices.com", img:"assets/products/hw-passport-prime.webp", antiPhish:true, manual:"https://docs.foundation.xyz/prime/setup/"},
+  {label:"Blockstream Jade",      url:"https://blockstream.com/jade", img:"assets/products/hw-jade.webp", manual:"https://help.blockstream.com/blockstream-jade/set-up-transact-recover-your-wallet/set-up-jade"},
+  {label:"Blockstream Jade Plus", url:"https://blockstream.com/jade", img:"assets/products/hw-jade-plus.webp", manual:"https://help.blockstream.com/blockstream-jade/use-jade-air-gapped/air-gapped-jade-plus-setup"},
+  {label:"Keepkey",               url:"https://www.keepkey.com",   img:"assets/products/hw-keepkey.png", manual:"https://www.keepkey.com/get-started"},
   {label:"Andere",                url:"",                          img:"assets/products/hw-generic.png", antiPhish:true}
 ];
 // Von ClavaStack empfohlene Kauf-Stellen zuerst, danach die zuvor gelisteten Boersen. kyc:true = mit Verifizierung.
@@ -2003,7 +2012,7 @@ var SOFTWARE_WALLETS = [
 function getSwWallet(label){ for(var i=0;i<SOFTWARE_WALLETS.length;i++){ if(SOFTWARE_WALLETS[i].label===label) return SOFTWARE_WALLETS[i]; } return null; }
 var PASSWORD_MANAGERS = [
   {label:"1Password",   url:"https://1password.com"},
-  {label:"Bitwarden",   url:"https://bitwarden.com"},
+  {label:"Bitwarden",   url:"https://bitwarden.com", img:"assets/apps/bitwarden.png"},
   {label:"KeePassXC",   url:"https://keepassxc.org"},
   {label:"LastPass",    url:"https://www.lastpass.com"},
   {label:"Dashlane",    url:"https://www.dashlane.com"},
@@ -2032,9 +2041,6 @@ var TIMELOCK_LOGO_URL = "assets/apps/timelock-recovery.png";
 // Liana Wallet (Wizardsardine) – Miniscript-Wallet mit Primaerpfad + Recovery-Pfad(en)/Timelock.
 var LIANA_WEBSITE  = "https://wizardsardine.com/liana";
 var LIANA_LOGO_URL = "assets/apps/liana-wallet.jpg";
-// ClavaStack manual - printed as a QR code under every Specter-branded hardware wallet in the PDF.
-var CLAVASTACK_MANUAL_URL_EN = "https://clavastack.com/manual";
-var CLAVASTACK_MANUAL_URL_DE = "https://clavastack.com/de/manual";
 // Ein einzelner relativer Timelock (OP_CHECKSEQUENCEVERIFY / BIP68) ist durch Bitcoins
 // Konsensregeln hart auf 65535 Bloecke begrenzt (16-Bit-Feld in nSequence) - das ist auch
 // das technische Maximum, das Liana selbst fuer einen Recovery-Pfad anbietet.
@@ -2141,7 +2147,7 @@ function swModelName(kind,i){ var raw=(state.sw[kind+"Models"]||[])[i]||""; var 
 function hotWalletList(){ var out=[]; for(var i=0;i<state.sw.pc;i++){ out.push({id:"pc-"+i, label:(swModelName("pc",i)||("Computer-Wallet "+(i+1)))+" (PC)"}); } for(var j=0;j<state.sw.phone;j++){ out.push({id:"phone-"+j, label:(swModelName("phone",j)||("Smartphone-Wallet "+(j+1)))+" (Handy)"}); } return out; }
 function hotLabelById(id){ var l=hotWalletList(); for(var i=0;i<l.length;i++){ if(l[i].id===id) return l[i].label; } return id; }
 function seedName(i){ var s=state.seeds[i]; return s ? (s.name||("Seed #"+(i+1))) : ("Seed #"+(i+1)); }
-function newDevice(){ return {model:"", modelCustom:"", smartcards:0, smartcardNames:[], companions:[]}; }
+function newDevice(){ return {model:"", modelCustom:"", manualCustom:"", smartcards:0, smartcardNames:[], companions:[]}; }
 function newCompanion(){ return {app:"", appCustom:"", platform:"", model:""}; }
 function newBackup(){ return {type:"paper", brand:"", brandCustom:"", smartcard:"", bagDigital:true, bagNo:"", descriptorWithBackup:false}; }
 function deviceModelName(dv){ return (dv && dv.model==="Andere" && dv.modelCustom) ? dv.modelCustom : (dv?dv.model:""); }
@@ -2218,12 +2224,13 @@ function scOptionsFor(seedIdx,curVal,deviceOnly){ var used=usedScExcept(seedIdx)
 function preloadAllImages(){
  var seen = {};
  function add(src){ if(!src || seen[src]) return; seen[src]=true; var img = new Image(); img.decoding = 'async'; img.src = src; }
- [HW_MODELS, COMPANION_APPS, SOFTWARE_WALLETS, EXCHANGES].forEach(function(arr){
+ [HW_MODELS, COMPANION_APPS, SOFTWARE_WALLETS, EXCHANGES, PASSWORD_MANAGERS].forEach(function(arr){
  for(var i=0;i<arr.length;i++){ add(arr[i].img); }
  });
  add(RITREK_LOGO_URL);
  add(TIMELOCK_LOGO_URL);
  add('assets/products/smartcard.png');
+ ['mnemonic','safe','smartcard','tree-structure','wallet','shared-wallet','two-keys','file','password','cloud','clock','contacts','exchange','devices','printer'].forEach(function(name){ add('assets/bitcoin-icons/'+name+'.svg'); });
 }
 var OFFLINE_CACHE_NAME = 'bitcoin-inheritance-offline-v1';
 var OFFLINE_FONT_CSS_URL = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap';
@@ -2237,13 +2244,15 @@ function collectOfflineAssetUrls(){
  }
  add('./');
  add('./index.html');
+ add('./diagram.js');
+ add('./diagram.css');
  add('./sw.js');
  add('./site.webmanifest');
  add('assets/clavastack-logo.png');
  add('assets/products/smartcard.png');
  add(RITREK_LOGO_URL);
  add(TIMELOCK_LOGO_URL);
- [HW_MODELS, COMPANION_APPS, SOFTWARE_WALLETS, EXCHANGES].forEach(function(arr){
+ [HW_MODELS, COMPANION_APPS, SOFTWARE_WALLETS, EXCHANGES, PASSWORD_MANAGERS].forEach(function(arr){
   for(var i=0;i<arr.length;i++) add(arr[i].img);
  });
  if(document && document.documentElement){
@@ -2490,6 +2499,8 @@ function renderDev(i){
   if(dv.model==="Andere"){
     h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+L('customNameLabel')+'</label>'
       +'<input class="form-control" type="text" value="'+esc(dv.modelCustom||"")+'" placeholder="'+L('customNamePh')+'" oninput="setDevModelCustom('+i+',this.value)"></div>';
+    h+='<div class="form-group"><label class="form-label" style="text-transform:none;font-size:0.72rem;">'+L('customManualLabel')+'</label>'
+      +'<input class="form-control" type="text" value="'+esc(dv.manualCustom||"")+'" placeholder="'+L('customManualPh')+'" oninput="setDevManualCustom('+i+',this.value)"></div>';
   }
   if(m && m.img){ h+='<div class="wizard-device-preview"><img src="'+m.img+'" alt="'+esc(m.label)+'"></div>'; }
   if(m && dv.model && !m.antiPhish){ h+='<p class="mini-note">'+Lf('antiPhishNotSupported',esc(dv.model))+'</p>'; }
@@ -2536,6 +2547,7 @@ function renderDev(i){
 function compOpts(sel){ var h=""; for(var i=0;i<COMPANION_APPS.length;i++){ var l=COMPANION_APPS[i].label; h+='<option value="'+esc(COMPANION_APPS[i].label)+'"'+(COMPANION_APPS[i].label===sel?" selected":"")+'>'+esc(l)+'</option>'; } return h; }
 function setDevModel(i,v){ state.devices[i].model=v; var m=getModel(v); if(!(m&&m.shield)) state.devices[i].smartcards=0; render(); }
 function setDevModelCustom(i,v){ state.devices[i].modelCustom=v; }
+function setDevManualCustom(i,v){ state.devices[i].manualCustom=v; }
 function setDevSmartcards(i,n){ state.devices[i].smartcards=n; render(); }
 function setSmartcardName(i,sc,v){ var dv=state.devices[i]; if(!dv.smartcardNames)dv.smartcardNames=[]; dv.smartcardNames[sc]=v; }
 function setCompanionCount(i,n){ var dv=state.devices[i]; while(dv.companions.length<n)dv.companions.push(newCompanion()); while(dv.companions.length>n)dv.companions.pop(); render(); }
@@ -3666,6 +3678,7 @@ function renderSummary(){
   h+='</ul>';
   h+=renderIncompleteBlock();
   h+='<button class="btn btn-pdf" onclick="buildAndPrint()" style="margin-top:28px;">'+L('createPDF')+'</button>';
+  h+='<div class="diagram-entry"><button class="btn btn-subtle" type="button" onclick="openDiagram(\'overview\')">'+(LANG==='de'?'Als Grafik anzeigen':'Show as graphic')+'</button></div>';
   h+=renderPostPdfStorageBlock();
   h+='<div style="text-align:center;margin-top:20px;">';
   h+='<button class="btn btn-subtle" onclick="toggleSaveInfo(this)">'+L('savePlanBtn')+'</button>';
@@ -4568,7 +4581,8 @@ function buildAndPrint(){
       h+='<div class="pdf-wallet-block">';
       h+='<div class="pdf-wallet-block-title">'+Lf('pdfDeviceTitle',d,esc(pdfDeviceModelName(dv)))+'</div>';
       if(m){ h+=fRow('Website:', m.url||null); if(m.img){ h+='<img class="pdf-device-img" src="'+m.img+'" alt="'+esc(pdfDeviceModelName(dv))+'">'; } }
-      if(m && m.specter){ h+=manualQrBlock(LANG==='de'?CLAVASTACK_MANUAL_URL_DE:CLAVASTACK_MANUAL_URL_EN); }
+      var manualUrl = dv.model==="Andere" ? (dv.manualCustom||"").trim() : (m ? ((LANG==='de' && m.manualDe) ? m.manualDe : (m.manual||"")) : "");
+      if(manualUrl){ h+=manualQrBlock(manualUrl); }
       h+=eRow(L('pdfDeviceName'));
       h+=eRow(L('pdfDeviceLocation'));
       h+=secRow(L('pdfDevicePIN'));
@@ -5177,6 +5191,7 @@ document.addEventListener("DOMContentLoaded", function(){
  registerOfflineSupport();
 });
 </script>
+<script src="diagram.js?v=20260914-22"></script>
 <div style="text-align:center;padding:0 24px;">
   <button type="button" id="offline-status-badge" class="app-header-offline-badge is-checking" onclick="prepareOfflineNow()" aria-live="polite" title="Prepare offline cache"><span class="offline-status-dot" aria-hidden="true"></span><span id="offline-status-text">Offline available</span><span id="offline-status-check" class="offline-status-check" hidden>✓</span></button>
 </div>

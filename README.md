@@ -6,7 +6,7 @@
 [![Open issues](https://img.shields.io/github/issues/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen)](https://github.com/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen/issues)
 [![Stars](https://img.shields.io/github/stars/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen)](https://github.com/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen/stargazers)
 
-A single-file, self-contained browser tool that walks Bitcoin holders through a structured
+A local-first browser tool that walks Bitcoin holders through a structured
 **inheritance plan** and turns it into a print-ready **PDF** (via the browser's print function).
 A functional clone of the Marc Steiner inheritance-plan tool, styled with **Specter** branding and
 the **ClavaStack** logo. The app itself is fully bilingual (EN/DE, switchable in the header).
@@ -15,7 +15,7 @@ the **ClavaStack** logo. The app itself is fully bilingual (EN/DE, switchable in
 
 ## Usage
 
-1. Open `index.html` in a browser (Chrome recommended) – no server, no build step required.
+1. Open `index.html` in a browser (Chrome recommended) – no build step required. Keep `diagram.js` and `diagram.css` beside it.
 2. Fill out the wizard. Sections/devices you don't need can simply be toggled off.
 3. Click **"Create PDF"** → the browser's print dialog opens.
 4. Choose **"Save as PDF"** as the destination. Also works with the **"Margins: None"** print
@@ -39,6 +39,7 @@ the **ClavaStack** logo. The app itself is fully bilingual (EN/DE, switchable in
   file and password safe/offline.*
 - **Predefined device/exchange lists** with automatic filling of the official URLs.
 - **Automatic quick-overview table** built from all entries.
+- **Two visual overviews** at the end of the wizard: a connected full diagram with a distinct color for each seed and its derived paths, plus individual seed/wallet diagram cards with local wallet and service icons. Both print on fixed A4 landscape sheets with 15 mm internal margins; diagram cards are grouped on pages without cutting a card, while the full diagram offsets parallel connections and leaves clear bands at page breaks. Neither view asks for or displays seed words, PINs, passphrases, or storage locations.
 - **Print-optimized PDF layout**: a running header (colored ClavaStack logo + URL) and footer
   (branding + page number) on every page, even margins on all four sides, no
   cut-off/overlapping content from page 2 onward (thead/tfoot spacer technique).
@@ -55,10 +56,12 @@ handwriting lines, filled in by hand only after printing.
 
 | File | Purpose |
 |------|---------|
-| `index.html` | Complete app (HTML, CSS, vanilla JS) – self-contained, logo embedded as base64 |
+| `index.html` | Wizard and standard PDF plan (HTML, CSS, vanilla JS) |
+| `diagram.js` / `diagram.css` | Automatically generated diagram views and print styles |
+| `assets/bitcoin-icons/` | Local generic diagram icons from Bitcoin Design |
 | `sw.js` / `site.webmanifest` | Service worker + PWA manifest for offline mode ("Make available offline") |
 | `assets/clavastack-logo.png` | ClavaStack logo (source) |
-| `.github/workflows/sync-to-clavastack.yml` | CI: mirrors `index.html` to the ClavaStack website on every push |
+| `.github/workflows/sync-to-clavastack.yml` | CI: mirrors the planner files to the ClavaStack website on every push |
 | `.gitignore` | OS/editor artifacts |
 
 No external dependencies besides the Google Fonts link (Montserrat).
@@ -82,3 +85,8 @@ LICENSE](LICENSE) requires the single word **"ClavaStack"**, prominently and leg
 displayed in the user interface, as an active hyperlink to https://clavastack.com. No logo
 or additional wording is required — but it must be there, not buried in a source file or
 credits page.
+
+Generic diagram symbols use selected [Bitcoin Icons](https://github.com/BitcoinDesign/Bitcoin-Icons)
+under the MIT license; the required notice is in
+[`assets/bitcoin-icons/LICENSE-MIT`](assets/bitcoin-icons/LICENSE-MIT). Wallet and service
+logos continue to use the planner's existing local images.

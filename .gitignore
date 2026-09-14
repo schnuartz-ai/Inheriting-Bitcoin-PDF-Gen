@@ -9,3 +9,7 @@ desktop.ini
 
 # Build / temp helper (logo data-uri is embedded into index.html)
 assets/logo-datauri.txt
+
+# Local diagram print QA and previews
+tmp/
+output/
