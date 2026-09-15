@@ -55,6 +55,7 @@ body.diagram-open .github-footer,body.diagram-open #offline-status-badge { displ
 .dg-asset-icon { display: block; width: 100%; height: 100%; flex: 0 0 auto; background: currentColor; -webkit-mask: var(--dg-asset) center / contain no-repeat; mask: var(--dg-asset) center / contain no-repeat; -webkit-mask-mode: alpha; mask-mode: alpha; }
 .dg-icon-image .dg-glyph { display: none; }
 .dg-icon-image { background: #f3f7fa; padding: 2px; }
+.dg-icon-asset .dg-glyph { display: none; }
 .dg-icon.has-image .dg-glyph { display: none; }
 .dg-icon.has-image { background: #f3f7fa; padding: 2px; }
 .dg-symbol { display: block; width: 19px; height: 19px; flex: 0 0 auto; background: currentColor; -webkit-mask: var(--dg-symbol) center / contain no-repeat; mask: var(--dg-symbol) center / contain no-repeat; }
