@@ -1,5 +1,5 @@
-const CACHE_NAME = 'bitcoin-inheritance-offline-v26';
-const CORE_URLS = ['./', './index.html', './diagram.css', './diagram.js', './assets/apps/bitwarden.png', './assets/clavastack-logo.png', './assets/products/smartcard.png', './site.webmanifest', ...['mnemonic','safe','smartcard','tree-structure','wallet','shared-wallet','two-keys','file','password','cloud','clock','contacts','exchange','devices','printer'].map(name => './assets/bitcoin-icons/' + name + '.svg')];
+const CACHE_NAME = 'bitcoin-inheritance-offline-v30';
+const CORE_URLS = ['./', './index.html', './diagram.css', './diagram.js', './assets/apps/bitwarden.png', './assets/clavastack-logo.png', './assets/products/smartcard.png', './assets/diagram/backup-paper-rip.png', './assets/diagram/backup-tamper-evident-bag.png', './assets/diagram/backup-paper.png', './assets/diagram/backup-metal.png', './assets/diagram/smartcard.png', './assets/diagram/seed.png', './site.webmanifest', ...['mnemonic','safe','smartcard','tree-structure','wallet','shared-wallet','two-keys','file','password','cloud','clock','contacts','exchange','devices','printer'].map(name => './assets/bitcoin-icons/' + name + '.svg')];
 
 self.addEventListener('install', event => {
   event.waitUntil((async () => {

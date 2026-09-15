@@ -58,6 +58,7 @@ handwriting lines, filled in by hand only after printing.
 |------|---------|
 | `index.html` | Wizard and standard PDF plan (HTML, CSS, vanilla JS) |
 | `diagram.js` / `diagram.css` | Automatically generated diagram views and print styles |
+| `assets/diagram/` | Local backup, smartcard and seed illustrations used by the diagrams |
 | `assets/bitcoin-icons/` | Local generic diagram icons from Bitcoin Design |
 | `sw.js` / `site.webmanifest` | Service worker + PWA manifest for offline mode ("Make available offline") |
 | `assets/clavastack-logo.png` | ClavaStack logo (source) |

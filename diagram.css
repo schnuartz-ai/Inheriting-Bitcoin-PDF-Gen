@@ -41,7 +41,7 @@ body.diagram-open .github-footer,body.diagram-open #offline-status-badge { displ
 .dg-node { position: relative; width: 100%; min-width: 0; border: 1px solid #34516b; border-left: 4px solid #57b9f1; border-radius: 8px; background: #112132; color: #e8eff5; padding: 12px 13px; box-shadow: 0 6px 17px rgba(0,0,0,.17); }
 .dg-position .dg-node { height: 100%; }
 .dg-position .dg-node strong { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.dg-position .dg-node li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dg-position .dg-node li { white-space: normal; overflow: visible; text-overflow: clip; }
 .dg-node-head { display: flex; gap: 10px; align-items: flex-start; min-width: 0; }
 .dg-node strong { font-size: 12px; font-weight: 800; line-height: 1.35; overflow-wrap: anywhere; }
 .dg-icon { width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 26px; font: 800 17px/1 system-ui,sans-serif; color: #74c6f6; background: rgba(84,185,242,.12); border-radius: 5px; overflow: hidden; }
