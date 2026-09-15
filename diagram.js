@@ -30,10 +30,10 @@
   }
   function backupIcon(b){
     if(!b) return '';
-    if(b.type==='paper_rip') return 'assets/diagram/backup-paper-rip-mask.png';
-    if(b.type==='paper') return b.bagDigital?'assets/diagram/backup-tamper-evident-bag-mask.png':'assets/diagram/backup-paper-mask.png';
-    if(b.type==='metal') return 'assets/diagram/backup-metal-mask.png';
-    if(b.type==='smartcard') return 'assets/diagram/smartcard-mask.png';
+    if(b.type==='paper_rip') return 'assets/diagram/backup-paper-mask2.png';
+    if(b.type==='paper') return b.bagDigital?'assets/diagram/backup-tamper-evident-bag-mask2.png':'assets/diagram/backup-paper-mask2.png';
+    if(b.type==='metal') return 'assets/diagram/backup-metal-mask2.png';
+    if(b.type==='smartcard') return 'assets/diagram/smartcard-mask2.png';
     return '';
   }
   function timelockBrief(rec){
@@ -52,7 +52,7 @@
       var sLines=fmtWallet(s.wallet);
       sLines.unshift(tr('Seedphrase','Seed phrase'));
       if(s.passphrases) sLines.push(detail(tr('Passphrasen','Passphrases'),s.passphrases));
-      add(node('seed-'+i,'seed',label(s.name,tr('Seed ','Seed ')+(i+1)),sLines,0,'assets/diagram/seed-mask.png'));
+      add(node('seed-'+i,'seed',label(s.name,tr('Seed ','Seed ')+(i+1)),sLines,0,'assets/diagram/seed-mask2.png'));
     }
     for(i=0;i<state.seeds.length;i++){
       s=state.seeds[i];
@@ -199,11 +199,11 @@
     return ({seed:'mnemonic',backup:'safe',device:'devices',wallet:'wallet',derived:'tree-structure',software:'wallet',multisig:'shared-wallet',liana:'clock',cosigner:'two-keys',descriptor:'file',exchange:'exchange',storage:'safe',timelock:'clock',contact:'contacts'})[n.kind]||'wallet';
   }
   function symbolHtml(name){ var src='assets/bitcoin-icons/'+name+'.svg'; return '<span class="dg-symbol" data-src="'+src+'" style="--dg-symbol:url(\''+src+'\')" aria-hidden="true"></span>'; }
-  function isDiagramAsset(src){ return /^assets\/diagram\/(?:backup-paper-rip|backup-tamper-evident-bag|backup-paper|backup-metal|smartcard|seed)-mask\.png$/.test(src||''); }
+  function isDiagramAsset(src){ return /^assets\/diagram\/(?:backup-paper-rip|backup-tamper-evident-bag|backup-paper|backup-metal|smartcard|seed)-mask2\.png$/.test(src||''); }
   function diagramAssetHtml(src){ return '<span class="dg-asset-icon" data-src="'+safe(src)+'" style="--dg-asset:url(\''+safe(src)+'\')" aria-hidden="true"></span>'; }
   function legendHtml(kind,label,g){
     var assets=[];
-    if(kind==='seed') assets=['assets/diagram/seed-mask.png'];
+    if(kind==='seed') assets=['assets/diagram/seed-mask2.png'];
     if(kind==='backup'){
       (g.nodes||[]).filter(function(n){return n.kind==='backup' && isDiagramAsset(n.icon);}).forEach(function(n){if(assets.indexOf(n.icon)<0) assets.push(n.icon);});
     }
