@@ -30,10 +30,10 @@
   }
   function backupIcon(b){
     if(!b) return '';
-    if(b.type==='paper_rip') return 'assets/diagram/backup-paper-rip.png';
-    if(b.type==='paper') return b.bagDigital?'assets/diagram/backup-tamper-evident-bag.png':'assets/diagram/backup-paper.png';
-    if(b.type==='metal') return 'assets/diagram/backup-metal.png';
-    if(b.type==='smartcard') return 'assets/diagram/smartcard.png';
+    if(b.type==='paper_rip') return 'assets/diagram/backup-paper-rip-mask.png';
+    if(b.type==='paper') return b.bagDigital?'assets/diagram/backup-tamper-evident-bag-mask.png':'assets/diagram/backup-paper-mask.png';
+    if(b.type==='metal') return 'assets/diagram/backup-metal-mask.png';
+    if(b.type==='smartcard') return 'assets/diagram/smartcard-mask.png';
     return '';
   }
   function timelockBrief(rec){
@@ -52,7 +52,7 @@
       var sLines=fmtWallet(s.wallet);
       sLines.unshift(tr('Seedphrase','Seed phrase'));
       if(s.passphrases) sLines.push(detail(tr('Passphrasen','Passphrases'),s.passphrases));
-      add(node('seed-'+i,'seed',label(s.name,tr('Seed ','Seed ')+(i+1)),sLines,0,'assets/diagram/seed.png'));
+      add(node('seed-'+i,'seed',label(s.name,tr('Seed ','Seed ')+(i+1)),sLines,0,'assets/diagram/seed-mask.png'));
     }
     for(i=0;i<state.seeds.length;i++){
       s=state.seeds[i];
@@ -199,8 +199,20 @@
     return ({seed:'mnemonic',backup:'safe',device:'devices',wallet:'wallet',derived:'tree-structure',software:'wallet',multisig:'shared-wallet',liana:'clock',cosigner:'two-keys',descriptor:'file',exchange:'exchange',storage:'safe',timelock:'clock',contact:'contacts'})[n.kind]||'wallet';
   }
   function symbolHtml(name){ var src='assets/bitcoin-icons/'+name+'.svg'; return '<span class="dg-symbol" data-src="'+src+'" style="--dg-symbol:url(\''+src+'\')" aria-hidden="true"></span>'; }
+  function isDiagramAsset(src){ return /^assets\/diagram\/(?:backup-paper-rip|backup-tamper-evident-bag|backup-paper|backup-metal|smartcard|seed)-mask\.png$/.test(src||''); }
+  function diagramAssetHtml(src){ return '<span class="dg-asset-icon" data-src="'+safe(src)+'" style="--dg-asset:url(\''+safe(src)+'\')" aria-hidden="true"></span>'; }
+  function legendHtml(kind,label,g){
+    var assets=[];
+    if(kind==='seed') assets=['assets/diagram/seed-mask.png'];
+    if(kind==='backup'){
+      (g.nodes||[]).filter(function(n){return n.kind==='backup' && isDiagramAsset(n.icon);}).forEach(function(n){if(assets.indexOf(n.icon)<0) assets.push(n.icon);});
+    }
+    var icon=assets.length?'<span class="dg-legend-assets">'+assets.map(diagramAssetHtml).join('')+'</span>':symbolHtml(symbolName({kind:kind,id:''}));
+    return '<span class="dg-legend-'+kind+'">'+icon+safe(label)+'</span>';
+  }
   function nodeHtml(n){
-    var icon='<span class="dg-icon'+(n.icon?'':' dg-generic')+'" aria-hidden="true">'+(n.icon?'<img src="'+safe(n.icon)+'" alt="" onload="this.parentNode.classList.add(\'has-image\')" onerror="this.style.display=\'none\'">':symbolHtml(symbolName(n)))+'<span class="dg-glyph">'+glyph(n.kind)+'</span></span>';
+    var media=n.icon?(isDiagramAsset(n.icon)?diagramAssetHtml(n.icon):'<img src="'+safe(n.icon)+'" alt="" onload="this.parentNode.classList.add(\'has-image\')" onerror="this.style.display=\'none\'">'):symbolHtml(symbolName(n));
+    var icon='<span class="dg-icon'+(n.icon?(isDiagramAsset(n.icon)?' dg-icon-asset':' dg-icon-image'):' dg-generic')+'" aria-hidden="true">'+media+'<span class="dg-glyph">'+glyph(n.kind)+'</span></span>';
     return '<div class="dg-node dg-'+n.kind+(n.icon?' dg-branded':'')+'"><div class="dg-node-head">'+icon+'<strong>'+safe(n.title)+'</strong></div>'+
       (n.lines.length?'<ul>'+n.lines.map(function(v){return '<li title="'+safe(v)+'">'+safe(v)+'</li>';}).join('')+'</ul>':'')+'</div>';
   }
@@ -345,7 +357,7 @@
     var key=g.nodes.filter(function(n){return n.kind==='seed';}).map(function(n){var si=Number(n.id.slice(5));return '<span><i style="background:'+seedColor(si)+'"></i>'+safe(n.title)+'</span>';}).join('');
     if(printLayout){
       var legendItems=[['seed','Seed'],['derived','BIP85'],['device',tr('Gerät','Device')],['wallet','Wallet'],['multisig','Multisig'],['liana','Liana'],['backup','Backup']];
-      var printLegend=legendItems.filter(function(item){return g.nodes.some(function(n){return n.kind===item[0] || item[0]==='wallet'&&n.kind==='software';});}).map(function(item){return '<span>'+symbolHtml(symbolName({kind:item[0],id:''}))+safe(item[1])+'</span>';}).join('');
+      var printLegend=legendItems.filter(function(item){return g.nodes.some(function(n){return n.kind===item[0] || item[0]==='wallet'&&n.kind==='software';});}).map(function(item){return legendHtml(item[0],item[1],g);}).join('');
       var pageCount=Math.max(1,1+Math.ceil(Math.max(0,maxY-810)/930)),sheets=[];
       for(var page=0;page<pageCount;page++){
         var start=page?810+(page-1)*930:0,end=page?start+930:810;
@@ -420,7 +432,7 @@
     });
     measure.remove();
     var legendItems=[['seed','Seed'],['derived','BIP85'],['device',tr('Gerät','Device')],['wallet','Wallet'],['multisig','Multisig'],['liana','Liana'],['backup','Backup']];
-    var legend=legendItems.filter(function(item){return g.nodes.some(function(n){return n.kind===item[0] || item[0]==='wallet'&&n.kind==='software';});}).map(function(item){return '<span>'+symbolHtml(symbolName({kind:item[0],id:''}))+safe(item[1])+'</span>';}).join('');
+    var legend=legendItems.filter(function(item){return g.nodes.some(function(n){return n.kind===item[0] || item[0]==='wallet'&&n.kind==='software';});}).map(function(item){return legendHtml(item[0],item[1],g);}).join('');
     var header='<div class="dg-paper-head dg-card-head"><div class="dg-paper-brand"><img src="assets/clavastack-logo.png" alt=""><div><span>'+tr('DIAGRAMMKARTEN','DIAGRAM CARDS')+'</span><strong>'+diagramTitle()+'</strong></div></div><div class="dg-paper-legend">'+legend+'</div></div>';
     main.innerHTML='<div class="dg-print-pages">'+pages.map(function(items){return '<section class="dg-print-sheet">'+header+'<div class="dg-card-page">'+items.join('')+'</div></section>';}).join('')+'</div>';
   }
@@ -428,7 +440,7 @@
     var g=model(),host=document.getElementById('diagram-view');
     function legend(kind,label,usedKinds){
       var used=usedKinds.some(function(candidate){return g.nodes.some(function(n){return n.kind===candidate;});});
-      return used?'<span>'+symbolHtml(symbolName({kind:kind,id:''}))+safe(label)+'</span>':'';
+      return used?legendHtml(kind,label,g):'';
     }
     var usedKinds={seed:['seed'],derived:['derived'],device:['device'],wallet:['wallet','software'],multisig:['multisig'],liana:['liana'],backup:['backup']};
     host.innerHTML='<div class="dg-shell'+(printLayout?' dg-paper-mode':'')+'"><div class="dg-toolbar"><div class="dg-title"><span class="dg-print-logo" aria-label="ClavaStack">CLAVA<span>STACK</span></span><div><div class="dg-kicker">'+(viewMode==='overview'?tr('GESAMTDIAGRAMM','FULL DIAGRAM'):tr('DIAGRAMMKARTEN','DIAGRAM CARDS'))+'</div><h1>'+diagramTitle()+'</h1></div></div><div class="dg-actions">'+
@@ -472,7 +484,7 @@
       return new Promise(function(resolve){img.addEventListener('load',resolve,{once:true});img.addEventListener('error',resolve,{once:true});});
     });
     var symbolSources={};
-    Array.prototype.forEach.call(document.querySelectorAll('#diagram-view .dg-symbol'),function(el){symbolSources[el.getAttribute('data-src')]=true;});
+    Array.prototype.forEach.call(document.querySelectorAll('#diagram-view .dg-symbol,#diagram-view .dg-asset-icon'),function(el){symbolSources[el.getAttribute('data-src')]=true;});
     Object.keys(symbolSources).forEach(function(src){
       ready.push(new Promise(function(resolve){var img=new Image();img.onload=resolve;img.onerror=resolve;img.src=src;}));
     });

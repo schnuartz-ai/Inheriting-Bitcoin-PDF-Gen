@@ -21,6 +21,12 @@ body.diagram-open .github-footer,body.diagram-open #offline-status-badge { displ
 .dg-legend { display: flex; flex-wrap: wrap; gap: 7px 18px; padding: 14px 0 19px; color: #8ba0b4; font-size: 10px; font-weight: 700; border-bottom: 1px solid #243448; }
 .dg-legend > span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
 .dg-legend .dg-symbol { width: 14px; height: 14px; color: #68bbeb; }
+.dg-legend-assets { display: inline-flex; align-items: center; gap: 2px; padding: 1px 2px; border-radius: 3px; }
+.dg-legend-assets .dg-asset-icon { width: 14px; height: 14px; }
+.dg-legend-seed .dg-legend-assets { background: rgba(104,187,235,.12); }
+.dg-legend-seed .dg-asset-icon { color: #68bbeb; }
+.dg-legend-backup .dg-legend-assets { background: rgba(220,196,141,.12); }
+.dg-legend-backup .dg-asset-icon { color: #dcc48d; }
 .dg-seed-key { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 0 0 14px; color: #c5d3df; font-size: 11px; font-weight: 700; }
 .dg-seed-key span { display: inline-flex; align-items: center; gap: 7px; }
 .dg-seed-key i { display: inline-block; width: 12px; height: 12px; flex: 0 0 12px; border-radius: 3px; }
@@ -46,6 +52,9 @@ body.diagram-open .github-footer,body.diagram-open #offline-status-badge { displ
 .dg-node strong { font-size: 12px; font-weight: 800; line-height: 1.35; overflow-wrap: anywhere; }
 .dg-icon { width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 26px; font: 800 17px/1 system-ui,sans-serif; color: #74c6f6; background: rgba(84,185,242,.12); border-radius: 5px; overflow: hidden; }
 .dg-icon img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.dg-asset-icon { display: block; width: 100%; height: 100%; flex: 0 0 auto; background: currentColor; -webkit-mask: var(--dg-asset) center / contain no-repeat; mask: var(--dg-asset) center / contain no-repeat; -webkit-mask-mode: alpha; mask-mode: alpha; }
+.dg-icon-image .dg-glyph { display: none; }
+.dg-icon-image { background: #f3f7fa; padding: 2px; }
 .dg-icon.has-image .dg-glyph { display: none; }
 .dg-icon.has-image { background: #f3f7fa; padding: 2px; }
 .dg-symbol { display: block; width: 19px; height: 19px; flex: 0 0 auto; background: currentColor; -webkit-mask: var(--dg-symbol) center / contain no-repeat; mask: var(--dg-symbol) center / contain no-repeat; }
@@ -130,6 +139,12 @@ body.diagram-open .github-footer,body.diagram-open #offline-status-badge { displ
   body.diagram-print .dg-paper-legend { display: flex; align-items: center; gap: 3mm; height: 6mm; border-bottom: 1px solid #c4d5e1; font: 700 9px/1 Montserrat,system-ui,sans-serif; }
   body.diagram-print .dg-paper-legend span { display: inline-flex; align-items: center; gap: 1mm; white-space: nowrap; }
   body.diagram-print .dg-paper-legend .dg-symbol { width: 11px; height: 11px; color: #458fb8; }
+  body.diagram-print .dg-paper-legend .dg-legend-assets { gap: 1px; }
+  body.diagram-print .dg-paper-legend .dg-legend-assets .dg-asset-icon { width: 11px; height: 11px; }
+  body.diagram-print .dg-paper-legend .dg-legend-seed .dg-legend-assets { background: rgba(69,143,184,.12); }
+  body.diagram-print .dg-paper-legend .dg-legend-backup .dg-legend-assets { background: rgba(167,123,62,.12); }
+  body.diagram-print .dg-paper-legend .dg-legend-seed .dg-asset-icon { color: #458fb8; }
+  body.diagram-print .dg-paper-legend .dg-legend-backup .dg-asset-icon { color: #a77b3e; }
   body.diagram-print .dg-paper-seeds { display: flex; align-items: center; height: 7mm; }
   body.diagram-print .dg-paper-seeds .dg-seed-key { margin: 0; }
   body.diagram-print .dg-print-window { width: 267mm; height: 157mm; overflow: hidden; position: relative; }
