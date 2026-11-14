@@ -254,9 +254,32 @@ select.form-control option { background: var(--specter-dark-accent); }
 .btn-next { background: var(--specter-primary); color: #fff; }
 .btn-next:hover { background: #1a87cc; }
 .btn-next:disabled { opacity: 0.4; cursor: not-allowed; }
-.progress-bar-wrap { height: 4px; background: #2a3a4a; border-radius: 2px; margin-bottom: 8px; }
-.progress-bar-fill { height: 100%; background: var(--specter-primary); border-radius: 2px; transition: width 0.3s; }
-.progress-label { font-size: 0.78rem; color: var(--specter-light-secondary); margin-bottom: 20px; }
+.progress-timeline { position: relative; height: 30px; margin: 0 0 2px; }
+.progress-chapters { position: absolute; inset: 0; display: flex; }
+.progress-chapter { position: relative; z-index: 0; flex: 1 1 0; min-width: 0; height: 30px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.progress-chapter::before { content: ""; position: absolute; top: 9px; right: 0; bottom: 11px; left: 0; border-radius: 0; background: linear-gradient(180deg, #253342, #1a2733); transition: transform .18s cubic-bezier(.2,.8,.2,1), border-radius .18s ease, filter .18s ease; }
+.progress-chapter:first-child::before { border-radius: 999px 0 0 999px; }
+.progress-chapter:last-child::before { border-radius: 0 999px 999px 0; }
+.progress-chapter.is-complete::before { background: linear-gradient(180deg, #39b5ff, #1495df); }
+.progress-chapter.is-current::before { background: linear-gradient(180deg, #57c3ff, #1f9fe8); }
+.progress-chapter.has-divider::after { content: ""; position: absolute; top: 11px; right: 0; z-index: 1; width: 1px; height: 6px; background: #b9d5e6; opacity: .9; pointer-events: none; }
+.progress-chapter:hover, .progress-chapter:focus-visible { z-index: 3; outline: none; }
+.progress-chapter:hover::before, .progress-chapter:focus-visible::before { border-radius: 999px; transform: scale(1.035, 1.65); filter: drop-shadow(0 0 5px rgba(65,177,241,.52)); }
+.progress-chapter:focus-visible { outline: 2px solid #d7efff; outline-offset: 3px; }
+.progress-chapter-number { position: absolute; top: 50%; left: 50%; z-index: 2; transform: translate(-50%, -50%); color: #dce9f1; font-size: .66rem; font-weight: 700; line-height: 1; opacity: 0; pointer-events: none; transition: opacity .12s ease; }
+.progress-chapter.is-complete .progress-chapter-number { color: #062037; }
+.progress-chapter.is-hovered .progress-chapter-number { opacity: 1; font-weight: 800; }
+.progress-chapter.is-neighbor .progress-chapter-number { opacity: .42; }
+.progress-tooltip { position: fixed; z-index: 1000; box-sizing: border-box; width: min(560px, calc(100vw - 32px)); padding: 13px 16px 14px; border: 1px solid rgba(128,158,180,.52); border-radius: 12px; background: linear-gradient(145deg, rgba(18,27,36,.98), rgba(4,7,11,.98)); color: var(--specter-light); box-shadow: 0 12px 30px rgba(0,0,0,.52); text-align: left; pointer-events: none; }
+.progress-tooltip[hidden] { display: none; }
+.progress-tooltip::after { content: ""; position: absolute; left: var(--progress-tooltip-arrow, 50%); bottom: -7px; width: 12px; height: 12px; margin-left: -6px; transform: rotate(45deg); border-right: 1px solid rgba(128,158,180,.65); border-bottom: 1px solid rgba(128,158,180,.65); background: #080d12; }
+.progress-tooltip--below::after { top: -7px; bottom: auto; transform: rotate(225deg); }
+.progress-tooltip__chapter { display: block; margin-bottom: 2px; color: #a8bac8; font-size: .9rem; font-weight: 500; line-height: 1.4; }
+.progress-tooltip__title { display: block; color: #f4f8fb; font-size: 1rem; font-weight: 800; line-height: 1.35; }
+.progress-tooltip__description { display: block; margin-top: 3px; color: #d6e0e7; font-size: .92rem; font-weight: 400; line-height: 1.45; }
+.progress-label { font-size: 0.82rem; color: var(--specter-light-secondary); margin-bottom: 20px; }
+@media (max-width: 640px) { .progress-timeline, .progress-chapter { height: 44px; } .progress-chapter::before { top: 17px; bottom: 17px; } .progress-chapter.has-divider::after { top: 19px; } }
+@media (prefers-reduced-motion: reduce) { .progress-chapter::before, .progress-chapter-number { transition: none; } }
 .summary-list { list-style: none; padding: 0; }
 .summary-list li { padding: 8px 0; border-bottom: 1px solid #2a3a4a; display: flex; gap: 12px; font-size: 0.9rem; }
 .summary-list li span:first-child { color: var(--specter-light-secondary); min-width: 200px; }
@@ -364,7 +387,10 @@ select.form-control option { background: var(--specter-dark-accent); }
     </div>
 
     <div id="progress-wrap" style="display:none;">
-      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill"></div></div>
+      <div class="progress-timeline" id="progress-timeline" role="group">
+        <div class="progress-chapters" id="progress-chapters"></div>
+        <div class="progress-tooltip" id="progress-tooltip" role="tooltip" hidden></div>
+      </div>
       <div class="progress-label" id="progress-label"></div>
     </div>
 
@@ -941,6 +967,7 @@ var STRINGS = {
     githubLink:'Open Source on GitHub',
     homeBtn:'Home',
     stepLabel:function(p,t){ return 'Step '+p+' of '+t; },
+    chaptersLabel:'Jump to a step', chapterLabel:function(n){ return 'Chapter '+n; },
     back:'← Back', next:'Next →',
     introH1:'Your Personal Bitcoin Inheritance Plan',
     introP:'We go through your entire <strong>security setup</strong> and capture all the information your heirs need. First you briefly name your hardware wallets, then how you use them exactly. You never type in secrets like seed phrases – you fill in the finished PDF by hand.',
@@ -1379,6 +1406,7 @@ var STRINGS = {
     githubLink:'Open Source auf GitHub',
     homeBtn:'Startseite',
     stepLabel:function(p,t){ return 'Schritt '+p+' von '+t; },
+    chaptersLabel:'Zu einem Schritt springen', chapterLabel:function(n){ return 'Kapitel '+n; },
     back:'← Zurück', next:'Weiter →',
     introH1:'Dein persönlicher Bitcoin-Nachlassplan',
     introP:'Wir gehen dein gesamtes <strong>Sicherheitssetup</strong> durch und erfassen alle Informationen, die deine Erben brauchen. Zuerst nennst du kurz deine Hardware-Wallets, danach wie du sie genau verwendest. Geheimnisse wie Seed-Phrasen tippst du nie ein – das fertige PDF füllst du handschriftlich aus.',
@@ -2233,7 +2261,7 @@ function preloadAllImages(){
  ['assets/diagram/backup-paper-rip-mask2.png','assets/diagram/backup-tamper-evident-bag-mask2.png','assets/diagram/backup-paper-mask2.png','assets/diagram/backup-metal-mask2.png','assets/diagram/smartcard-mask2.png','assets/diagram/seed-mask2.png'].forEach(add);
  ['mnemonic','safe','smartcard','tree-structure','wallet','shared-wallet','two-keys','file','password','cloud','clock','contacts','exchange','devices','printer'].forEach(function(name){ add('assets/bitcoin-icons/'+name+'.svg'); });
 }
-var OFFLINE_CACHE_NAME = 'bitcoin-inheritance-offline-v1';
+var OFFLINE_CACHE_NAME = 'bitcoin-inheritance-offline-v2';
 var OFFLINE_FONT_CSS_URL = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap';
 function collectOfflineAssetUrls(){
  var seen = {};
@@ -2378,6 +2406,52 @@ if(document.readyState === 'loading'){
 }
 // ===== WIZARD ENGINE =====
 var pos = 0;
+var CHAPTER_COPY = {
+  en: {
+    offline:["Offline mode","Choose whether you can enter sensitive wallet details while fully offline."],
+    book:["Password book","Check whether access credentials are stored on paper."],
+    pwm:["Password manager","Record whether and how you manage access credentials in an app."],
+    devcount:["Hardware wallets","Set how many devices you use."],
+    dev:["Hardware wallet {n}","Record the model and companion apps for this device."],
+    addr:["Address types","Choose the address formats you use with your wallets."],
+    seedcount:["Seed phrases","Set how many cold-storage seed phrases you need to document."],
+    seed:["Seed phrase {n}","Record how this backup is stored and protected."],
+    bip85:["BIP-85 wallets","Note whether you derive additional wallets from existing seed phrases."],
+    sw:["Software wallets","Record the wallet apps you use on a computer or phone."],
+    ex:["Exchanges and services","Note your services and how each account uses two-factor authentication."],
+    multisig:["Multisig wallets","Document your multisig wallets and the keys needed to recover them."],
+    lianaSigType:["Liana wallet type","Choose whether your Liana setup uses single-sig or multisig."],
+    liana:["Liana wallets","Document each primary path and recovery path."],
+    timelock:["Timelock recovery","Document the recovery setup and where its backups are stored."],
+    dig:["Digital copy","Record where you saved the plan and whether it is encrypted."],
+    contacts:["Trusted contacts","Add people who can help your heirs with the recovery process."],
+    summary:["Review your plan","Check the information and prepare your PDF."]
+  },
+  de: {
+    offline:["Offline-Modus","Entscheiden, ob du sensible Wallet-Angaben komplett offline eintragen kannst."],
+    book:["Passwort-Buch","Prüfen, ob Zugangsdaten auf Papier gespeichert werden."],
+    pwm:["Passwortmanager","Festhalten, ob und mit welcher App du Zugangsdaten verwaltest."],
+    devcount:["Hardware-Wallets","Anzahl deiner Geräte festlegen."],
+    dev:["Hardware-Wallet {n}","Modell und Begleit-Apps für dieses Gerät erfassen."],
+    addr:["Adresstypen","Adresstypen auswählen, die du mit deinen Wallets verwendest."],
+    seedcount:["Seed-Phrasen","Anzahl deiner Cold-Storage-Seed-Phrasen festlegen."],
+    seed:["Seed-Phrase {n}","Aufbewahrung und Schutz des jeweiligen Backups erfassen."],
+    bip85:["BIP-85-Wallets","Festhalten, ob du weitere Wallets aus Seed-Phrasen ableitest."],
+    sw:["Software-Wallets","Wallet-Apps auf Computer und Smartphone erfassen."],
+    ex:["Börsen und Kaufdienste","Dienste und ihre Zwei-Faktor-Authentifizierung festhalten."],
+    multisig:["Multisig-Wallets","Multisig-Wallets und die nötigen Schlüssel dokumentieren."],
+    lianaSigType:["Liana-Wallet-Typ","Single-Sig oder Multisig für deine Liana-Einrichtung auswählen."],
+    liana:["Liana-Wallets","Primär- und Recovery-Pfade dokumentieren."],
+    timelock:["Timelock Recovery","Recovery-Setup und Aufbewahrung der Backups festhalten."],
+    dig:["Digitale Kopie","Speicherort und Verschlüsselung des Plans festhalten."],
+    contacts:["Vertrauenswürdige Kontakte","Personen eintragen, die deine Erben unterstützen können."],
+    summary:["Plan prüfen","Angaben kontrollieren und den PDF-Plan vorbereiten."]
+  }
+};
+function chapterMeta(sc){
+  var copy=CHAPTER_COPY[LANG==="de"?"de":"en"][sc.k]||CHAPTER_COPY[LANG==="de"?"de":"en"].summary;
+  return {title:copy[0].replace("{n}",String((sc.i||0)+1)),description:copy[1]};
+}
 function screens(){
   var arr=[{k:"intro"},{k:"offline"},{k:"book"},{k:"pwm"},{k:"devcount"}];
   for (var i=0;i<state.devices.length;i++) arr.push({k:"dev",i:i});
@@ -2398,7 +2472,54 @@ function screens(){
 function go(d){ var list=screens(); pos+=d; if(pos<0)pos=0; if(pos>=list.length)pos=list.length-1; render(); window.scrollTo(0,0); }
 function screenIndexFor(key,idx){ var list=screens(); for(var i=0;i<list.length;i++){ var sc=list[i]; if(sc.k===key && (idx==null || sc.i===idx)) return i; } return -1; }
 function gotoScreen(key,idx){ var p=screenIndexFor(key,idx); if(p>=0){ pos=p; render(); window.scrollTo(0,0); } }
+function jumpToChapter(step){ var list=screens(); if(step>0 && step<list.length){ pos=step; render(); window.scrollTo(0,0); } }
+function clearChapterEmphasis(){
+  var chapters=document.querySelectorAll(".progress-chapter");
+  for(var i=0;i<chapters.length;i++) chapters[i].classList.remove("is-hovered","is-neighbor");
+}
+function emphasizeChapter(button){
+  clearChapterEmphasis();
+  if(!button) return;
+  button.classList.add("is-hovered");
+  if(button.previousElementSibling) button.previousElementSibling.classList.add("is-neighbor");
+  if(button.nextElementSibling) button.nextElementSibling.classList.add("is-neighbor");
+}
+function showChapterTooltip(button){
+  var tooltip=document.getElementById("progress-tooltip");
+  if(!tooltip || !button) return;
+  emphasizeChapter(button);
+  tooltip.innerHTML='<span class="progress-tooltip__chapter">'+esc(button.getAttribute("data-chapter"))+'</span>'
+    +'<span class="progress-tooltip__title">'+esc(button.getAttribute("data-title"))+'</span>'
+    +'<span class="progress-tooltip__description">'+esc(button.getAttribute("data-description"))+'</span>';
+  tooltip.hidden=false;
+  tooltip.style.visibility="hidden";
+  var marker=button.getBoundingClientRect();
+  var center=marker.left+marker.width/2;
+  tooltip.style.left=center+"px";
+  tooltip.style.top=(marker.top-10)+"px";
+  var bubble=tooltip.getBoundingClientRect();
+  var above=marker.top>=bubble.height+18;
+  tooltip.classList.toggle("progress-tooltip--below",!above);
+  tooltip.style.transform=above?"translate(-50%, -100%)":"translate(-50%, 0)";
+  tooltip.style.top=above?(marker.top-10)+"px":(marker.bottom+10)+"px";
+  var clampedCenter=Math.max(12+bubble.width/2,Math.min(window.innerWidth-12-bubble.width/2,center));
+  tooltip.style.left=clampedCenter+"px";
+  tooltip.style.setProperty("--progress-tooltip-arrow",(center-(clampedCenter-bubble.width/2))+"px");
+  tooltip.style.visibility="visible";
+}
+function hideChapterTooltip(force){
+  if(!force){
+    var active=document.activeElement;
+    if(active && active.classList && active.classList.contains("progress-chapter")){ showChapterTooltip(active); return; }
+    var hovered=document.querySelector(".progress-chapter:hover");
+    if(hovered){ showChapterTooltip(hovered); return; }
+  }
+  clearChapterEmphasis();
+  var tooltip=document.getElementById("progress-tooltip");
+  if(tooltip) tooltip.hidden=true;
+}
 function render(){
+  hideChapterTooltip(true);
   var list=screens();
   if(pos>=list.length)pos=list.length-1; if(pos<0)pos=0;
   var sc=list[pos];
@@ -2431,7 +2552,20 @@ function render(){
   else {
     pw.style.display="block";
     var total=list.length-1;
-    document.getElementById("progress-fill").style.width=Math.round(pos/total*100)+"%";
+    var chaptersHtml="";
+    for(var chapter=1;chapter<list.length;chapter++){
+      var meta=chapterMeta(list[chapter]);
+      var chapterName=Lf("chapterLabel",chapter);
+      var ariaText=chapterName+": "+meta.title+". "+meta.description;
+      var chapterClass="progress-chapter"+(chapter<=pos?" is-complete":"")+(chapter<pos?" has-divider":"")+(chapter===pos?" is-current":"");
+      chaptersHtml+='<button type="button" class="'+chapterClass+'"'
+        +' data-chapter="'+esc(chapterName)+'" data-title="'+esc(meta.title)+'" data-description="'+esc(meta.description)+'"'
+        +' aria-label="'+esc(ariaText)+'"'+(chapter===pos?' aria-current="step"':'')
+        +' onclick="jumpToChapter('+chapter+')" onmouseenter="showChapterTooltip(this)" onmouseleave="hideChapterTooltip()" onfocus="showChapterTooltip(this)" onblur="hideChapterTooltip()"><span class="progress-chapter-number" aria-hidden="true">'+chapter+'</span></button>';
+    }
+    var timeline=document.getElementById("progress-timeline");
+    timeline.setAttribute("aria-label",L("chaptersLabel"));
+    document.getElementById("progress-chapters").innerHTML=chaptersHtml;
     document.getElementById("progress-label").textContent=Lf('stepLabel',pos,total);
   }
 }

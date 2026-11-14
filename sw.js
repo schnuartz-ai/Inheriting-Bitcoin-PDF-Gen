@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bitcoin-inheritance-offline-v37';
+const CACHE_NAME = 'bitcoin-inheritance-offline-v38';
 const CORE_URLS = ['./', './index.html', './diagram.css', './diagram.js', './assets/apps/bitwarden.png', './assets/clavastack-logo.png', './assets/products/smartcard.png', './assets/diagram/backup-paper-rip-mask2.png', './assets/diagram/backup-tamper-evident-bag-mask2.png', './assets/diagram/backup-paper-mask2.png', './assets/diagram/backup-metal-mask2.png', './assets/diagram/smartcard-mask2.png', './assets/diagram/seed-mask2.png', './site.webmanifest', ...['mnemonic','safe','smartcard','tree-structure','wallet','shared-wallet','two-keys','file','password','cloud','clock','contacts','exchange','devices','printer'].map(name => './assets/bitcoin-icons/' + name + '.svg')];
 
 self.addEventListener('install', event => {
