@@ -1,64 +1,64 @@
-# Bitcoin Inheritance Planner: App (Android und iOS)
+# Bitcoin Inheritance Planner: mobile app (Android and iOS)
 
-Dieser Ordner enthält **nur die App**. Die Webseite liegt im Hauptordner des Repos und kennt nichts von hier.
+This folder contains **only the app**. The website lives in the repo root and knows nothing about it.
 
-## Ein Code, zwei Ausgaben
+## One codebase, two outputs
 
 ```
 Repo
-├── index.html, diagram.js, diagram.css, assets/   ← gemeinsamer Kern (Webseite UND App)
-├── sw.js, site.webmanifest                         ← nur Webseite (Offline-Modus im Browser)
-└── app/                                            ← nur App
-    ├── src/                                        ← App-Funktionen, nur hier definiert
-    │   ├── planner-extras.js/.css                  Jahrescheck, Checkliste, Kalender-Eintrag, PDF-Checklistenseite
-    │   └── app-shell.js/.css                       Pläne, Kalender, Einstellungen, PIN, Backup, Onboarding, Mobil-Zusammenfassung
-    ├── scripts/build-www.mjs                       baut app/www aus Kern + src
-    ├── android/, ios/, plugins/                    Capacitor-Projekte und kleine native Plugins (Druck, Kalender)
-    └── resources/                                  Logo-Quellen für Icons und Startbild
+├── index.html, diagram.js, diagram.css, assets/   ← shared core (website AND app)
+├── sw.js, site.webmanifest                         ← website only (offline mode in the browser)
+└── app/                                            ← app only
+    ├── src/                                        ← app features, defined here only
+    │   ├── planner-extras.js/.css                  yearly check, checklist, calendar event, PDF checklist page
+    │   └── app-shell.js/.css                       plans, calendar, settings, PIN, backup, onboarding, mobile summary
+    ├── scripts/build-www.mjs                       builds app/www from core + src
+    ├── android/, ios/, plugins/                    Capacitor projects and small native plugins (print, calendar)
+    └── resources/                                  logo sources for icons and splash screens
 ```
 
-- **Webseite:** Was im Hauptordner liegt, wird bei einem Push auf `master` mit `sync-to-clavastack.yml` auf die Webseite übertragen. Dort gibt es keinen PIN, keine Pläne-Liste und keinen Jahrescheck.
-- **App:** `npm run build:www` kopiert die gemeinsamen Dateien nach `app/www`, hängt die Dateien aus `app/src` ein und trägt in jeder Datei eine neue Versionsnummer ein (damit die WebView nie veraltete Dateien verwendet). Capacitor verpackt das dann als Android- und iOS-App.
-- **Erweiterungspunkte:** In `index.html` stehen wenige, mit "App-Erweiterungspunkt" markierte Zeilen (`window.PX`, zum Beispiel ein zusätzlicher Wizard-Schritt). Sie sind im Web inaktiv, weil `window.PX` dort nicht existiert. Die Pipeline prüft, dass `index.html` nie direkt auf App-Dateien verweist.
-- **Fehlerkorrekturen** im gemeinsamen Kern (zum Beispiel Umlaute, Diagramm-Layout) wirken automatisch in beiden Ausgaben. Neue Funktionen, die nur die App haben soll, gehören nach `app/src`.
+- **Website:** Everything in the repo root is published to the website by `sync-to-clavastack.yml` on every push to `master`. It has no PIN, no plans list and no yearly check.
+- **App:** `npm run build:www` copies the shared files to `app/www`, hooks in the files from `app/src` and writes a fresh version number into every file reference (so the WebView never uses stale cached files). Capacitor then packages the result as an Android and an iOS app.
+- **Extension points:** `index.html` contains a few lines marked "app extension point" (they check `window.PX`, for example an additional wizard step). They are inactive on the website because `window.PX` does not exist there. CI checks that `index.html` never references app files directly.
+- **Bug fixes** in the shared core (for example character escaping or the diagram layout) automatically apply to both outputs. New features that only the app should have belong in `app/src`.
 
-## Entwickeln
+## Develop
 
 ```bash
 cd app
 npm ci
-npm run assets      # Logo und Icons neu erzeugen (nur nach Logo-Änderung)
-npm run sync        # app/www bauen und in android/ios kopieren
-npm run android     # öffnet Android Studio
-npm run ios         # öffnet Xcode (nur auf dem Mac)
+npm run assets      # regenerate logo and icons (only after a logo change)
+npm run sync        # build app/www and copy it into android/ios
+npm run android     # opens Android Studio
+npm run ios         # opens Xcode (macOS only)
 ```
 
-Nach jeder Änderung an einer Datei im Hauptordner oder in `app/src` muss `npm run sync` laufen, bevor die App neu gebaut wird.
+Run `npm run sync` after every change to a file in the repo root or in `app/src` before rebuilding the app.
 
-## Automatisch bauen (GitHub Actions)
+## Automatic builds (GitHub Actions)
 
-Workflow `.github/workflows/app.yml`. Er läuft bei Änderungen an `app/` und an den gemeinsamen Web-Dateien, nicht bei reinen Webseiten-Änderungen wie `sw.js`.
+Workflow `.github/workflows/app.yml`. It runs on changes to `app/` and to the shared web files, not on website-only changes such as `sw.js`.
 
-| Job | Was passiert |
+| Job | What it does |
 |---|---|
-| Prüfen | JavaScript-Syntax, Web-Teil bauen, prüfen, dass die Webseite ohne App-Dateien auskommt |
-| Android | Debug-APK als Artefakt (zum Testen). Mit hinterlegtem Schlüssel zusätzlich signiertes Release-APK und AAB |
-| iOS | Kompilier-Check auf macOS (ohne Signatur) |
-| Release | Nur bei einem Tag `app-vX.Y.Z`: legt ein GitHub-Release mit dem Android-Build an |
+| Check | JavaScript syntax, builds the web part, verifies that the website works without app files |
+| Android | Debug APK as an artifact (for testing). With a signing key configured it also builds a signed release APK and AAB |
+| iOS | Compile check on macOS (unsigned) |
+| Release | Only for a tag `app-vX.Y.Z`: creates a GitHub release with the Android build |
 
-Die Versionsnummer kommt aus der Build-Nummer (`versionCode` = Lauf-Nummer, `versionName` = 1.0.Lauf-Nummer).
+The version comes from the run number (`versionCode` = run number, `versionName` = 1.0.run-number).
 
-**Signierte Android-Builds einschalten:** Im Repo unter *Settings > Secrets and variables > Actions* vier Secrets anlegen: `ANDROID_KEYSTORE_B64` (Base64 der Keystore-Datei), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`. Den Schlüssel einmal erzeugen und sicher sichern:
+**Enable signed Android builds:** create four secrets under *Settings > Secrets and variables > Actions*: `ANDROID_KEYSTORE_B64` (Base64 of the keystore file), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`. Create the key once and back it up safely:
 
 ```bash
 keytool -genkeypair -v -keystore release.keystore -alias upload -keyalg RSA -keysize 4096 -validity 10000
-base64 -w0 release.keystore    # Inhalt in ANDROID_KEYSTORE_B64 einfügen
+base64 -w0 release.keystore    # paste the output into ANDROID_KEYSTORE_B64
 ```
 
-Ohne den Schlüssel gibt es keine Updates über mehrere Versionen. Debug-Builds sind bei jedem Lauf anders signiert und lassen sich nicht über eine ältere Installation drüber installieren.
+Without the key there are no updates across versions: debug builds are signed differently on every run and cannot be installed over an older installation.
 
-**Veröffentlichen:** `git tag app-v1.0.0 && git push origin app-v1.0.0`.
+**Publish:** `git tag app-v1.0.0 && git push origin app-v1.0.0`.
 
-**iOS:** Die Pipeline prüft nur, dass das Projekt kompiliert. Für TestFlight und App Store braucht es ein Apple-Developer-Konto, Signatur-Zertifikate und ein Mac oder einen Cloud-Build-Dienst, siehe `STORE_LAUNCH.md`.
+**iOS:** The pipeline only checks that the project compiles. TestFlight and the App Store need an Apple Developer account, signing certificates and a Mac or a cloud build service, see `STORE_LAUNCH.md`.
 
-Weitere Details zu Funktionen, Store-Texten und Datenschutz: [STORE_LAUNCH.md](STORE_LAUNCH.md).
+More details on features, store listing and privacy: [STORE_LAUNCH.md](STORE_LAUNCH.md).

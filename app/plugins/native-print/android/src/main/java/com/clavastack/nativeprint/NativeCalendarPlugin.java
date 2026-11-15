@@ -9,8 +9,8 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
 /**
- * Oeffnet die Kalender-App mit einem vorausgefuellten Termin (keine Berechtigung noetig).
- * Der Nutzer speichert den Termin selbst. Unterstuetzt Wiederholung per RRULE (z. B. FREQ=YEARLY).
+ * Opens the calendar app with a prefilled event (no permission needed).
+ * The user saves the event. Supports repetition via RRULE (e.g. FREQ=YEARLY).
  */
 @CapacitorPlugin(name = "NativeCalendar")
 public class NativeCalendarPlugin extends Plugin {

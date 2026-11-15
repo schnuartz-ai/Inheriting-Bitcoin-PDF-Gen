@@ -1,6 +1,6 @@
-/* Bitcoin Inheritance Planner: Styles fuer Jahrescheck, Checkliste, Erstgespraech-Karte, App-Anpassungen */
+/* Bitcoin Inheritance Planner: styles for the yearly check, checklist, consultation card and app adjustments */
 
-/* ---- Wizard-Screen: Jahrescheck ---- */
+/* ---- Wizard screen: yearly check ---- */
 .px-card { margin-top: 20px; padding: 18px; background: var(--specter-dark-accent); border: 1px solid #2a3a4a; border-radius: var(--radius); }
 .px-row { display: flex; flex-wrap: wrap; gap: 14px; }
 .px-field { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 150px; font-size: 0.78rem; font-weight: 600; color: var(--specter-light-secondary); }
@@ -18,7 +18,7 @@
 .px-pgroup ul { padding-left: 18px; }
 .px-pgroup li { margin-bottom: 4px; }
 
-/* ---- Erstgespraech- und Check-Karten ---- */
+/* ---- Consultation and check cards ---- */
 .px-consult { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 0 0 20px; padding: 18px 20px; background: var(--specter-dark-secondary); border: 1px solid #2a3a4a; border-left: 4px solid var(--specter-primary); border-radius: var(--radius); }
 .px-consult-text { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 4px; }
 .px-consult-text strong { color: var(--specter-light); font-size: 0.95rem; }
@@ -28,11 +28,11 @@
 .px-summary { text-align: center; margin: 18px 0; }
 .px-draft { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0 0 20px; font-size: 0.76rem; color: var(--specter-light-secondary); }
 
-/* ---- Header-Button (App) ---- */
+/* ---- Header button (app) ---- */
 .px-header-btn { background: transparent; color: var(--specter-light); border: 1px solid rgba(255,255,255,0.2); border-radius: var(--radius); padding: 9px 14px; font-family: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
 .px-header-due { border-color: var(--specter-coral); color: var(--specter-coral); }
 
-/* ---- Checklisten-Ansicht ---- */
+/* ---- Checklist view ---- */
 html.px-lock, html.px-lock body { overflow: hidden; }
 #px-check { position: fixed; inset: 0; z-index: 1000; background: var(--specter-dark); overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
 .px-check-inner { max-width: 760px; margin: 0 auto; padding: 18px 16px 48px; }
@@ -57,7 +57,7 @@ html.px-lock, html.px-lock body { overflow: hidden; }
 .px-done .px-txt { color: var(--specter-light-secondary); text-decoration: line-through; }
 .px-final { margin-top: 26px; }
 
-/* ---- PDF-Seite Jahres-Check ---- */
+/* ---- PDF page yearly check ---- */
 .px-pdf-group { margin: 0 0 10pt; page-break-inside: avoid; }
 .px-pdf-gt { font-size: 9pt; font-weight: 800; color: #0C1A27; margin: 8pt 0 4pt; text-transform: uppercase; letter-spacing: 0.4pt; }
 .px-pdf-item { display: flex; align-items: flex-start; gap: 7pt; font-size: 8.5pt; color: #1a1a1a; line-height: 1.4; margin: 0 0 4.5pt; }
@@ -66,7 +66,7 @@ html.px-lock, html.px-lock body { overflow: hidden; }
 .px-pdf-log th { background: #0C1A27; color: #fff; padding: 4pt 5pt; text-align: left; font-size: 7.5pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .px-pdf-log td { border: 1px solid #c8d6e2; height: 20pt; }
 
-/* ---- Mobile-App-Anpassungen ---- */
+/* ---- Mobile app adjustments ---- */
 html.native-app #offline-status-badge, html.native-app .app-header-offline, html.native-app .github-footer { display: none !important; }
 html.native-app body { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
 html.native-app input, html.native-app textarea, html.native-app select { font-size: 16px; }
@@ -78,7 +78,7 @@ html.native-app input, html.native-app textarea, html.native-app select { font-s
 
 @media print { #px-check, .px-header-btn { display: none !important; } }
 
-/* ---- Checkliste anpassen ---- */
+/* ---- Edit the checklist ---- */
 .px-head-btns { display: flex; gap: 8px; align-items: center; }
 .px-edit-toggle { min-height: 44px; padding: 0 14px; }
 .px-editrow { cursor: default; align-items: center; justify-content: space-between; }
@@ -89,13 +89,13 @@ html.native-app input, html.native-app textarea, html.native-app select { font-s
 .px-add .btn { min-height: 48px; }
 .px-cal-btn { margin-top: 12px; width: 100%; min-height: 48px; }
 
-/* ---- Jahrescheck: Felder auf gleicher Hoehe ---- */
+/* ---- Yearly check: fields at the same height ---- */
 .px-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: end; }
 .px-field { min-width: 0; }
 .px-field span { line-height: 1.2; min-height: 1.2em; white-space: nowrap; }
 .px-input { height: 52px; box-sizing: border-box; -webkit-appearance: none; appearance: none; }
 
-/* ---- Direkte Rueckmeldung ---- */
+/* ---- Direct feedback ---- */
 @keyframes pxflash { 0% { box-shadow: 0 0 0 0 rgba(31,153,229,0.8); } 60% { box-shadow: 0 0 0 14px rgba(31,153,229,0); } 100% { box-shadow: 0 0 0 0 rgba(31,153,229,0); } }
 .px-flash { animation: pxflash 1.2s ease-out 1; }
 .px-actions .btn:disabled { opacity: 0.6; cursor: wait; }

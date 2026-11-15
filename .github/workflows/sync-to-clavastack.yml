@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-    # Reine App-Aenderungen (Ordner app/) betreffen die Webseite nicht
+    # App-only changes (folder app/) do not affect the website
     paths-ignore:
       - 'app/**'
       - '.github/workflows/app.yml'

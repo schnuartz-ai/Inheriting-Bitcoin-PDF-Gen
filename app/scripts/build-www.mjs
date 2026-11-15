@@ -1,9 +1,9 @@
-// Baut app/www/ fuer Capacitor.
+// Builds app/www/ for Capacitor.
 //
-// Ein Code, zwei Ausgaben:
-//   Webseite = die Dateien im Hauptordner des Repos (index.html, diagram.js, diagram.css, assets/), unveraendert.
-//   App      = dieselben Web-Dateien PLUS die App-Dateien aus app/src (Jahrescheck, Pins, Plaene, Kalender ...).
-// Die App-Dateien werden hier in die Kopie der index.html eingehaengt. Die Webseite selbst laedt sie nie.
+// One codebase, two outputs:
+//   Website = the files in the repo root (index.html, diagram.js, diagram.css, assets/), unchanged.
+//   App      = the same web files PLUS the app files from app/src (yearly check, PIN, plans, calendar ...).
+// The app files are hooked into the copy of index.html here. The website itself never loads them.
 import { cpSync, mkdirSync, rmSync, readFileSync, writeFileSync, readdirSync, copyFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -14,20 +14,20 @@ const www = join(appRoot, 'www');
 rmSync(www, { recursive: true, force: true });
 mkdirSync(www, { recursive: true });
 
-// 1. Gemeinsame Web-Dateien
+// 1. Shared web files
 for (const f of ['diagram.js', 'diagram.css']) copyFileSync(join(webRoot, f), join(www, f));
 cpSync(join(webRoot, 'assets'), join(www, 'assets'), {
   recursive: true,
   filter: (src) => !/screenshot-|social-preview|logo-datauri/.test(src),
 });
 
-// 2. Nur-App-Dateien
+// 2. App-only files
 for (const f of ['planner-extras.js', 'planner-extras.css', 'app-shell.js', 'app-shell.css']) {
   copyFileSync(join(appRoot, 'src', f), join(www, f));
 }
 copyFileSync(join(appRoot, 'src', 'app-logo.svg'), join(www, 'assets', 'app-logo.svg'));
 
-// 3. Montserrat lokal (latin + latin-ext, Gewichte 400-800), kein Google-Fonts-Abruf in der App
+// 3. Montserrat locally (latin + latin-ext, weights 400-800), no Google Fonts request in the app
 const fontDir = join(www, 'fonts');
 mkdirSync(fontDir, { recursive: true });
 const fsrc = join(appRoot, 'node_modules', '@fontsource', 'montserrat', 'files');
@@ -44,22 +44,22 @@ for (const w of [400, 500, 600, 700, 800]) {
 }
 writeFileSync(join(fontDir, 'fonts.css'), css);
 
-// 4. index.html fuer die App ableiten
+// 4. Derive index.html for the app
 let html = readFileSync(join(webRoot, 'index.html'), 'utf8');
 function mustReplace(re, replacement, what) {
   if (!re.test(html)) throw new Error('index.html: ' + what + ' nicht gefunden');
   html = html.replace(re, replacement);
 }
 mustReplace(/<link href="https:\/\/fonts\.googleapis\.com[^>]*>/, '<link rel="stylesheet" href="fonts/fonts.css">', 'Google-Fonts-Link');
-// Capacitor-Laufzeit (registerPlugin, isNativePlatform ...) muss als erstes Skript laden. Die in die App eingebaute
-// native-bridge.js kennt registerPlugin ohne Bundler nicht.
+// The Capacitor runtime (registerPlugin, isNativePlatform ...) must load as the first script. The native-bridge.js
+// built into the app does not know registerPlugin without a bundler.
 copyFileSync(join(appRoot, 'node_modules', '@capacitor', 'core', 'dist', 'capacitor.js'), join(www, 'capacitor.js'));
 mustReplace(/<head>/, '<head>\n<script src="capacitor.js"></script>', '<head>');
-// App-Dateien direkt nach den Diagramm-Dateien einhaengen (Reihenfolge: Diagramm, Erweiterungen, Huelle)
+// Hook the app files in right after the diagram files (order: diagram, extensions, shell)
 mustReplace(/(<link rel="stylesheet" href="diagram\.css[^"]*">)/, '$1\n<link rel="stylesheet" href="planner-extras.css">\n<link rel="stylesheet" href="app-shell.css">', 'diagram.css-Link');
 mustReplace(/(<script src="diagram\.js[^"]*"><\/script>)/, '$1\n<script src="planner-extras.js"></script>\n<script src="app-shell.js"></script>', 'diagram.js-Skript');
-// Jeder Build bekommt eine neue Versionsnummer in allen Datei-Verweisen, damit die WebView nie veraltete Dateien
-// aus ihrem Zwischenspeicher nimmt (die App wird oft mit gleichem Dateinamen aktualisiert).
+// Every build gets a new version number in all file references so the WebView never uses stale files
+// from its cache (the app is often updated with the same file names).
 const stamp = Date.now().toString(36);
 html = html.replace(/(diagram|planner-extras|app-shell)\.(css|js)(\?v=[0-9a-zA-Z-]+)?"/g, (m, n, ext) => n + '.' + ext + '?v=' + stamp + '"');
 writeFileSync(join(www, 'index.html'), html);

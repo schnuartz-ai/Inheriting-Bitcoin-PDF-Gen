@@ -4,8 +4,8 @@ import EventKit
 import EventKitUI
 import UIKit
 
-/// Oeffnet den System-Dialog "Ereignis hinzufuegen" mit vorausgefuelltem, jaehrlich wiederkehrendem Termin.
-/// Der Nutzer speichert den Termin selbst. Ab iOS 17 ist dafuer keine Kalender-Berechtigung noetig.
+/// Opens the system "Add event" dialog with a prefilled, yearly repeating event.
+/// The user saves the event. From iOS 17 on no calendar permission is needed for this.
 @objc(NativeCalendarPlugin)
 public class NativeCalendarPlugin: CAPPlugin, CAPBridgedPlugin, EKEventEditViewDelegate {
     public let identifier = "NativeCalendarPlugin"

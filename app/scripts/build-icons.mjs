@@ -1,6 +1,6 @@
-// Rendert das App-Logo in alle PNG-Quellen fuer @capacitor/assets (npm run assets).
-// Logo: Bitcoin-Muenze, die sich an drei Personen verzweigt (Vererbung), Brand-Farben Specter/ClavaStack.
-// Liegt die Originaldatei unter resources/logo-source.png, wird sie statt des Vektor-Nachbaus verwendet.
+// Renders the app logo into all PNG sources for @capacitor/assets (npm run assets).
+// Logo: a Bitcoin coin branching out to three people (inheritance), Specter/ClavaStack brand colors.
+// If the original file is at resources/logo-source.png it is used instead of the vector recreation.
 import sharp from 'sharp';
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -13,7 +13,7 @@ mkdirSync(out, { recursive: true });
 const DARK = '#04070B';
 const BLUE = '#1F99E5';
 
-// Zeichenflaeche 1254 x 1254, Motiv-Mittelpunkt ca. (626, 630)
+// Canvas 1254 x 1254, motif center about (626, 630)
 const motif = (c = BLUE) => `
   <g fill="none" stroke="${c}">
     <circle cx="622" cy="425" r="232" stroke-width="48"/>
@@ -32,7 +32,7 @@ const doc = (inner, bg = true) => `<svg xmlns="http://www.w3.org/2000/svg" width
 const png = (xml, file, size) => sharp(Buffer.from(xml)).resize(size, size).png().toFile(join(out, file));
 
 writeFileSync(join(out, 'logo.svg'), doc(place(1)));
-// Transparentes Logo fuer die App-Oberflaeche (Onboarding, leere Ansichten)
+// Transparent logo for the app UI (onboarding, empty views)
 writeFileSync(join(root, 'src', 'app-logo.svg'),
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="190 150 860 960">${motif()}</svg>\n`);
 
@@ -45,11 +45,11 @@ if (existsSync(src)) {
   await png(doc(place(1)), 'icon-only.png', 1024);
   await png(doc(place(1)), 'play-store-icon-512.png', 512);
 }
-// Adaptive Icon (Android): Vordergrund im Safe-Zone-Bereich, Hintergrund einfarbig
+// Adaptive icon (Android): foreground inside the safe zone, plain background
 await png(doc(place(0.7), false), 'icon-foreground.png', 1024);
 await png(`<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"><rect width="1024" height="1024" fill="${DARK}"/></svg>`, 'icon-background.png', 1024);
 
-// Splash: Logo mittig, kleiner, auf Brand-Schwarz
+// Splash: logo centered, smaller, on brand black
 const splash = `<svg xmlns="http://www.w3.org/2000/svg" width="2732" height="2732" viewBox="0 0 2732 2732"><rect width="2732" height="2732" fill="${DARK}"/><g transform="translate(1366 1366) scale(0.85) translate(-626 -630)">${motif()}</g></svg>`;
 await sharp(Buffer.from(splash)).png().toFile(join(out, 'splash.png'));
 await sharp(Buffer.from(splash)).png().toFile(join(out, 'splash-dark.png'));

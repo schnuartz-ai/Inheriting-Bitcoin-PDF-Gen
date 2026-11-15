@@ -1,9 +1,9 @@
-/* Bitcoin Inheritance Planner: Zusatzfunktionen fuer Web und Mobile-App (Capacitor)
- *  - Jahrescheck: fester Jahrestermin, Erinnerung (App) / Kalenderdatei (.ics), Checkliste passend zum Plan
- *  - Checkliste als eigene Seite im PDF
- *  - Erstgespraech-Hinweis (kostenloses Erstgespraech mit der App)
- *  - Native Bruecken: Datei teilen, Drucken, Zurueck-Taste, Entwurf lokal speichern
- * Laeuft ohne Build-Schritt. In der Web-Version sind die nativen Teile einfach inaktiv.
+/* Bitcoin Inheritance Planner: app-only features (Capacitor mobile app)
+ *  - Yearly check: fixed yearly date, reminder (app) / calendar file (.ics), checklist tailored to the plan
+ *  - Checklist as its own page in the PDF
+ *  - First-consultation hint (free first consultation using the app)
+ *  - Native bridges: share a file, print, back button
+ * Needs no build step. Loaded by the app build only, the website never includes this file.
  */
 (function(){
   'use strict';
@@ -13,7 +13,7 @@
   window.IS_NATIVE = NATIVE;
   if(NATIVE) document.documentElement.classList.add('native-app');
 
-  // Kapitel-Texte des App-Schritts 'Jahrescheck' (die Web-Datei kennt diesen Schritt nicht)
+  // Chapter texts of the app step 'yearly check' (the web file does not know this step)
   if(typeof CHAPTER_COPY !== 'undefined'){
     CHAPTER_COPY.en.reminder = ['Yearly check', 'Pick a date to re-check your setup once a year and get a checklist.'];
     CHAPTER_COPY.de.reminder = ['Jahrescheck', 'Einmal im Jahr prüfen, ob dein Setup noch stimmt, mit Termin und Checkliste.'];
@@ -29,7 +29,7 @@
   function $(id){ return document.getElementById(id); }
   function toast(msg, kind){ if(typeof showToast === 'function') showToast(msg, kind); }
 
-  /* ---------- Plugin-Zugriff (ohne Bundler) ---------- */
+  /* ---------- Plugin access (without a bundler) ---------- */
   var plugCache = {};
   function plug(name){
     if(!NATIVE) return null;
@@ -41,7 +41,7 @@
     return plugCache[name];
   }
 
-  /* ---------- Speicher: nativ Preferences, im Web nur Arbeitsspeicher ---------- */
+  /* ---------- Storage: native Preferences, memory only on the web ---------- */
   var mem = {};
   var store = {
     get: function(key){
@@ -58,7 +58,7 @@
     }
   };
 
-  /* ---------- Datum-Helfer ---------- */
+  /* ---------- Date helpers ---------- */
   function pad(n){ return (n < 10 ? '0' : '') + n; }
   function ymd(d){ return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
   function parseDate(s){
@@ -71,7 +71,7 @@
     var m = /^(\d{1,2}):(\d{2})$/.exec(s || '');
     return m ? {h: Math.min(23, +m[1]), m: Math.min(59, +m[2])} : {h: 10, m: 0};
   }
-  // 29. Februar wird auf den 28. gelegt, damit der Termin wirklich jedes Jahr kommt
+  // Feb 29 is moved to Feb 28 so the date really occurs every year
   function normalizedMD(d){
     var month = d.getMonth() + 1, day = d.getDate();
     if(month === 2 && day === 29) day = 28;
@@ -94,7 +94,7 @@
     catch(err){ return ymd(d); }
   }
 
-  /* ---------- Reminder-State (Teil des Plans, geht in die Plan-Datei) ---------- */
+  /* ---------- Reminder state (part of the plan, goes into the plan file) ---------- */
   function rem(){
     if(!state.reminder || typeof state.reminder !== 'object') state.reminder = {on: null, date: '', time: '10:00'};
     if(!state.reminder.date){
@@ -105,10 +105,10 @@
     return state.reminder;
   }
 
-  /* ---------- Checkliste passend zum Plan ---------- */
+  /* ---------- Checklist tailored to the plan ---------- */
   function safe(fn){ try { return fn(); } catch(err){ return null; } }
 
-  // Eigene Anpassungen gehoeren zum Plan (state.checkCustom): {add: [{id, t}], removed: [ids erzeugter Punkte]}
+  // Own changes belong to the plan (state.checkCustom): {add: [{id, t}], removed: [ids of generated items]}
   function customData(){
     var c = (typeof host !== 'undefined' && typeof host.customRef === 'function') ? host.customRef() : null;
     if(!c){ if(!state.checkCustom || typeof state.checkCustom !== 'object') state.checkCustom = {add: [], removed: []}; c = state.checkCustom; }
@@ -126,7 +126,7 @@
     }).filter(function(g){ return g.items.length; });
     if(c.add.length && !includeRemoved){
       var own = {t: T('Eigene Punkte', 'My items'), items: c.add.map(function(a){ return {id: a.id, t: a.t, custom: true}; })};
-      res.splice(Math.max(0, res.length - 1), 0, own);   // vor dem Abschluss
+      res.splice(Math.max(0, res.length - 1), 0, own);   // before the wrap-up
     }
     return res;
   }
@@ -237,7 +237,7 @@
       T('Check im Jahresprotokoll eintragen und nächsten Termin bestätigen.', 'Log the check in the yearly record and confirm the next date.')
     ]);
 
-    // Stabile IDs aus dem Text: Haekchen bleiben erhalten, auch wenn sich der Plan aendert
+    // Stable IDs from the text: ticks are kept even when the plan changes
     var seen = {};
     var out = groups.map(function(g){
       return {t: g.t, items: g.items.map(function(text){
@@ -250,7 +250,7 @@
   }
   function countItems(groups){ var n = 0; groups.forEach(function(g){ n += g.items.length; }); return n; }
 
-  /* ---------- Kalenderdatei (.ics) ---------- */
+  /* ---------- Calendar file (.ics) ---------- */
   function icsEscape(s){ return String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
   function fold(line){
     var out = [], rest = line;
@@ -290,7 +290,7 @@
     return lines.map(fold).join('\r\n') + '\r\n';
   }
 
-  /* ---------- Datei speichern/teilen ---------- */
+  /* ---------- Save/share a file ---------- */
   function shareTextFile(text, fname, mime, dialogTitle){
     if(NATIVE){
       var fs = plug('Filesystem'), sh = plug('Share');
@@ -308,7 +308,7 @@
   }
 
   if(NATIVE && typeof window.triggerDownload === 'function'){
-    // Plan-Datei (.json) speichern: statt Browser-Download das System-Teilen-Menue (Dateien, iCloud, Mail ...)
+    // Save the plan file (.json): the system share sheet (Files, iCloud, mail ...) instead of a browser download
     window.triggerDownload = function(text, fname){
       shareTextFile(text, fname, 'application/json', T('Plan speichern', 'Save plan')).catch(function(err){
         if(err && /cancel/i.test(String(err.message || err))) return;
@@ -317,24 +317,24 @@
     };
   }
 
-  /* ---------- Schnittstelle zur App-Huelle (app-shell.js ueberschreibt diese Felder) ---------- */
+  /* ---------- Interface to the app shell (app-shell.js overrides these fields) ---------- */
   var host = {
     planName: function(){ return ''; },
     planId: function(){ return ''; },
     planNo: function(){ return 0; },
-    onCheckSave: function(){ return Promise.resolve(); },   // Check-Daten des aktiven Plans speichern
-    onCheckRemove: function(){},                            // Jahrescheck des aktiven Plans wurde abgeschaltet
-    onCheckChanged: function(){},                           // Fortschritt/Abschluss hat sich geaendert
-    customRef: null,                                        // Anpassungen eines anderen Plans (Kalender-Pfad), sonst null
-    rebuild: null,                                          // Checkliste eines anderen Plans neu erzeugen, sonst null
-    onEditReminder: null,                                   // Termin aendern (Plan oeffnen)
-    onPdfDone: null,                                        // PDF-Druckdialog wurde abgeschlossen
-    beforePrint: null                                       // Hinweis vor dem Druckdialog: Promise<boolean>
+    onCheckSave: function(){ return Promise.resolve(); },   // Save the check data of the active plan
+    onCheckRemove: function(){},                            // The yearly check of the active plan was turned off
+    onCheckChanged: function(){},                           // Progress/completion changed
+    customRef: null,                                        // Customizations of another plan (calendar path), otherwise null
+    rebuild: null,                                          // Rebuild the checklist of another plan, otherwise null
+    onEditReminder: null,                                   // Change date (open plan)
+    onPdfDone: null,                                        // PDF print dialog was completed
+    beforePrint: null                                       // Hint before the print dialog: Promise<boolean>
   };
 
-  /* ---------- Drucken: nativ ueber System-Druckdialog (PDF speichern/teilen) ---------- */
-  // Der System-Druckdialog meldet kein "afterprint". Damit der Druckmodus der Grafik (diagram.js) nicht haengen bleibt
-  // und das PDF nicht verfaelscht, loesen wir afterprint selbst aus: iOS nach dem Dialog, Android beim Zurueckkehren in die App.
+  /* ---------- Printing: native system print dialog (save/share PDF) ---------- */
+  // The system print dialog does not report "afterprint". So that the print mode of the graphic (diagram.js) does not get stuck
+  // and the PDF is not distorted, we fire afterprint ourselves: on iOS after the dialog, on Android when returning to the app.
   var printPending = null;
   function finishPrint(){
     if(!printPending) return;
@@ -346,9 +346,9 @@
     var origPrint = window.print ? window.print.bind(window) : null;
     var platform = (typeof cap.getPlatform === 'function' && cap.getPlatform()) || '';
     window.print = function(){
-      window.__pxPrintStart = Date.now();   // Nachweis, dass der Druck wirklich angestossen wurde
+      window.__pxPrintStart = Date.now();   // Proof that printing was really started
       var dv = document.getElementById('diagram-view'), diagram = !!(dv && !dv.hidden);
-      // Ein haengengebliebener Grafik-Druckmodus darf den PDF-Druck nicht verfaelschen
+      // A stuck graphic print mode must not distort the PDF print
       if(!diagram && document.body.classList.contains('diagram-print')) window.dispatchEvent(new Event('afterprint'));
       var name = T('Bitcoin-Nachlassplan', 'Bitcoin inheritance plan');
       var start = function(){
@@ -367,7 +367,7 @@
     };
   }
 
-  /* ---------- Check-Daten des aktiven Plans ---------- */
+  /* ---------- Check data of the active plan ---------- */
   var snap = null;   // {planName, date, time, groups, ticks, lastDone, history, created, lang}
 
   function isDue(s){
@@ -381,9 +381,9 @@
     return true;
   }
 
-  /* ---------- Erinnerung (lokale Benachrichtigungen) ---------- */
-  // Plant die naechsten 5 Jahrestermine als einzelne Benachrichtigungen (zuverlaessiger als eine Wiederholungsregel).
-  // Die ID ist pro Plan eindeutig: 100 + planNo * 10 + Jahr. Die App fuellt sie bei jedem Start nach.
+  /* ---------- Reminder (local notifications) ---------- */
+  // Schedules the next 5 yearly dates as individual notifications (more reliable than a repeat rule).
+  // The ID is unique per plan: 100 + planNo * 10 + year. The app tops them up on every start.
   var NOTIF_COUNT = 5;
   function notifIds(no){ var a = []; for(var i = 0; i < 10; i++) a.push({id: 100 + no * 10 + i}); return a; }
   function cancelNotifications(no){
@@ -418,7 +418,7 @@
     if(!el) return;
     el.className = 'px-status ' + (bad ? 'px-status-bad' : 'px-status-ok'); el.style.display = 'block';
     el.textContent = msg;
-    // Direkte Rueckmeldung: in die Bildschirmmitte scrollen und kurz aufleuchten
+    // Direct feedback: scroll to the middle of the screen and flash briefly
     try { el.scrollIntoView({behavior: 'smooth', block: 'center'}); } catch(err){}
     void el.offsetWidth; el.classList.add('px-flash');
     if(bad) toast(msg, 'err');
@@ -461,7 +461,7 @@
     return cancelNotifications(host.planNo()).then(function(){ return host.onCheckRemove(); });
   }
 
-  // Kalenderdatei teilen: check = {groups, date, time, planName, planId}
+  // Share a calendar file: check = {groups, date, time, planName, planId}
   function shareIcs(check){
     var ics = buildIcs(check);
     if(!ics){ setStatus(T('Bitte wähle ein Datum.', 'Please choose a date.'), true); return Promise.resolve(); }
@@ -472,7 +472,7 @@
       setStatus(T('Die Kalenderdatei konnte nicht erstellt werden.', 'The calendar file could not be created.'), true);
     });
   }
-  // Direkt in den Kalender des Handys: oeffnet die Kalender-App mit fertigem, jaehrlich wiederkehrendem Termin
+  // Straight into the phone calendar: opens the calendar app with a ready-made, yearly repeating event
   function addToCalendar(check){
     var start = nextOccurrence(check.date, check.time);
     if(!start){ setStatus(T('Bitte wähle ein Datum.', 'Please choose a date.'), true); return Promise.resolve(); }
@@ -494,7 +494,7 @@
     return shareIcs({groups: buildChecklist(), date: r.date, time: r.time, planName: host.planName(), planId: host.planId()});
   }
 
-  /* ---------- Wizard-Screen: Jahrescheck ---------- */
+  /* ---------- Wizard screen: yearly check ---------- */
   function renderReminder(){
     var r = rem(), on = r.on === true, groups = buildChecklist(), total = countItems(groups);
     var h = '<div class="section-card"><div class="section-card-body">';
@@ -540,7 +540,7 @@
     return h;
   }
 
-  /* ---------- Checklisten-Ansicht (Overlay) ---------- */
+  /* ---------- Checklist view (overlay) ---------- */
   var view = null;   // {groups, ticks, date, time, lastDone, persisted, planName}
 
   function currentModel(){
@@ -624,14 +624,14 @@
     o.innerHTML = h; o.scrollTop = keep;
   }
 
-  // Anpassung ausfuehren, Liste neu erzeugen und speichern
+  // Apply the change, rebuild the list and save
   function mutate(fn){
     if(!view) return;
     var c = customData(); fn(c);
     var g = (typeof host.rebuild === 'function' && host.rebuild()) || buildChecklist();
     view.groups = g;
     if(snap){ snap.groups = g; host.onCheckSave(snap); }
-    else if(typeof render === 'function') render();   // speichert den Plan (Wizard-Neuzeichnen im Hintergrund)
+    else if(typeof render === 'function') render();   // saves the plan (wizard redraws in the background)
     drawCheck();
   }
   function toggleEdit(){ if(!view) return; view.edit = !view.edit; drawCheck(); }
@@ -678,7 +678,7 @@
     else if(typeof gotoScreen === 'function') gotoScreen('reminder');
   }
 
-  /* ---------- Erstgespraech-Karte ---------- */
+  /* ---------- First-consultation card ---------- */
   function consultCard(){
     var url = NATIVE ? BOOK_URL_APP : BOOK_URL;
     return '<div class="px-consult"><div class="px-consult-text"><strong>' + e(T('Kostenloses Erstgespräch', 'Free first consultation')) + '</strong>' +
@@ -698,7 +698,7 @@
     return h;
   }
 
-  /* ---------- PDF-Seite: Jahres-Checkliste ---------- */
+  /* ---------- PDF page: yearly checklist ---------- */
   function pdfChecklistHtml(){
     var groups = buildChecklist(), r = rem();
     var d = parseDate(r.date), when = (r.on === true && d) ? fmtDayMonth(d) : null;
@@ -719,7 +719,7 @@
     return h;
   }
 
-  /* ---------- Einhaengen in die bestehende App ---------- */
+  /* ---------- Hooking into the existing app ---------- */
   if(typeof renderIntro === 'function'){
     var origIntro = renderIntro;
     window.renderIntro = function(){ return origIntro() + consultCard(); };

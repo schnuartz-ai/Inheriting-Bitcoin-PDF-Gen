@@ -2,8 +2,8 @@ import Foundation
 import Capacitor
 import UIKit
 
-/// Oeffnet den System-Druckdialog fuer den WebView-Inhalt. Dort kann der Nutzer
-/// "Als PDF sichern" waehlen (Teilen-Symbol oben rechts im Druckdialog).
+/// Opens the system print dialog for the WebView content. There the user can
+/// choose "Save as PDF" (share icon at the top right of the print dialog).
 @objc(NativePrintPlugin)
 public class NativePrintPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "NativePrintPlugin"

@@ -2224,8 +2224,8 @@ function exchangeLabels(){ var o=[]; for(var i=0;i<state.ex.count;i++){ o.push(L
 function ogOpts(label,arr,sel){ if(!arr.length) return ""; var h='<optgroup label="'+esc(label)+'">'; for(var i=0;i<arr.length;i++){ h+='<option value="'+esc(arr[i])+'"'+(arr[i]===sel?" selected":"")+'>'+esc(arr[i])+'</option>'; } return h+'</optgroup>'; }
 function timelockSourceOpts(sel){ return ogOpts(L('pdfTlGroupSeeds'), seedStructures(), sel) + ogOpts(L('pdfTlGroupMultisig'), multisigLabels(), sel); }
 function timelockDestOpts(sel){ return ogOpts(L('pdfTlGroupSeeds'), seedStructures(), sel) + ogOpts(L('pdfTlGroupSW'), softwareWalletLabels(), sel) + ogOpts(L('pdfTlGroupHW'), deviceLabels(), sel) + ogOpts(L('pdfTlGroupMultisig'), multisigLabels(), sel) + ogOpts(L('pdfTlGroupEx'), exchangeLabels(), sel); }
-// Maskiert Text fuer HTML. Bereits vorhandene HTML-Kuerzel (z. B. &szlig; &uuml; &#8211;) bleiben erhalten, damit Texte aus
-// den Sprachtabellen nicht doppelt maskiert und als "Rei&szlig;festes" angezeigt werden. Ein einzelnes & (z. B. "AT&T") wird weiter maskiert.
+// Escapes text for HTML. Existing HTML entities (e.g. &szlig; &uuml; &#8211;) are kept so that texts from
+// the language tables are not escaped twice and shown as "Rei&szlig;festes". A lone & (e.g. "AT&T") is still escaped.
 function esc(s){ return (s==null?"":String(s)).replace(/&(?!(?:[a-zA-Z][a-zA-Z0-9]{1,31}|#[0-9]{1,7}|#[xX][0-9a-fA-F]{1,6});)/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function getModel(label){ for (var i=0;i<HW_MODELS.length;i++){ if (HW_MODELS[i].label===label) return HW_MODELS[i]; } return null; }
 function deviceLabel(d){ var dv=state.devices[d]; if(!dv) return ""; return Lf('pdfDeviceLabel',d,deviceModelName(dv)||""); }
@@ -2468,7 +2468,7 @@ function screens(){
   arr.push({k:"timelock"});
   arr.push({k:"dig"});
   arr.push({k:"contacts"});
-  if(window.PX) arr.push({k:"reminder"});   // App-Erweiterungspunkt, im Web inaktiv
+  if(window.PX) arr.push({k:"reminder"});   // app extension point, inactive on the website
   arr.push({k:"summary"});
   return arr;
 }
@@ -3819,7 +3819,7 @@ function renderSummary(){
   h+=renderIncompleteBlock();
   h+='<button class="btn btn-pdf" onclick="buildAndPrint()" style="margin-top:28px;">'+L('createPDF')+'</button>';
   h+='<div class="diagram-entry"><button class="btn btn-subtle" type="button" onclick="openDiagram(\'overview\')">'+(LANG==='de'?'Als Grafik anzeigen':'Show as graphic')+'</button></div>';
-  h+=(window.PX?PX.summaryExtras():"");   // App-Erweiterungspunkt, im Web inaktiv
+  h+=(window.PX?PX.summaryExtras():"");   // app extension point, inactive on the website
   h+=renderPostPdfStorageBlock();
   h+='<div style="text-align:center;margin-top:20px;">';
   h+='<button class="btn btn-subtle" onclick="toggleSaveInfo(this)">'+L('savePlanBtn')+'</button>';
@@ -5009,7 +5009,7 @@ function buildAndPrint(){
     }
   }
 
-  // App-Erweiterungspunkt (im Web inaktiv): zusaetzliche PDF-Seiten
+  // app extension point (inactive on the website): additional PDF pages
   if(window.PX) h+=PX.pdfChecklistHtml();
 
   // 13. Notes page
@@ -5307,7 +5307,7 @@ function loadPlan(input){
     } else if(parsed && typeof parsed.state === "object" && parsed.state){
       applyLoadedState(parsed.state);
     } else if(parsed && (Array.isArray(parsed.devices) || Array.isArray(parsed.seeds)) && typeof parsed === "object"){
-      applyLoadedState(parsed);   // unverschluesselt gespeichertes state-Objekt
+      applyLoadedState(parsed);   // state object saved without encryption
     } else {
       alert(L('noValidPlan'));
     }

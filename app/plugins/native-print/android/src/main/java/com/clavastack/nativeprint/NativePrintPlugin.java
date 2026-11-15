@@ -12,7 +12,7 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
 /**
- * Oeffnet den System-Druckdialog fuer den WebView-Inhalt (Ziel "Als PDF speichern" ist dort enthalten).
+ * Opens the system print dialog for the WebView content (the "Save as PDF" target is included there).
  */
 @CapacitorPlugin(name = "NativePrint")
 public class NativePrintPlugin extends Plugin {

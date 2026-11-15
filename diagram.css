@@ -188,7 +188,7 @@ body.diagram-open .github-footer,body.diagram-open #offline-status-badge { displ
   @page diagram-overview { size: A4 landscape; margin: 0; }
 }
 
-/* ---- Handy: Gesamtdiagramm in einer Spalte, Linien am linken Rand ---- */
+/* ---- Phones: full diagram in one column, lanes on the left edge ---- */
 .dg-canvas[data-mode="mobile"] .dg-position .dg-node { height: auto; }
 .dg-canvas[data-mode="mobile"] .dg-position .dg-node strong { -webkit-line-clamp: 3; }
 @media (max-width: 760px) {
@@ -198,7 +198,7 @@ body.diagram-open .github-footer,body.diagram-open #offline-status-badge { displ
   .dg-toolbar h1 { font-size: 20px; }
 }
 
-/* ---- Handy: Diagrammkarten als Baum mit durchgehender Linie statt doppelter Pfeile ---- */
+/* ---- Phones: diagram cards as a tree with one continuous line instead of double arrows ---- */
 @media (max-width: 760px) {
   .dg-flow-card { padding: 14px 12px; }
   .dg-flow-arrow { display: none; }

@@ -371,7 +371,7 @@
     }
     return (key?'<div class="dg-seed-key">'+key+'</div>':'')+'<div class="dg-scroll"><div class="dg-canvas" style="width:'+width+'px;height:'+Math.max(320,maxY)+'px"><svg class="dg-edges" viewBox="0 0 '+width+' '+Math.max(320,maxY)+'" aria-hidden="true"><defs>'+markers+'</defs>'+paths+dots+'</svg>'+cards.map(function(c){return c.html;}).join('')+'</div></div>';
   }
-  // ---- Handy-Ansicht des Gesamtdiagramms: eine Spalte, Verbindungen als farbige Linien am linken Rand ----
+  // ---- Phone view of the full diagram: one column, connections as colored lanes on the left edge ----
   var lastMobile=false;
   function isMobileView(){ return window.innerWidth<760; }
   function layoutMobileOverview(scroll,canvas){
@@ -414,10 +414,10 @@
       });
       return Math.max(1,ends.length);
     }
-    // 1. Probelauf mit fester Randbreite, um die Zahl der Linien zu ermitteln
+    // 1. Trial run with a fixed margin width to find out the number of lanes
     place(72,avail-72-8); assignPorts();
     var lanes=Math.min(9,assignLanes()),laneArea=8+lanes*7+16;
-    // 2. Endgueltige Breite, Hoehen neu messen
+    // 2. Final width, measure the heights again
     place(laneArea,avail-laneArea-8); assignPorts(); assignLanes();
     var NS='http://www.w3.org/2000/svg';
     [].slice.call(svg.children).forEach(function(el){ if(el.tagName.toLowerCase()==='circle') svg.removeChild(el); });
@@ -441,7 +441,7 @@
     var scroll=document.querySelector('#diagram-view .dg-scroll'),canvas=scroll&&scroll.querySelector('.dg-canvas');
     if(!scroll||!canvas) return;
     var mobileNow=isMobileView();
-    if(mobileNow!==lastMobile){ lastMobile=mobileNow; paint(); return; }   // Bildschirm gedreht: neu aufbauen
+    if(mobileNow!==lastMobile){ lastMobile=mobileNow; paint(); return; }   // screen rotated: rebuild
     if(mobileNow){ layoutMobileOverview(scroll,canvas); return; }
     var width=parseFloat(canvas.style.width)||1370,height=parseFloat(canvas.style.height)||320;
     var scale=Math.min(1,Math.max(.45,(scroll.clientWidth-2)/width));

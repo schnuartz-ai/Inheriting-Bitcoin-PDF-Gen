@@ -1,10 +1,10 @@
-name: App (Android und iOS)
+name: App (Android and iOS)
 
-# Die App (Ordner app/) wird aus denselben Web-Dateien gebaut wie die Webseite (index.html, diagram.*, assets/)
-# plus den App-Dateien in app/src. Diese Pipeline laeuft deshalb bei Aenderungen an app/ UND an den gemeinsamen
-# Web-Dateien. Die Webseite selbst wird von sync-to-clavastack.yml veroeffentlicht und nicht von hier.
+# The app (folder app/) is built from the same web files as the website (index.html, diagram.*, assets/)
+# plus the app-only files in app/src. This workflow therefore runs on changes to app/ AND to the shared
+# web files. The website itself is published by sync-to-clavastack.yml, not by this workflow.
 #
-# Veroeffentlichen: Tag "app-v1.2.3" pushen, dann erzeugt der Job "release" ein GitHub-Release mit dem Android-Build.
+# To publish: push a tag like "app-v1.2.3". The "release" job then creates a GitHub release with the Android build.
 on:
   push:
     branches: [master]
@@ -24,7 +24,7 @@ defaults:
 
 jobs:
   check:
-    name: Pruefen und Web-Teil bauen
+    name: Check and build web part
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,14 +34,14 @@ jobs:
           cache: npm
           cache-dependency-path: app/package-lock.json
       - run: npm ci
-      - name: JavaScript-Syntax pruefen
+      - name: Check JavaScript syntax
         run: |
           for f in src/*.js ../diagram.js scripts/*.mjs; do node --check "$f"; done
-      - name: App-Dateien duerfen nicht in der Webseite stecken
+      - name: App files must not leak into the website
         working-directory: .
         run: |
-          if grep -nE "planner-extras|app-shell|IS_NATIVE" index.html | grep -vE "App-Erweiterungspunkt|window.IS_NATIVE"; then
-            echo "::error::index.html verweist auf App-Dateien. Die Webseite muss ohne sie laufen."; exit 1
+          if grep -nE "planner-extras|app-shell|IS_NATIVE" index.html | grep -vE "app extension point|window.IS_NATIVE"; then
+            echo "::error::index.html references app files. The website must work without them."; exit 1
           fi
       - run: npm run build:www
 
@@ -62,23 +62,23 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - name: Android SDK vorbereiten (das Runner-Image bringt das SDK schon mit)
+      - name: Prepare Android SDK (the runner image already ships the SDK)
         run: |
           SDKM="$(command -v sdkmanager || echo "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager")"
           yes | "$SDKM" --licenses > /dev/null || true
           "$SDKM" "platforms;android-36" "build-tools;36.0.0"
       - run: npm ci
       - run: npm run sync
-      - name: Version setzen (aus der Build-Nummer)
+      - name: Set version (from the run number)
         run: echo "VERSION_ARGS=-PappVersionCode=${{ github.run_number }} -PappVersionName=1.0.${{ github.run_number }}" >> "$GITHUB_ENV"
-      - name: Debug-APK (zum Testen, nicht fuer Updates geeignet)
+      - name: Debug APK (for testing, not suitable for updates)
         working-directory: app/android
         run: ./gradlew assembleDebug $VERSION_ARGS
       - uses: actions/upload-artifact@v4
         with:
           name: android-debug-apk
           path: app/android/app/build/outputs/apk/debug/*.apk
-      - name: Signierte Release-Builds (nur mit hinterlegtem Schluessel)
+      - name: Signed release builds (only when a signing key is configured)
         if: ${{ env.KEYSTORE_B64 != '' }}
         env:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -98,7 +98,7 @@ jobs:
             app/android/app/build/outputs/bundle/release/*.aab
 
   ios:
-    name: iOS (Kompilier-Check)
+    name: iOS (compile check)
     needs: check
     runs-on: macos-latest
     steps:
@@ -110,7 +110,7 @@ jobs:
           cache-dependency-path: app/package-lock.json
       - run: npm ci
       - run: npm run sync
-      - name: Fuer den Simulator bauen (ohne Signatur)
+      - name: Build for the simulator (unsigned)
         run: |
           xcodebuild -project ios/App/App.xcodeproj -scheme App \
             -destination 'generic/platform=iOS Simulator' \
@@ -118,7 +118,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO build
 
   release:
-    name: GitHub-Release
+    name: GitHub release
     if: startsWith(github.ref, 'refs/tags/app-v')
     needs: [android, ios]
     runs-on: ubuntu-latest
@@ -131,18 +131,18 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: dist
-      - name: Release anlegen
+      - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="${GITHUB_REF_NAME}"
           if ls dist/android-release/apk/release/*.apk >/dev/null 2>&1; then
             FILES="dist/android-release/apk/release/*.apk dist/android-release/bundle/release/*.aab"
-            NOTE="Signierte Android-App (APK zum direkten Installieren, AAB für Google Play)."
+            NOTE="Signed Android app (APK for direct installation, AAB for Google Play)."
             FLAGS=""
           else
             FILES="dist/android-debug-apk/*.apk"
-            NOTE="Test-Build (Debug-signiert). Für Updates über mehrere Versionen bitte die signierten Builds nutzen, sobald der Schlüssel hinterlegt ist."
+            NOTE="Test build (debug-signed). Use the signed builds for updates across versions once the signing key is configured."
             FLAGS="--prerelease"
           fi
           gh release create "$TAG" $FILES --repo "$GITHUB_REPOSITORY" --title "Bitcoin Inheritance Planner ${TAG#app-v}" --notes "$NOTE" $FLAGS

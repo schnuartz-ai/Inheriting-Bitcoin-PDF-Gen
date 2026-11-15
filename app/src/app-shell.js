@@ -1,15 +1,15 @@
-/* Bitcoin Inheritance Planner: App-Huelle (nur in der Mobile-App geladen)
- *  - Erststart: Sprache waehlen, kurze Uebersicht
- *  - Untere Leiste: Plaene, Kalender, Einstellungen (immer sichtbar)
- *  - Mehrere Plaene lokal speichern, ansehen, bearbeiten, umbenennen, duplizieren, loeschen
- *  - Kalender mit den Jahrescheck-Terminen aller Plaene
- *  - Nach dem fertigen Plan: Frage nach dem Jahrescheck
- * Baut auf planner-extras.js (window.PX) und dem bestehenden Wizard (index.html) auf.
+/* Bitcoin Inheritance Planner: app shell (loaded in the mobile app only)
+ *  - First start: choose language, short overview
+ *  - Bottom bar: Plans, Calendar, Settings (always visible)
+ *  - Store several plans locally: view, edit, rename, duplicate, delete
+ *  - Calendar with the yearly check dates of all plans
+ *  - After a finished plan: offer the yearly check
+ * Builds on planner-extras.js (window.PX) and the existing wizard (index.html).
  */
 (function(){
   'use strict';
 
-  /* ---------- Absicherung: Fehler sichtbar machen, nie ein schwarzer Bildschirm ---------- */
+  /* ---------- Safety net: make errors visible, never a black screen ---------- */
   var isApp = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
   var fatalLines = [];
   function showFatal(msg, watchdog){
@@ -17,10 +17,10 @@
     fatalLines.push(String(msg).slice(0, 220));
     var d = document.getElementById('px-fatal');
     if(!d){ d = document.createElement('div'); d.id = 'px-fatal'; document.body.appendChild(d); d.onclick = function(){ if(d.parentNode) d.parentNode.removeChild(d); fatalLines = []; }; }
-    // Nur-Wachhund-Meldungen verschwinden von selbst, sobald die Oberflaeche steht
+    // Watchdog-only messages disappear on their own once the UI is up
     if(watchdog && fatalLines.length === 1) d.setAttribute('data-wd', '1'); else d.removeAttribute('data-wd');
     d.innerHTML = '<b>Fehler / Error</b><br>' + fatalLines.slice(-4).map(function(l){ return l.replace(/</g, '&lt;'); }).join('<br>');
-    // Die normale Oberflaeche wieder einblenden, damit die App benutzbar bleibt
+    // Show the normal UI again so the app stays usable
     var app = document.getElementById('app-ui'), shell = document.getElementById('px-shell'), tabs = document.getElementById('px-tabbar');
     var shellOk = shell && shell.style.display !== 'none' && shell.children.length;
     if(app && !shellOk) app.style.display = '';
@@ -30,11 +30,11 @@
   window.addEventListener('error', function(ev){ showFatal((ev.message || 'error') + ' (' + String(ev.filename || '').split('/').pop() + ':' + ev.lineno + ')'); });
   window.addEventListener('unhandledrejection', function(ev){
     var m = ev.reason && (ev.reason.message || ev.reason);
-    if(m === 'locked') return;   // gesperrt (PIN): erwartetes Verhalten, kein Fehler
+    if(m === 'locked') return;   // locked (PIN): expected behavior, not an error
     showFatal('Promise: ' + m);
   });
   if(isApp) setTimeout(function(){
-    // Wartet der Nutzer noch auf die PIN-Abfrage oder die Einfuehrung, ist die Shell mit Absicht noch leer
+    // While the user is still at the PIN prompt or the introduction, the shell is empty on purpose
     if(document.getElementById('px-pin') || document.getElementById('px-onb')) return;
     var shell = document.getElementById('px-shell');
     if(!shell || !shell.children.length) showFatal('Die App-Oberflaeche wurde nicht aufgebaut (Shell leer). PX=' + (window.PX ? 'ok' : 'fehlt'), true);
@@ -49,9 +49,9 @@
   var KEY_SETTINGS = 'px.settings.v1', KEY_INDEX = 'px.plans.index', KEY_PLAN = 'px.plan.';
 
   var settings = {lang: null, onboarded: false, nextNo: 1};
-  var index = [];          // Kurzinfos aller Plaene
-  var active = null;       // der gerade im Wizard bearbeitete Plan
-  var external = null;     // Plan, dessen Checkliste aus dem Kalender geoeffnet wurde: {rec}
+  var index = [];          // Short info for all plans
+  var active = null;       // the plan currently being edited in the wizard
+  var external = null;     // plan whose checklist was opened from the calendar: {rec}
   var current = 'plans';   // 'plans' | 'calendar' | 'settings' | 'wizard'
   var cal = {y: new Date().getFullYear(), m: new Date().getMonth(), sel: null};
   var saveTimer = null;
@@ -62,10 +62,10 @@
   function toast(msg, kind){ if(typeof showToast === 'function') showToast(msg, kind); }
   function openLink(url){ window.open(url, '_blank'); }
 
-  /* ---------- Speicher ---------- */
+  /* ---------- Storage ---------- */
   var KEY_PIN = 'px.pin.v1', KEY_FAIL = 'px.pin.fail';
   var PIN_ITER = 400000, PIN_MIN = 6, PIN_MAX = 12, LOCK_AFTER_MS = 30000;
-  // meta: {salt, iter, wrapped}. key: der Datenschluessel, liegt nur im Arbeitsspeicher und nur solange entsperrt ist.
+  // meta: {salt, iter, wrapped}. key: the data key, kept in memory only and only while unlocked.
   var pin = {meta: null, key: null};
   function pinOn(){ return !!pin.meta; }
   function isSecretKey(key){ return key === KEY_INDEX || key.indexOf(KEY_PLAN) === 0; }
@@ -105,7 +105,7 @@
   function saveJson(key, obj){
     var text = JSON.stringify(obj);
     if(pinOn() && isSecretKey(key)){
-      if(!pin.key) return Promise.reject(new Error('locked'));   // niemals Klartext schreiben, solange gesperrt
+      if(!pin.key) return Promise.reject(new Error('locked'));   // never write plaintext while locked
       return encBytes(pin.key, te.encode(text)).then(function(o){ return store.set(key, JSON.stringify(o)); });
     }
     return store.set(key, text);
@@ -137,8 +137,8 @@
     return Promise.all([saveSettings(), savePlanRec(rec, 0)]).then(function(){ return rec; });
   }
 
-  /* ---------- Aktiven Plan speichern ---------- */
-  // Checkliste an den aktuellen Plan anpassen, bereits gesetzte Haekchen bleiben erhalten
+  /* ---------- Save the active plan ---------- */
+  // Adapt the checklist to the current plan, ticks that were already set are kept
   function refreshCheck(){
     var chk = PX.getCheck();
     if(!chk || !active) return chk;
@@ -157,7 +157,7 @@
     var total = screens().length - 1;
     if(pos >= total) active.finished = true;
     var sig = signature();
-    if(sig === active.sig) return Promise.resolve();   // nichts geaendert: Datum 'zuletzt bearbeitet' bleibt
+    if(sig === active.sig) return Promise.resolve();   // nothing changed: the 'last edited' date stays
     active.sig = sig;
     var chk = PX.getCheck();
     var rec = {id: active.id, no: active.no, name: active.name, created: active.created, updated: Date.now(), pos: pos, finished: active.finished, state: state, check: chk || null};
@@ -168,7 +168,7 @@
     saveTimer = setTimeout(function(){ saveActive().catch(function(){}); }, 500);
   }
 
-  /* ---------- Anbindung an planner-extras.js ---------- */
+  /* ---------- Connection to planner-extras.js ---------- */
   PX.host.planName = function(){ return active ? active.name : ''; };
   PX.host.planId = function(){ return active ? active.id : ''; };
   PX.host.planNo = function(){ return active ? active.no : 0; };
@@ -190,7 +190,7 @@
     });
   };
   PX.host.onPdfDone = function(){ setTimeout(askAfterPdf, 1500); };
-  // Kurzer Hinweis vor dem System-Druckdialog (einmalig abschaltbar)
+  // Short hint before the system print dialog (can be turned off once)
   PX.host.beforePrint = function(){
     if(settings.printHintSeen) return Promise.resolve(true);
     var ios = (window.Capacitor && typeof window.Capacitor.getPlatform === 'function' && window.Capacitor.getPlatform() === 'ios');
@@ -204,7 +204,7 @@
       onRemember: function(){ settings.printHintSeen = true; saveSettings(); }
     }).then(function(ok){ return !!ok; });
   };
-  // Checkliste eines Plans bearbeiten, der nicht im Wizard offen ist (Kalender-Pfad)
+  // Edit the checklist of a plan that is not open in the wizard (calendar path)
   PX.host.customRef = function(){
     if(!external) return null;
     var st = external.rec.state = external.rec.state || {};
@@ -238,7 +238,7 @@
     return '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
   }
 
-  /* ---------- Dialoge ---------- */
+  /* ---------- Dialogs ---------- */
   var modalOpen = false;
   function closeModal(){ var m = $('px-modal'); if(m && m.parentNode) m.parentNode.removeChild(m); modalOpen = false; }
   // ask({title, text, input:{value}, ok, cancel, danger}) -> Promise<string|true|null>
@@ -296,10 +296,10 @@
     });
   }
 
-  /* ---------- Ansichten umschalten ---------- */
+  /* ---------- Switch views ---------- */
   function ensureShell(){
     if($('px-shell')) return;
-    // Erst sichtbar, wenn die erste Ansicht wirklich aufgebaut ist (sonst bleibt die normale Oberflaeche sichtbar)
+    // Only visible once the first view is really built (otherwise the normal UI stays visible)
     var shell = document.createElement('div'); shell.id = 'px-shell'; shell.style.display = 'none';
     document.body.insertBefore(shell, document.body.firstChild);
     var bar = document.createElement('nav'); bar.id = 'px-tabbar'; bar.setAttribute('aria-label', 'Navigation'); bar.style.display = 'none';
@@ -327,7 +327,7 @@
     var app = $('app-ui'), shell = $('px-shell');
     document.documentElement.classList.toggle('in-wizard', v === 'wizard');
     var bar = $('px-tabbar');
-    if(v !== 'wizard') renderShell();   // zuerst aufbauen, erst danach umschalten
+    if(v !== 'wizard') renderShell();   // build first, switch afterwards
     if(app) app.style.display = v === 'wizard' ? '' : 'none';
     if(shell) shell.style.display = v === 'wizard' ? 'none' : '';
     if(bar) bar.style.display = '';
@@ -341,7 +341,7 @@
     p.then(function(){ if(v === 'calendar'){ var n = new Date(); cal.y = n.getFullYear(); cal.m = n.getMonth(); cal.sel = null; } showView(v); });
   }
 
-  /* ---------- Plan oeffnen ---------- */
+  /* ---------- Open a plan ---------- */
   function openPlan(id, target){
     external = null;
     return loadJson(KEY_PLAN + id).then(function(rec){
@@ -402,7 +402,7 @@
     });
   }
 
-  /* ---------- Checkliste eines Plans aus dem Kalender ---------- */
+  /* ---------- Checklist of a plan, opened from the calendar ---------- */
   function openCheckOf(id){
     var p = current === 'wizard' ? leaveWizard() : Promise.resolve();
     p.then(function(){ return loadJson(KEY_PLAN + id); }).then(function(rec){
@@ -427,7 +427,7 @@
     });
   }
 
-  /* ---------- Nach dem fertigen Plan: Jahrescheck anbieten ---------- */
+  /* ---------- After a finished plan: offer the yearly check ---------- */
   function askAfterPdf(){
     if(current !== 'wizard' || !active || PX.getCheck()) return;
     if(state.reminder && state.reminder.on === false) return;
@@ -444,7 +444,7 @@
     });
   }
 
-  /* ---------- Hilfen fuer Anzeige ---------- */
+  /* ---------- Display helpers ---------- */
   function fmtDate(ts){ try { return new Date(ts).toLocaleDateString(loc(), {day: 'numeric', month: 'short', year: 'numeric'}); } catch(err){ return ''; } }
   function daysUntil(d){ var n = new Date(); n.setHours(0, 0, 0, 0); var t = new Date(d); t.setHours(0, 0, 0, 0); return Math.round((t - n) / 86400000); }
   function whenText(days){
@@ -453,7 +453,7 @@
     return T('in ' + days + ' Tagen', 'in ' + days + ' days');
   }
 
-  /* ---------- Ansicht: Plaene ---------- */
+  /* ---------- View: Plans ---------- */
   function viewPlans(){
     var h = '<div class="sv"><div class="sv-head"><h1>' + e(T('Meine Pläne', 'My plans')) + '</h1>' +
             '<button class="btn btn-primary btn-sm" onclick="PXS.newPlan()">' + ico('plus') + e(T('Neuer Plan', 'New plan')) + '</button></div>';
@@ -481,7 +481,7 @@
     return h + PX.consultCard() + '</div>';
   }
 
-  /* ---------- Ansicht: Kalender ---------- */
+  /* ---------- View: Calendar ---------- */
   function eventsOn(y, m, d){
     var out = [], key = y + '-' + PX.pad(m + 1) + '-' + PX.pad(d);
     index.forEach(function(p){
@@ -547,7 +547,7 @@
            '<button class="btn btn-ghost btn-sm" onclick="PXS.ics(\'' + p.id + '\')">' + e(T('In Kalender eintragen', 'Add to calendar')) + '</button></div></div>';
   }
 
-  /* ---------- Ansicht: Einstellungen ---------- */
+  /* ---------- View: Settings ---------- */
   function viewSettings(){
     var h = '<div class="sv"><div class="sv-head"><h1>' + e(T('Einstellungen', 'Settings')) + '</h1></div>';
     h += '<div class="sg"><div class="sg-title">' + e(T('Sprache', 'Language')) + '</div><div class="seg">' +
@@ -589,7 +589,7 @@
     });
   }
 
-  // Loescht alle Plaene, Termine und die PIN, auch ohne Zugriff auf den (verschluesselten) Index
+  // Deletes all plans, dates and the PIN, even without access to the (encrypted) index
   function wipeEverything(){
     return plug('Preferences').keys().then(function(r){
       var ks = ((r && r.keys) || []).filter(function(k){ return k === KEY_INDEX || k === KEY_PIN || k === KEY_FAIL || k.indexOf(KEY_PLAN) === 0; });
@@ -603,10 +603,10 @@
     }).then(function(){ index = []; pin.meta = null; pin.key = null; external = null; });
   }
 
-  /* ---------- PIN-Schutz ---------- */
+  /* ---------- PIN protection ---------- */
   var pendingOpen = null, bgAt = 0, padOpen = false;
 
-  // pinPad({title, text, cancel, submit(pinStr) -> Promise<Fehlertext|null>, extra:{label, onClick(finish)}}) -> Promise<pin|null>
+  // pinPad({title, text, cancel, submit(pinStr) -> Promise<error text|null>, extra:{label, onClick(finish)}}) -> Promise<pin|null>
   function pinPad(o){
     return new Promise(function(resolve){
       var old = $('px-pin'); if(old && old.parentNode) old.parentNode.removeChild(old);
@@ -659,7 +659,7 @@
   }
 
   function failInfo(){ return loadJson(KEY_FAIL).then(function(f){ return f || {n: 0, until: 0}; }); }
-  // Prueft die PIN, setzt bei Erfolg den Datenschluessel. Liefert null bei Erfolg, sonst den Fehlertext.
+  // Checks the PIN and sets the data key on success. Returns null on success, otherwise the error text.
   function verifyPin(pinStr){
     return failInfo().then(function(f){
       var now = Date.now();
@@ -683,7 +683,7 @@
         var dek = r[0], kek = r[1];
         return wrapDek(dek, kek).then(function(wrapped){
           var meta = {salt: b64e(salt), iter: PIN_ITER, wrapped: wrapped};
-          // Erst Schluessel sichern, dann Daten umschreiben: auch bei Abbruch bleibt alles lesbar (Klartext oder verschluesselt)
+          // Store the key first, then rewrite the data: everything stays readable even if interrupted (plaintext or encrypted)
           return store.set(KEY_PIN, JSON.stringify(meta)).then(function(){
             pin.meta = meta; pin.key = dek;
             var jobs = [];
@@ -698,7 +698,7 @@
   function disablePin(){
     var ids = index.map(function(p){ return p.id; });
     return Promise.all(ids.map(function(id){ return loadJson(KEY_PLAN + id); })).then(function(recs){
-      var saved = pin.meta; pin.meta = null;      // ab jetzt wird im Klartext geschrieben
+      var saved = pin.meta; pin.meta = null;      // from now on plaintext is written
       var jobs = [];
       recs.forEach(function(rec, i){ if(rec) jobs.push(saveJson(KEY_PLAN + ids[i], rec)); });
       jobs.push(saveIndex());
@@ -726,7 +726,7 @@
   function askCurrentPin(title){
     return pinPad({title: title, text: T('Gib deine aktuelle PIN ein.', 'Enter your current PIN.'), cancel: true, submit: verifyPin});
   }
-  // Warnhinweis mit Pflicht-Haken: die PIN laesst sich nicht wiederherstellen
+  // Warning with mandatory checkbox: the PIN cannot be recovered
   function pinWarning(okLabel){
     return ask({
       title: T('Wichtig: PIN sicher aufschreiben', 'Important: write your PIN down safely'),
@@ -747,7 +747,7 @@
       });
     });
   }
-  // PIN zuruecksetzen: mit der alten PIN eine neue festlegen, die Daten bleiben erhalten
+  // Reset PIN: set a new one using the old PIN, the data is kept
   function pinChange(){
     askCurrentPin(T('PIN zurücksetzen', 'Reset PIN')).then(function(ok){
       if(!ok) return;
@@ -772,7 +772,7 @@
       index = i || [];
       showView('plans');
       if(!settings.onboarded) showOnboarding();
-      // Erinnerungen auffuellen, damit immer die naechsten 5 Jahre geplant sind
+      // Top up reminders so the next 5 years are always scheduled
       index.forEach(function(p){
         if(p.chk) PX.scheduleFor({id: p.id, no: p.no}, p.chk.date, p.chk.time, true).catch(function(){});
       });
@@ -794,7 +794,7 @@
       }}
     }).then(function(){ return afterUnlock(); });
   }
-  // Sperrt die App: Daten und Anzeige werden aus dem Arbeitsspeicher entfernt, danach PIN-Abfrage
+  // Locks the app: data and display are removed from memory, then the PIN prompt follows
   function lockNow(){
     if(!pinOn() || !pin.key || padOpen) return Promise.resolve();
     if(PX.isCheckOpen()) PX.closeCheck();
@@ -809,8 +809,8 @@
     });
   }
 
-  /* ---------- Backup fuer Passwort-Manager (z. B. Bitwarden) und Wiederherstellen ---------- */
-  var BACKUP_NOTE_LIMIT = 9500;   // Bitwarden-Notizen sind auf etwa 10.000 Zeichen begrenzt
+  /* ---------- Backup for a password manager (e.g. Bitwarden) and restore ---------- */
+  var BACKUP_NOTE_LIMIT = 9500;   // Bitwarden notes are limited to about 10,000 characters
   function packText(text){
     var bytes = te.encode(text);
     if(typeof CompressionStream === 'undefined') return Promise.resolve('CSIP-RAW1:' + b64e(bytes));
@@ -838,7 +838,7 @@
     if(navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text).catch(legacy);
     return legacy();
   }
-  // Kompakter Backup-Text (gzip + Base64) als Zwischenablage-Inhalt fuer eine Sichere Notiz im Passwort-Manager
+  // Compact backup text (gzip + Base64) as clipboard content for a secure note in the password manager
   function backupToManager(){
     var payload = JSON.stringify({app: 'clavastack-nachlassplan', version: 1, savedAt: new Date().toISOString(), state: state});
     packText(payload).then(function(packed){
@@ -856,7 +856,7 @@
       });
     }).catch(function(){ toast(T('Kopieren nicht möglich. Nutze „Als Datei teilen“.', 'Copying failed. Use "Share as file".'), 'err'); });
   }
-  // "Plan speichern" in der Zusammenfassung: erst den Weg waehlen
+  // "Save plan" in the summary: choose the way first
   var origSavePlan = window.savePlan;
   window.savePlan = function(){
     sheet(T('Plan sichern', 'Back up plan'), [
@@ -893,13 +893,13 @@
     ]).then(function(i){ if(i === 0) restoreFromText(); else if(i === 1) restoreFromFile(); });
   }
 
-  /* ---------- Zusammenfassung fuers Handy ---------- */
-  // Uebersichtliche Variante von "Plan pruefen": Aktionen oben, Setup als Kacheln, Offenes und naechste Schritte als Karten
+  /* ---------- Summary for phones ---------- */
+  // Clear variant of "Review plan": actions on top, setup as tiles, open items and next steps as cards
   function planEmpty(){
     return !state.devices.length && !state.seeds.length && !((state.sw.pc || 0) + (state.sw.phone || 0)) && !state.ex.count && !state.multisigs.length && !(state.lianaWallets && state.lianaWallets.length);
   }
 
-  /* ---------- Rueckmeldung bei PDF und Grafik: nie stumm ---------- */
+  /* ---------- Feedback for PDF and graphic: never silent ---------- */
   var origBuild = window.buildAndPrint;
   window.buildAndPrint = function(){
     var t0 = Date.now();
@@ -912,7 +912,7 @@
   var origOpenDiagram = window.openDiagram;
   window.openDiagram = function(mode){
     if(planEmpty()){ toast(T('Noch keine Angaben im Plan. Ergänze zuerst dein Setup.', 'No plan details yet. Add your setup first.'), 'err'); return; }
-    // alter Druckmodus der Grafik darf die Anzeige nicht stoeren
+    // a stale print mode of the graphic must not disturb the display
     if(document.body.classList.contains('diagram-print')) window.dispatchEvent(new Event('afterprint'));
     try { origOpenDiagram.call(this, mode); } catch(err){ showFatal('Grafik: ' + (err && err.message)); return; }
     setTimeout(function(){
@@ -923,7 +923,7 @@
   document.addEventListener('visibilitychange', function(){ if(!document.hidden && PX.finishPrint) PX.finishPrint(); });
 
   var origSummary = window.renderSummary;
-  // Sicherheitstipps kompakt und eingeklappt: Titel, Text und Links je Tipp
+  // Security tips compact and collapsed: title, text and links per tip
   function renderTipsMobile(){
     var tips = buildRecommendations(), regular = [], adv = [];
     tips.forEach(function(t){ (t.advanced ? adv : regular).push(t); });
@@ -949,7 +949,7 @@
          '<button class="btn btn-primary sm-pdf" onclick="buildAndPrint()">' + L('createPDF') + '</button>' +
          '<button class="btn btn-ghost sm-graph" onclick="openDiagram(\'overview\')">' + e(T('Als Grafik ansehen', 'Show as graphic')) + '</button></div>';
 
-    // Setup-Kacheln
+    // Setup tiles
     var tiles = [];
     function tile(n, label, txt){ tiles.push('<div class="sm-tile"><div class="sm-n' + (txt ? ' txt' : '') + '">' + n + '</div><div class="sm-l">' + label + '</div></div>'); }
     if(state.devices.length) tile(state.devices.length, L('hwWallets'));
@@ -969,7 +969,7 @@
                         e(T('Für die Grafik und ein aussagekräftiges PDF brauchst du mindestens ein Gerät, einen Seed oder eine Börse.', 'For the graphic and a meaningful PDF you need at least one device, seed or exchange.')) + '</p>' +
                         '<button class="btn btn-primary" onclick="gotoScreen(\'devcount\')">' + e(T('Setup ergänzen', 'Add your setup')) + '</button></div>';
 
-    // Offene Punkte
+    // Open items
     if(inc.length){
       h += '<details class="sm-card sm-warn" open><summary>' + e(T('Noch offen', 'Still open')) + ' <span class="sm-count">' + inc.length + '</span></summary><div class="sm-body">';
       inc.forEach(function(it){
@@ -978,7 +978,7 @@
       h += '</div></details>';
     }
 
-    // Naechste Schritte
+    // Next steps
     var chk = PX.getCheck(), nextDate = chk ? PX.nextOccurrence(chk.date, chk.time) : null;
     h += '<div class="sec-title">' + e(T('Nächste Schritte', 'Next steps')) + '</div>';
     h += '<button class="sm-row sm-step" onclick="' + (chk ? 'PX.openCheck()' : 'gotoScreen(\'reminder\')') + '"><span class="sm-row-t"><b>' + e(T('Jahrescheck', 'Yearly check')) + '</b>' +
@@ -986,7 +986,7 @@
     h += '<button class="sm-row sm-step" onclick="savePlan()"><span class="sm-row-t"><b>' + e(T('Backup sichern', 'Back up')) + '</b>' +
          '<small>' + e(T('In den Passwort-Manager oder als Datei', 'To your password manager or as a file')) + '</small></span>' + ico('right') + '</button>';
 
-    // Wohin mit dem PDF
+    // Where to keep the PDF
     h += '<details class="sm-card"><summary>' + L('postPdfBtn') + '</summary><div class="sm-body"><ol class="sm-steps">';
     for(var n = 1; n <= 5; n++){ h += '<li><b>' + L('postPdfStep' + n + 'Title') + '</b><small>' + L('postPdfStep' + n + 'Body') + '</small></li>'; }
     h += '</ol></div></details>';
@@ -1001,7 +1001,7 @@
     catch(err){ showFatal('Zusammenfassung: ' + (err && err.message)); return origSummary(); }
   };
 
-  /* ---------- Shell zeichnen ---------- */
+  /* ---------- Draw the shell ---------- */
   function renderShell(){
     var s = $('px-shell'); if(!s || current === 'wizard') return;
     s.innerHTML = current === 'calendar' ? viewCalendar() : (current === 'settings' ? viewSettings() : viewPlans());
@@ -1052,7 +1052,7 @@
     drawTabbar();
   }
 
-  /* ---------- Zurueck-Taste ---------- */
+  /* ---------- Back button ---------- */
   function onBack(){
     var mm = $('px-modal');
     if(mm && mm._cancel){ mm._cancel(); return; }
@@ -1074,13 +1074,13 @@
   /* ---------- Start ---------- */
   function init(){
     ensureShell();
-    // Externe Links nicht in der WebView laden
+    // Do not load external links in the WebView
     var logo = $('logo-link');
     if(logo) logo.addEventListener('click', function(ev){ ev.preventDefault(); openLink('https://clavastack.com'); }, true);
     var book = $('btn-book'); if(book) book.href = BOOK_URL_APP;
     try { var sb = plug('StatusBar'); sb.setStyle({style: 'DARK'}); sb.setBackgroundColor({color: '#04070B'}); } catch(err){}
 
-    // Titel in der Kopfzeile: App-Name statt Web-Titel (auch nach Sprachwechsel)
+    // Header title: app name instead of the web title (also after a language change)
     function setAppTitle(){
       var t = $('header-title-text'); if(t) t.textContent = 'Bitcoin Inheritance Planner';
       var pf = document.querySelector('.header-brand-prefix'); if(pf) pf.style.display = 'none';
@@ -1095,11 +1095,11 @@
       settings = Object.assign(settings, r[0] || {});
       try { pin.meta = r[1] ? JSON.parse(r[1]) : null; } catch(err){ pin.meta = null; }
       if(settings.lang) setLanguage(settings.lang);
-      // Listener zuerst anmelden, damit die Zurueck-Taste auch bei der PIN-Abfrage funktioniert
+      // Register listeners first so the back button also works at the PIN prompt
       plug('App').addListener('backButton', onBack);
       plug('App').addListener('appStateChange', function(st){
         if(!st) return;
-        if(st.isActive && PX.finishPrint) PX.finishPrint();   // zurueck aus dem Druckdialog
+        if(st.isActive && PX.finishPrint) PX.finishPrint();   // back from the print dialog
         if(!st.isActive){ bgAt = Date.now(); }
         else if(pinOn() && pin.key && bgAt && Date.now() - bgAt > LOCK_AFTER_MS){ lockNow(); }
       });
