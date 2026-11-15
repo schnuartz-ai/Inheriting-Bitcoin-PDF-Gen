@@ -48,14 +48,20 @@ Workflow `.github/workflows/app.yml`. It runs on changes to `app/` and to the sh
 
 The version comes from the run number (`versionCode` = run number, `versionName` = 1.0.run-number).
 
-**Enable signed Android builds:** create four secrets under *Settings > Secrets and variables > Actions*: `ANDROID_KEYSTORE_B64` (Base64 of the keystore file), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`. Create the key once and back it up safely:
+**Enable signed Android builds (the secret values never need to be shown to anyone):**
 
-```bash
-keytool -genkeypair -v -keystore release.keystore -alias upload -keyalg RSA -keysize 4096 -validity 10000
-base64 -w0 release.keystore    # paste the output into ANDROID_KEYSTORE_B64
-```
+1. Run the helper on your own machine (it needs a JDK for `keytool`; Node is already required):
 
-Without the key there are no updates across versions: debug builds are signed differently on every run and cannot be installed over an older installation.
+   ```bash
+   node app/scripts/make-keystore.mjs
+   ```
+
+   It creates `release.keystore` and four small text files in a folder **outside** the repo (default: `~/bitcoin-inheritance-planner-signing`). It refuses to write inside the repo and never prints the secret values.
+2. Back up the whole folder in two places (for example a password manager attachment and an offline copy). Without the keystore and its password there are no app updates for installed users.
+3. In GitHub open *Settings > Secrets and variables > Actions > New repository secret* and create four secrets, named exactly like the files, with the file content as the value: `ANDROID_KEYSTORE_B64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`.
+4. Push to `master` or push a tag. Signed builds run only there, never for pull requests.
+
+Without the key there are no updates across versions: debug builds are signed differently on every run and cannot be installed over an older installation. Optionally protect the secrets further with a GitHub *Environment* that requires your approval.
 
 **Publish:** `git tag app-v1.0.0 && git push origin app-v1.0.0`.
 
