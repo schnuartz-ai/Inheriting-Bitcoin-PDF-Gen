@@ -60,6 +60,7 @@ handwriting lines, filled in by hand only after printing.
 | `diagram.js` / `diagram.css` | Automatically generated diagram views and print styles |
 | `assets/diagram/` | Local backup, smartcard and seed illustrations used by the diagrams |
 | `assets/bitcoin-icons/` | Local generic diagram icons from Bitcoin Design |
+| `app/` | Mobile app (Android and iOS), kept apart from the website: see [app/README.md](app/README.md) |
 | `sw.js` / `site.webmanifest` | Service worker + PWA manifest for offline mode ("Make available offline") |
 | `assets/clavastack-logo.png` | ClavaStack logo (source) |
 | `.github/workflows/sync-to-clavastack.yml` | CI: mirrors the planner files to the ClavaStack website on every push |
@@ -71,6 +72,10 @@ No external dependencies besides the Google Fonts link (Montserrat).
 
 The current `index.html` runs live at **[clavastack.com/inheritance-planner](https://clavastack.com/inheritance-planner)**
 (auto-synced on every push, see the CI workflow above).
+
+## Mobile app (Android and iOS)
+
+The planner also ships as a mobile app, **Bitcoin Inheritance Planner**, built with [Capacitor](https://capacitorjs.com). It lives in [`app/`](app/README.md) and is built from the same core files as this website plus app-only features (PIN lock, plans list, calendar, yearly check, backup to a password manager). The website does not contain those features. GitHub Actions builds the app automatically when `app/` or the shared core files change.
 
 ## Security notice
 

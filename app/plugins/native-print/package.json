@@ -1,0 +1,14 @@
+{
+  "name": "native-print",
+  "version": "1.0.0",
+  "description": "Minimal Capacitor plugin: opens the system print dialog (Save as PDF) for the WebView content.",
+  "main": "dist/index.js",
+  "files": ["android/src/main/", "android/build.gradle", "ios/Sources", "Package.swift", "dist/"],
+  "license": "CPAL-1.0",
+  "keywords": ["capacitor", "plugin", "native"],
+  "capacitor": {
+    "ios": { "src": "ios" },
+    "android": { "src": "android" }
+  },
+  "peerDependencies": { "@capacitor/core": ">=8.0.0" }
+}

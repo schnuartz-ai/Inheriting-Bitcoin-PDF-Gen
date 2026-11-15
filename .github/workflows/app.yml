@@ -1,0 +1,144 @@
+name: App (Android und iOS)
+
+# Die App (Ordner app/) wird aus denselben Web-Dateien gebaut wie die Webseite (index.html, diagram.*, assets/)
+# plus den App-Dateien in app/src. Diese Pipeline laeuft deshalb bei Aenderungen an app/ UND an den gemeinsamen
+# Web-Dateien. Die Webseite selbst wird von sync-to-clavastack.yml veroeffentlicht und nicht von hier.
+#
+# Veroeffentlichen: Tag "app-v1.2.3" pushen, dann erzeugt der Job "release" ein GitHub-Release mit dem Android-Build.
+on:
+  push:
+    branches: [master]
+    tags: ['app-v*']
+    paths: ['app/**', 'index.html', 'diagram.js', 'diagram.css', 'assets/**', '.github/workflows/app.yml']
+  pull_request:
+    paths: ['app/**', 'index.html', 'diagram.js', 'diagram.css', 'assets/**', '.github/workflows/app.yml']
+  workflow_dispatch: {}
+
+concurrency:
+  group: app-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: app
+
+jobs:
+  check:
+    name: Pruefen und Web-Teil bauen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      - name: JavaScript-Syntax pruefen
+        run: |
+          for f in src/*.js ../diagram.js scripts/*.mjs; do node --check "$f"; done
+      - name: App-Dateien duerfen nicht in der Webseite stecken
+        working-directory: .
+        run: |
+          if grep -nE "planner-extras|app-shell|IS_NATIVE" index.html | grep -vE "App-Erweiterungspunkt|window.IS_NATIVE"; then
+            echo "::error::index.html verweist auf App-Dateien. Die Webseite muss ohne sie laufen."; exit 1
+          fi
+      - run: npm run build:www
+
+  android:
+    name: Android
+    needs: check
+    runs-on: ubuntu-latest
+    env:
+      KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+      - run: npm ci
+      - run: npm run sync
+      - name: Version setzen (aus der Build-Nummer)
+        run: echo "VERSION_ARGS=-PappVersionCode=${{ github.run_number }} -PappVersionName=1.0.${{ github.run_number }}" >> "$GITHUB_ENV"
+      - name: Debug-APK (zum Testen, nicht fuer Updates geeignet)
+        working-directory: app/android
+        run: ./gradlew assembleDebug $VERSION_ARGS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-debug-apk
+          path: app/android/app/build/outputs/apk/debug/*.apk
+      - name: Signierte Release-Builds (nur mit hinterlegtem Schluessel)
+        if: ${{ env.KEYSTORE_B64 != '' }}
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        working-directory: app/android
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > release.keystore
+          printf 'storeFile=../release.keystore\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' "$KEYSTORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > keystore.properties
+          ./gradlew assembleRelease bundleRelease $VERSION_ARGS
+      - uses: actions/upload-artifact@v4
+        if: ${{ env.KEYSTORE_B64 != '' }}
+        with:
+          name: android-release
+          path: |
+            app/android/app/build/outputs/apk/release/*.apk
+            app/android/app/build/outputs/bundle/release/*.aab
+
+  ios:
+    name: iOS (Kompilier-Check)
+    needs: check
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      - run: npm run sync
+      - name: Fuer den Simulator bauen (ohne Signatur)
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App \
+            -destination 'generic/platform=iOS Simulator' \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            CODE_SIGNING_ALLOWED=NO build
+
+  release:
+    name: GitHub-Release
+    if: startsWith(github.ref, 'refs/tags/app-v')
+    needs: [android, ios]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Release anlegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if ls dist/android-release/apk/release/*.apk >/dev/null 2>&1; then
+            FILES="dist/android-release/apk/release/*.apk dist/android-release/bundle/release/*.aab"
+            NOTE="Signierte Android-App (APK zum direkten Installieren, AAB für Google Play)."
+            FLAGS=""
+          else
+            FILES="dist/android-debug-apk/*.apk"
+            NOTE="Test-Build (Debug-signiert). Für Updates über mehrere Versionen bitte die signierten Builds nutzen, sobald der Schlüssel hinterlegt ist."
+            FLAGS="--prerelease"
+          fi
+          gh release create "$TAG" $FILES --repo "$GITHUB_REPOSITORY" --title "Bitcoin Inheritance Planner ${TAG#app-v}" --notes "$NOTE" $FLAGS
