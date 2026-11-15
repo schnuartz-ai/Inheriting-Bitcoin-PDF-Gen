@@ -62,7 +62,11 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: android-actions/setup-android@v3
+      - name: Android SDK vorbereiten (das Runner-Image bringt das SDK schon mit)
+        run: |
+          SDKM="$(command -v sdkmanager || echo "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager")"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "platforms;android-36" "build-tools;36.0.0"
       - run: npm ci
       - run: npm run sync
       - name: Version setzen (aus der Build-Nummer)
