@@ -1,0 +1,26 @@
+# Nur-App-Build-Artefakte (Webseite: siehe .gitignore im Hauptordner)
+node_modules/
+www/
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/*.keystore
+android/*.jks
+android/keystore.properties
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+ios/App/Pods/
+ios/App/build/
+ios/DerivedData/
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+resources/logo.svg
+*.keystore
+*.jks
+keystore.properties
+
+# Gradle-Build-Ausgaben der lokalen Plugins
+plugins/*/android/build/
+plugins/*/android/.gradle/

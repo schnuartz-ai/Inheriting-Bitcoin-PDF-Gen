@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - master
+    # App-only changes (folder app/) do not affect the website
+    paths-ignore:
+      - 'app/**'
+      - '.github/workflows/app.yml'
   workflow_dispatch: {}
 
 jobs:

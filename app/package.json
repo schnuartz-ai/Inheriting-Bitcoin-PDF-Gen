@@ -1,0 +1,33 @@
+{
+  "name": "bitcoin-inheritance-planner",
+  "version": "1.0.0",
+  "description": "ClavaStack Bitcoin Inheritance Planner (web + Android + iOS via Capacitor)",
+  "private": true,
+  "license": "CPAL-1.0",
+  "scripts": {
+    "build:www": "node scripts/build-www.mjs",
+    "assets": "node scripts/build-icons.mjs && npx capacitor-assets generate --assetPath resources --android --ios",
+    "sync": "npm run build:www && npx cap sync",
+    "android": "npm run sync && npx cap open android",
+    "ios": "npm run sync && npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/ios": "^8.6.2",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@capacitor/preferences": "^8.0.1",
+    "@capacitor/share": "^8.0.3",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.4",
+    "@fontsource/montserrat": "^5.3.0",
+    "native-print": "file:plugins/native-print"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
+    "@capacitor/cli": "^8.6.2",
+    "sharp": "^0.35.5"
+  }
+}

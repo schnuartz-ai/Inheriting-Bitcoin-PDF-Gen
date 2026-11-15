@@ -187,3 +187,28 @@ body.diagram-open .github-footer,body.diagram-open #offline-status-badge { displ
   @page { size: A4 landscape; margin: 15mm; }
   @page diagram-overview { size: A4 landscape; margin: 0; }
 }
+
+/* ---- Phones: full diagram in one column, lanes on the left edge ---- */
+.dg-canvas[data-mode="mobile"] .dg-position .dg-node { height: auto; }
+.dg-canvas[data-mode="mobile"] .dg-position .dg-node strong { -webkit-line-clamp: 3; }
+@media (max-width: 760px) {
+  .dg-scroll { border-radius: 12px; }
+  .dg-legend { gap: 6px 14px; padding: 12px 0 14px; }
+  .dg-main { padding-top: 16px; }
+  .dg-toolbar h1 { font-size: 20px; }
+}
+
+/* ---- Phones: diagram cards as a tree with one continuous line instead of double arrows ---- */
+@media (max-width: 760px) {
+  .dg-flow-card { padding: 14px 12px; }
+  .dg-flow-arrow { display: none; }
+  .dg-flow { gap: 12px; }
+  .dg-flow-targets, .dg-flow-sources { border-top: 0; border-left: 2px solid #2f6f98; margin-left: 14px; padding: 0 0 0 18px; gap: 12px; }
+  .dg-flow-target, .dg-flow-source { flex-direction: column; align-items: stretch; gap: 5px; position: relative; }
+  .dg-flow-target::before, .dg-flow-source::before { content: ''; position: absolute; left: -18px; top: 8px; width: 14px; height: 2px; background: #2f6f98; transform: none; font-size: 0; }
+  .dg-flow-target > .dg-node, .dg-flow-source > .dg-node { flex: 0 0 auto; width: 100%; }
+  .dg-flow-source .dg-edge-tag { order: -1; text-align: left; }
+  .dg-edge-tag { min-width: 0; font-size: 9.5px; }
+  .dg-inline-arrow { align-self: center; transform: rotate(90deg); font-size: 20px; }
+  .dg-other-grid { grid-template-columns: 1fr; }
+}

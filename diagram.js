@@ -371,10 +371,78 @@
     }
     return (key?'<div class="dg-seed-key">'+key+'</div>':'')+'<div class="dg-scroll"><div class="dg-canvas" style="width:'+width+'px;height:'+Math.max(320,maxY)+'px"><svg class="dg-edges" viewBox="0 0 '+width+' '+Math.max(320,maxY)+'" aria-hidden="true"><defs>'+markers+'</defs>'+paths+dots+'</svg>'+cards.map(function(c){return c.html;}).join('')+'</div></div>';
   }
+  // ---- Phone view of the full diagram: one column, connections as colored lanes on the left edge ----
+  var lastMobile=false;
+  function isMobileView(){ return window.innerWidth<760; }
+  function layoutMobileOverview(scroll,canvas){
+    var svg=canvas.querySelector('svg.dg-edges'); if(!svg) return;
+    var cols=[20,350,730,1110],nodes=[].slice.call(canvas.querySelectorAll('.dg-position')),byId={};
+    nodes.forEach(function(el){
+      if(el.getAttribute('data-layer')===null){
+        var left=parseFloat(el.style.left)||0,layer=0;
+        cols.forEach(function(c,i){ if(Math.abs(left-c)<5) layer=i; });
+        el.setAttribute('data-layer',layer); el.setAttribute('data-oy',parseFloat(el.style.top)||0);
+      }
+      byId[el.getAttribute('data-node')]=el;
+    });
+    nodes.sort(function(a,b){ return (Number(a.getAttribute('data-layer'))-Number(b.getAttribute('data-layer')))||(Number(a.getAttribute('data-oy'))-Number(b.getAttribute('data-oy'))); });
+    var paths=[].filter.call(svg.children,function(el){ return el.tagName.toLowerCase()==='path'; });
+    var edges=paths.map(function(p){ return {el:p,a:byId[p.getAttribute('data-from')],b:byId[p.getAttribute('data-to')]}; }).filter(function(e){ return e.a&&e.b; });
+    var avail=Math.max(280,(scroll.clientWidth||340)-2),total=0;
+    function place(x,w){
+      var y=14;
+      nodes.forEach(function(el){
+        el.style.left=x+'px'; el.style.width=w+'px'; el.style.minHeight='0'; el.style.height='auto'; el.style.top=y+'px';
+        el._y=y; el._h=el.offsetHeight; y+=el._h+16;
+      });
+      total=y-2;
+    }
+    function assignPorts(){
+      nodes.forEach(function(el){
+        var out=edges.filter(function(e){return e.a===el;}).sort(function(p,q){return p.b._y-q.b._y;});
+        out.forEach(function(e,i){ e.sy=el._y+el._h*(i+1)/(out.length+1); });
+        var inc=edges.filter(function(e){return e.b===el;}).sort(function(p,q){return p.a._y-q.a._y;});
+        inc.forEach(function(e,i){ e.ty=el._y+el._h*(i+1)/(inc.length+1); });
+      });
+    }
+    function assignLanes(){
+      var ends=[];
+      edges.slice().sort(function(p,q){ return Math.min(p.sy,p.ty)-Math.min(q.sy,q.ty); }).forEach(function(e){
+        var lo=Math.min(e.sy,e.ty),hi=Math.max(e.sy,e.ty),lane=0;
+        while(lane<ends.length && ends[lane]>lo-4) lane++;
+        ends[lane]=hi; e.lane=lane;
+      });
+      return Math.max(1,ends.length);
+    }
+    // 1. Trial run with a fixed margin width to find out the number of lanes
+    place(72,avail-72-8); assignPorts();
+    var lanes=Math.min(9,assignLanes()),laneArea=8+lanes*7+16;
+    // 2. Final width, measure the heights again
+    place(laneArea,avail-laneArea-8); assignPorts(); assignLanes();
+    var NS='http://www.w3.org/2000/svg';
+    [].slice.call(svg.children).forEach(function(el){ if(el.tagName.toLowerCase()==='circle') svg.removeChild(el); });
+    edges.forEach(function(e){
+      var lane=Math.min(lanes-1,e.lane),lx=8+lane*7+3,nx=laneArea,sy=e.sy,ty=e.ty,dir=ty>sy?1:-1,r=5,d;
+      if(Math.abs(ty-sy)<2) d='M'+nx+' '+sy+' H'+(nx-3);
+      else d='M'+nx+' '+sy+' H'+(lx+r)+' Q'+lx+' '+sy+' '+lx+' '+(sy+dir*r)+' V'+(ty-dir*r)+' Q'+lx+' '+ty+' '+(lx+r)+' '+ty+' H'+(nx-3);
+      e.el.setAttribute('d',d);
+      var dot=document.createElementNS(NS,'circle');
+      dot.setAttribute('cx',nx); dot.setAttribute('cy',sy); dot.setAttribute('r',3);
+      dot.setAttribute('style','--dg-dot-color:'+(e.el.style.getPropertyValue('--dg-edge-color')||'#90a6b5'));
+      svg.appendChild(dot);
+    });
+    canvas.setAttribute('data-mode','mobile');
+    canvas.style.width=avail+'px'; canvas.style.height=Math.ceil(total+14)+'px'; canvas.style.transform='none';
+    svg.setAttribute('viewBox','0 0 '+avail+' '+Math.ceil(total+14));
+    scroll.style.height=''; scroll.style.overflow='auto';
+  }
   function fitOverviewCanvas(){
     if(document.body.classList.contains('diagram-print') || viewMode!=='overview') return;
     var scroll=document.querySelector('#diagram-view .dg-scroll'),canvas=scroll&&scroll.querySelector('.dg-canvas');
     if(!scroll||!canvas) return;
+    var mobileNow=isMobileView();
+    if(mobileNow!==lastMobile){ lastMobile=mobileNow; paint(); return; }   // screen rotated: rebuild
+    if(mobileNow){ layoutMobileOverview(scroll,canvas); return; }
     var width=parseFloat(canvas.style.width)||1370,height=parseFloat(canvas.style.height)||320;
     var scale=Math.min(1,Math.max(.45,(scroll.clientWidth-2)/width));
     canvas.style.transformOrigin='0 0';
@@ -450,6 +518,7 @@
       '<button type="button" class="dg-close" onclick="closeDiagram()">× <span>'+tr('Zurück','Back')+'</span></button></div></div>'+
       '<div class="dg-legend">'+legend('seed','Seed',usedKinds.seed)+legend('derived','BIP85',usedKinds.derived)+legend('device',tr('Gerät','Device'),usedKinds.device)+legend('wallet','Wallet',usedKinds.wallet)+legend('multisig','Multisig',usedKinds.multisig)+legend('liana','Liana',usedKinds.liana)+legend('backup','Backup',usedKinds.backup)+'</div>'+
       '<main class="dg-main">'+(viewMode==='overview'?overview(g,printLayout):cards(g))+'</main></div>';
+    if(!printLayout){ lastMobile=isMobileView(); }
     if(!printLayout && viewMode==='overview') requestAnimationFrame(fitOverviewCanvas);
   }
   window.openDiagram=function(mode){viewMode=mode==='cards'?'cards':'overview';document.body.classList.add('diagram-open');document.getElementById('app-ui').style.display='none';document.getElementById('diagram-view').hidden=false;paint();window.scrollTo(0,0);};

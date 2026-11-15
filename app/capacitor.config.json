@@ -1,0 +1,25 @@
+{
+  "appId": "com.clavastack.inheritanceplanner",
+  "appName": "Bitcoin Inheritance Planner",
+  "webDir": "www",
+  "backgroundColor": "#04070B",
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#04070B"
+  },
+  "android": {
+    "backgroundColor": "#04070B",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 800,
+      "backgroundColor": "#04070B",
+      "showSpinner": false
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon",
+      "iconColor": "#1F99E5"
+    }
+  }
+}
