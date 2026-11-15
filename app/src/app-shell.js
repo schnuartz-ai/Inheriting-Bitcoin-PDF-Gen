@@ -570,7 +570,7 @@
          '<button class="btn btn-danger-ghost" onclick="PXS.wipe()">' + e(T('Alle Daten auf diesem Gerät löschen', 'Delete all data on this device')) + '</button></div>';
     h += '<div class="sg"><div class="sg-title">' + e(T('Über die App', 'About')) + '</div>' +
          '<p class="muted">Bitcoin Inheritance Planner ' + APP_VERSION + '<br>' + e(T('Entwickelt von ', 'Built by ')) + '<a href="#" onclick="PXS.link(\'https://clavastack.com\');return false;">ClavaStack</a> · ' +
-         '<a href="#" onclick="PXS.link(\'https://github.com/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen\');return false;">' + e(T('Open Source', 'Open source')) + '</a></p></div></div>';
+         '<a href="#" onclick="PXS.link(\'https://github.com/Schnuartz/bitcoin-inheritance-planner\');return false;">' + e(T('Open Source', 'Open source')) + '</a></p></div></div>';
     return h;
   }
   function refreshNotifState(){

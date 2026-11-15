@@ -1,10 +1,10 @@
 # ClavaStack – Bitcoin Inheritance Plan Tool
 
 [![Live Demo](https://img.shields.io/badge/demo-clavastack.com-1e88e5)](https://clavastack.com/inheritance-planner)
-[![License](https://img.shields.io/github/license/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen)](LICENSE)
-[![Last commit](https://img.shields.io/github/last-commit/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen)](https://github.com/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen/commits/master)
-[![Open issues](https://img.shields.io/github/issues/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen)](https://github.com/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen/issues)
-[![Stars](https://img.shields.io/github/stars/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen)](https://github.com/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen/stargazers)
+[![License](https://img.shields.io/github/license/Schnuartz/bitcoin-inheritance-planner)](LICENSE)
+[![Last commit](https://img.shields.io/github/last-commit/Schnuartz/bitcoin-inheritance-planner)](https://github.com/Schnuartz/bitcoin-inheritance-planner/commits/master)
+[![Open issues](https://img.shields.io/github/issues/Schnuartz/bitcoin-inheritance-planner)](https://github.com/Schnuartz/bitcoin-inheritance-planner/issues)
+[![Stars](https://img.shields.io/github/stars/Schnuartz/bitcoin-inheritance-planner)](https://github.com/Schnuartz/bitcoin-inheritance-planner/stargazers)
 
 A local-first browser tool that walks Bitcoin holders through a structured
 **inheritance plan** and turns it into a print-ready **PDF** (via the browser's print function).
