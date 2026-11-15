@@ -50,7 +50,9 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     env:
-      KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+      # Signing secrets are only handed to builds on master and on tags, never to pull requests:
+      # a pull request could change this workflow and read them.
+      KEYSTORE_B64: ${{ github.event_name != 'pull_request' && secrets.ANDROID_KEYSTORE_B64 || '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
