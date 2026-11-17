@@ -22,9 +22,15 @@ cpSync(join(webRoot, 'assets'), join(www, 'assets'), {
 });
 
 // 2. App-only files
-for (const f of ['planner-extras.js', 'planner-extras.css', 'app-shell.js', 'app-shell.css']) {
+for (const f of ['planner-extras.js', 'planner-extras.css', 'app-shell.css']) {
   copyFileSync(join(appRoot, 'src', f), join(www, f));
 }
+// The version shown in Settings comes from the build (APP_VERSION, set by CI from the release tag), not from a constant in the source.
+const pkgVersion = JSON.parse(readFileSync(join(appRoot, 'package.json'), 'utf8')).version;
+const appVersion = (process.env.APP_VERSION || pkgVersion).replace(/[^0-9A-Za-z.+-]/g, '');
+const shellJs = readFileSync(join(appRoot, 'src', 'app-shell.js'), 'utf8');
+if (!shellJs.includes('__APP_VERSION__')) throw new Error('app-shell.js: Versions-Platzhalter nicht gefunden');
+writeFileSync(join(www, 'app-shell.js'), shellJs.replace('__APP_VERSION__', appVersion));
 copyFileSync(join(appRoot, 'src', 'app-logo.svg'), join(www, 'assets', 'app-logo.svg'));
 
 // 3. Montserrat locally (latin + latin-ext, weights 400-800), no Google Fonts request in the app
@@ -54,7 +60,22 @@ mustReplace(/<link href="https:\/\/fonts\.googleapis\.com[^>]*>/, '<link rel="st
 // The Capacitor runtime (registerPlugin, isNativePlatform ...) must load as the first script. The native-bridge.js
 // built into the app does not know registerPlugin without a bundler.
 copyFileSync(join(appRoot, 'node_modules', '@capacitor', 'core', 'dist', 'capacitor.js'), join(www, 'capacitor.js'));
-mustReplace(/<head>/, '<head>\n<script src="capacitor.js"></script>', '<head>');
+// Content Security Policy for the app: nothing may be loaded from or sent to another host, no plugins, no frames,
+// no forms, no <base>. Inline scripts stay allowed because the planner still uses inline event handlers; the
+// network restriction is what limits the damage if a script ever gets injected (together with the missing INTERNET permission).
+const csp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "frame-src 'none'",
+  "base-uri 'none'",
+  "form-action 'none'",
+].join('; ');
+mustReplace(/<head>/, '<head>\n<meta http-equiv="Content-Security-Policy" content="' + csp + '">\n<script src="capacitor.js"></script>', '<head>');
 // Hook the app files in right after the diagram files (order: diagram, extensions, shell)
 mustReplace(/(<link rel="stylesheet" href="diagram\.css[^"]*">)/, '$1\n<link rel="stylesheet" href="planner-extras.css">\n<link rel="stylesheet" href="app-shell.css">', 'diagram.css-Link');
 mustReplace(/(<script src="diagram\.js[^"]*"><\/script>)/, '$1\n<script src="planner-extras.js"></script>\n<script src="app-shell.js"></script>', 'diagram.js-Skript');

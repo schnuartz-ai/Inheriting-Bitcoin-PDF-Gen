@@ -42,21 +42,53 @@
   }
 
   /* ---------- Storage: native Preferences, memory only on the web ---------- */
+  // Errors are NOT swallowed: a failed read must never look like "no data" (the app would start without PIN and
+  // overwrite the encrypted data), and a failed write must never look like success.
   var mem = {};
   var store = {
     get: function(key){
       if(!NATIVE) return Promise.resolve(mem[key] || null);
-      return plug('Preferences').get({key: key}).then(function(r){ return r && r.value ? r.value : null; }).catch(function(){ return null; });
+      return plug('Preferences').get({key: key}).then(function(r){ return r && r.value ? r.value : null; });
     },
     set: function(key, val){
       if(!NATIVE){ mem[key] = val; return Promise.resolve(); }
-      return plug('Preferences').set({key: key, value: val}).catch(function(){});
+      return plug('Preferences').set({key: key, value: val});
+    },
+    // Writes and reads back, rejects if the stored value differs (used for the PIN key material)
+    setVerified: function(key, val){
+      return store.set(key, val).then(function(){ return store.get(key); }).then(function(back){
+        if(back !== val) throw new Error('write-verify');
+      });
     },
     remove: function(key){
       if(!NATIVE){ delete mem[key]; return Promise.resolve(); }
-      return plug('Preferences').remove({key: key}).catch(function(){});
+      return plug('Preferences').remove({key: key});
     }
   };
+
+  /* ---------- Imported / stored plan state: never trust it ---------- */
+  // Ids end up in HTML attributes. Only harmless characters are allowed.
+  var ID_RE = /^[A-Za-z0-9_-]{1,40}$/;
+  var BAD_KEYS = {'__proto__': 1, 'constructor': 1, 'prototype': 1};
+  function sanitizeState(st){
+    var out = {};
+    if(!st || typeof st !== 'object' || Array.isArray(st)) return out;
+    Object.keys(st).forEach(function(k){ if(!BAD_KEYS[k]) out[k] = st[k]; });
+    var c = out.checkCustom;
+    if(c && typeof c === 'object' && !Array.isArray(c)){
+      out.checkCustom = {
+        add: (Array.isArray(c.add) ? c.add : []).filter(function(a){ return a && typeof a.id === 'string' && ID_RE.test(a.id) && typeof a.t === 'string'; })
+              .map(function(a){ return {id: a.id, t: a.t.slice(0, 140)}; }).slice(0, 100),
+        removed: (Array.isArray(c.removed) ? c.removed : []).filter(function(id){ return typeof id === 'string' && ID_RE.test(id); }).slice(0, 500)
+      };
+    } else delete out.checkCustom;
+    return out;
+  }
+  // Every plan that is loaded from a file or from the backup text passes through here
+  if(typeof window.applyLoadedState === 'function'){
+    var origApply = window.applyLoadedState;
+    window.applyLoadedState = function(loaded){ return origApply.call(this, sanitizeState(loaded)); };
+  }
 
   /* ---------- Date helpers ---------- */
   function pad(n){ return (n < 10 ? '0' : '') + n; }
@@ -259,20 +291,25 @@
     return out.join('\r\n');
   }
   function icsStamp(d){ return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + 'T' + pad(d.getHours()) + pad(d.getMinutes()) + '00'; }
-  function descriptionFor(groups){
-    var desc = T('Jährlicher Bitcoin-Check. Öffne die App „Bitcoin Inheritance Planner“ und arbeite die Checkliste ab.',
-                 'Yearly Bitcoin check. Open the "Bitcoin Inheritance Planner" app and work through the checklist.') + '\n';
-    groups.forEach(function(g){ desc += '\n' + g.t + ':\n'; g.items.forEach(function(it){ desc += '[ ] ' + it.t + '\n'; }); });
-    return desc;
+  // Calendar entries are synced to the calendar provider (often a cloud account) and can be shared with other
+  // people. They therefore contain NO plan details: no plan name, seed names, storage places or checklist items.
+  // The checklist stays inside the app.
+  function descriptionFor(){
+    return T('Jährlicher Bitcoin-Check. Öffne die App „Bitcoin Inheritance Planner“ und arbeite die Checkliste ab.',
+             'Yearly Bitcoin check. Open the "Bitcoin Inheritance Planner" app and work through the checklist.');
   }
-  // check = {groups, date, time, planName, planId}
+  // Neutral title; with several plans only the plan number tells them apart (never the plan name)
+  function calendarTitle(check){
+    return T('Jährlicher Bitcoin-Check', 'Yearly Bitcoin check') + (check && check.planNo > 1 ? ' (' + T('Plan ', 'Plan ') + check.planNo + ')' : '');
+  }
+  // check = {date, time, planNo, planId}
   function buildIcs(check){
-    var groups = check.groups, start = nextOccurrence(check.date, check.time);
+    var start = nextOccurrence(check.date, check.time);
     if(!start) return null;
     var end = new Date(start.getTime() + 45 * 60000), now = new Date();
     var utc = now.getUTCFullYear() + pad(now.getUTCMonth() + 1) + pad(now.getUTCDate()) + 'T' + pad(now.getUTCHours()) + pad(now.getUTCMinutes()) + pad(now.getUTCSeconds()) + 'Z';
-    var desc = descriptionFor(groups);
-    var title = T('Jährlicher Bitcoin-Check', 'Yearly Bitcoin check') + (check.planName ? ' (' + check.planName + ')' : '');
+    var desc = descriptionFor();
+    var title = calendarTitle(check);
     var lines = [
       'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//ClavaStack//Bitcoin Inheritance Planner//EN', 'CALSCALE:GREGORIAN',
       'BEGIN:VEVENT',
@@ -291,10 +328,28 @@
   }
 
   /* ---------- Save/share a file ---------- */
+  // Files for the share sheet live in their own cache folder (the only folder the FileProvider exposes).
+  // The receiving app reads the file after the sheet closes, so it cannot be deleted right away. Instead the folder is
+  // emptied before every new share, at app start, when the app locks, after "Delete all data" and when the app
+  // comes back to the foreground more than a minute after the share.
+  var SHARE_DIR = 'shared', sharedAt = 0;
+  function cleanShared(){
+    if(!NATIVE) return Promise.resolve();
+    sharedAt = 0;
+    try { return plug('Filesystem').rmdir({path: SHARE_DIR, directory: 'CACHE', recursive: true}).catch(function(){}); }
+    catch(err){ return Promise.resolve(); }
+  }
+  function cleanSharedIfOld(){
+    if(sharedAt && Date.now() - sharedAt > 60000) return cleanShared();
+    return Promise.resolve();
+  }
   function shareTextFile(text, fname, mime, dialogTitle){
     if(NATIVE){
       var fs = plug('Filesystem'), sh = plug('Share');
-      return fs.writeFile({path: fname, data: text, directory: 'CACHE', encoding: 'utf8'}).then(function(res){
+      return cleanShared().then(function(){
+        return fs.writeFile({path: SHARE_DIR + '/' + fname, data: text, directory: 'CACHE', encoding: 'utf8', recursive: true});
+      }).then(function(res){
+        sharedAt = Date.now();
         return sh.share({title: dialogTitle || fname, url: res.uri, dialogTitle: dialogTitle || fname});
       });
     }
@@ -477,9 +532,9 @@
     var start = nextOccurrence(check.date, check.time);
     if(!start){ setStatus(T('Bitte wähle ein Datum.', 'Please choose a date.'), true); return Promise.resolve(); }
     if(!NATIVE) return shareIcs(check);
-    var title = T('Jährlicher Bitcoin-Check', 'Yearly Bitcoin check') + (check.planName ? ' (' + check.planName + ')' : '');
+    var title = calendarTitle(check);
     return plug('NativeCalendar').addEvent({
-      title: title, notes: descriptionFor(check.groups), start: start.getTime(), end: start.getTime() + 45 * 60000, rrule: 'FREQ=YEARLY'
+      title: title, notes: descriptionFor(), start: start.getTime(), end: start.getTime() + 45 * 60000, rrule: 'FREQ=YEARLY'
     }).catch(function(){
       toast(T('Kalender nicht erreichbar, ich gebe dir stattdessen eine Kalenderdatei.', 'Calendar not reachable, giving you a calendar file instead.'), 'err');
       return shareIcs(check);
@@ -487,11 +542,11 @@
   }
   function exportIcs(){
     var r = rem();
-    return addToCalendar({groups: buildChecklist(), date: r.date, time: r.time, planName: host.planName(), planId: host.planId()});
+    return addToCalendar({date: r.date, time: r.time, planNo: host.planNo(), planId: host.planId()});
   }
   function exportIcsFile(){
     var r = rem();
-    return shareIcs({groups: buildChecklist(), date: r.date, time: r.time, planName: host.planName(), planId: host.planId()});
+    return shareIcs({date: r.date, time: r.time, planNo: host.planNo(), planId: host.planId()});
   }
 
   /* ---------- Wizard screen: yearly check ---------- */
@@ -524,7 +579,7 @@
            (active ? e(T('Aktiv. Nächster Termin: ', 'Active. Next date: ') + fmtLong(active)) : '') + '</div>';
       h += '<p class="mini-note">' + e(NATIVE
         ? T('Die Erinnerung läuft lokal auf diesem Gerät. Es werden keine Daten an Server gesendet. Die Benachrichtigung enthält keine Details zu deinem Plan.', 'The reminder runs locally on this device. No data is sent to any server. The notification contains no details about your plan.')
-        : T('Die Kalenderdatei enthält die Checkliste und erinnert dich eine Woche vorher und am Tag selbst. Mit der Mobile-App erinnert dich dein Handy direkt.', 'The calendar file contains the checklist and reminds you a week before and on the day. With the mobile app your phone reminds you directly.')) + '</p>';
+        : T('Die Kalenderdatei enthält keine Plandetails und erinnert dich eine Woche vorher und am Tag selbst. Mit der Mobile-App erinnert dich dein Handy direkt.', 'The calendar file contains no plan details and reminds you a week before and on the day. With the mobile app your phone reminds you directly.')) + '</p>';
       h += '</div>';
       h += '<details class="px-preview"><summary>' + e(T('Vorschau: deine Checkliste (', 'Preview: your checklist (') + total + T(' Punkte)', ' items)')) + '</summary>';
       groups.forEach(function(g){
@@ -591,10 +646,10 @@
       g.items.forEach(function(it){
         if(edit){
           h += '<div class="px-item px-editrow"><span class="px-txt">' + e(it.t) + '</span>' +
-               '<button class="px-del" onclick="PX.removeItem(\'' + it.id + '\')" aria-label="' + e(T('Entfernen', 'Remove')) + '">&#10005;</button></div>';
+               '<button class="px-del" data-id="' + e(it.id) + '" onclick="PX.removeItem(this.dataset.id)" aria-label="' + e(T('Entfernen', 'Remove')) + '">&#10005;</button></div>';
         } else {
-          h += '<label class="px-item' + (view.ticks[it.id] ? ' px-done' : '') + '"><input type="checkbox" ' + (view.ticks[it.id] ? 'checked' : '') +
-               ' onchange="PX.tick(\'' + it.id + '\',this.checked)"><span class="px-box"></span><span class="px-txt">' + e(it.t) + '</span></label>';
+          h += '<label class="px-item' + (view.ticks[it.id] ? ' px-done' : '') + '"><input type="checkbox" data-id="' + e(it.id) + '" ' + (view.ticks[it.id] ? 'checked' : '') +
+               ' onchange="PX.tick(this.dataset.id,this.checked)"><span class="px-box"></span><span class="px-txt">' + e(it.t) + '</span></label>';
         }
       });
       h += '</div>';
@@ -609,7 +664,7 @@
         h += '<details class="px-preview"><summary>' + e(T('Entfernte Punkte (', 'Removed items (') + gone.length + ')') + '</summary>';
         gone.forEach(function(it){
           h += '<div class="px-item px-editrow"><span class="px-txt">' + e(it.t) + '</span>' +
-               '<button class="btn btn-ghost btn-sm" onclick="PX.restoreItem(\'' + it.id + '\')">' + e(T('Zurück', 'Restore')) + '</button></div>';
+               '<button class="btn btn-ghost btn-sm" data-id="' + e(it.id) + '" onclick="PX.restoreItem(this.dataset.id)">' + e(T('Zurück', 'Restore')) + '</button></div>';
         });
         h += '</details>';
       }
@@ -659,8 +714,10 @@
     var fill = document.querySelector('#px-check .px-bar-fill'), lab = document.querySelector('#px-check .px-bar-label');
     if(fill) fill.style.width = (p.total ? Math.round(p.done / p.total * 100) : 0) + '%';
     if(lab) lab.textContent = p.done + ' / ' + p.total;
-    var cb = document.querySelector('#px-check input[onchange*="\'' + id + '\'"]');
-    if(cb && cb.parentNode) cb.parentNode.classList.toggle('px-done', !!on);
+    var boxes = document.querySelectorAll('#px-check input[type="checkbox"]');
+    for(var i = 0; i < boxes.length; i++){
+      if(boxes[i].getAttribute('data-id') === id && boxes[i].parentNode) boxes[i].parentNode.classList.toggle('px-done', !!on);
+    }
   }
   function finish(){
     var p = progress();
@@ -758,6 +815,9 @@
     restoreItem: restoreItem,
     finish: finish,
     editReminder: editReminder,
-    _icsForTest: function(){ var r = rem(); return buildIcs({groups: buildChecklist(), date: r.date, time: r.time, planName: host.planName(), planId: host.planId()}); }
+    sanitizeState: sanitizeState,
+    cleanShared: cleanShared,
+    cleanSharedIfOld: cleanSharedIfOld,
+    buildIcs: buildIcs
   };
 })();

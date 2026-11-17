@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Only the "shared" cache folder can be handed to other apps (plan file, calendar file for the share sheet).
+     The app empties it regularly (see cleanShared in planner-extras.js). Nothing else is exposed. -->
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <external-path name="my_images" path="." />
-    <cache-path name="my_cache_images" path="." />
+    <cache-path name="shared" path="shared/" />
 </paths>
