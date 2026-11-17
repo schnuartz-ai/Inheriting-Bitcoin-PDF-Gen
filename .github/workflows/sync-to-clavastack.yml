@@ -10,16 +10,23 @@ on:
       - '.github/workflows/app.yml'
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout tool repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Clone ClavaStack website repo
+        # The token goes into an HTTP header for this command only, not into the clone URL or the git config.
+        env:
+          SITE_TOKEN: ${{ secrets.CLAVASTACK_WEBSITE_TOKEN }}
         run: |
-          git clone https://x-access-token:${{ secrets.CLAVASTACK_WEBSITE_TOKEN }}@github.com/Schnuartz/next-clavastack.git
+          echo "::add-mask::$(printf 'x-access-token:%s' "$SITE_TOKEN" | base64 -w0)"
+          git -c http.extraheader="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$SITE_TOKEN" | base64 -w0)" clone https://github.com/Schnuartz/next-clavastack.git
 
       - name: Copy planner and assets
         run: |
@@ -29,6 +36,8 @@ jobs:
           rsync -a --delete assets/ next-clavastack/public/inheritance-planner/assets/
 
       - name: Commit and push if changed
+        env:
+          SITE_TOKEN: ${{ secrets.CLAVASTACK_WEBSITE_TOKEN }}
         run: |
           cd next-clavastack
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -36,4 +45,4 @@ jobs:
           git add public/inheritance-planner/index.html public/inheritance-planner/diagram.js public/inheritance-planner/diagram.css public/inheritance-planner/sw.js public/inheritance-planner/assets
           git diff --staged --quiet && echo "No changes" && exit 0
           git commit -m "sync: update inheritance-planner from tool repo"
-          git push
+          git -c http.extraheader="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$SITE_TOKEN" | base64 -w0)" push
