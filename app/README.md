@@ -29,6 +29,7 @@ cd app
 npm ci
 npm run assets      # regenerate logo and icons (only after a logo change)
 npm run sync        # build app/www and copy it into android/ios
+npm test            # unit tests for import, PIN crypto, backup text, calendar privacy
 npm run android     # opens Android Studio
 npm run ios         # opens Xcode (macOS only)
 ```
@@ -41,12 +42,12 @@ Workflow `.github/workflows/app.yml`. It runs on changes to `app/` and to the sh
 
 | Job | What it does |
 |---|---|
-| Check | JavaScript syntax, builds the web part, verifies that the website works without app files |
+| Check | JavaScript syntax, unit tests (`npm test`), builds the web part, verifies that the website works without app files |
 | Android | Debug APK as an artifact (for testing). With a signing key configured it also builds a signed release APK and AAB |
 | iOS | Compile check on macOS (unsigned) |
 | Release | Only for a tag `app-vX.Y.Z`: creates a GitHub release with the Android build |
 
-The version comes from the run number (`versionCode` = run number, `versionName` = 1.0.run-number).
+The version: `versionCode` is the run number. `versionName` (and the version shown in Settings) is the release tag without the `app-v` prefix for tag builds, otherwise `1.0.<run number>`. Release assets include `SHA256SUMS.txt`.
 
 **Enable signed Android builds (the secret values never need to be shown to anyone):**
 
