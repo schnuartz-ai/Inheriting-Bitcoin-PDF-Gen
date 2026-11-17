@@ -165,7 +165,15 @@
   }
   function saveSoon(){
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(function(){ saveActive().catch(function(){}); }, 500);
+    saveTimer = setTimeout(function(){ saveActive().catch(saveFailed); }, 500);
+  }
+  // A failed save must be visible, never silent (shown at most every 10 seconds)
+  var saveFailAt = 0;
+  function saveFailed(err){
+    if(err && err.message === 'locked') return;
+    if(Date.now() - saveFailAt < 10000) return;
+    saveFailAt = Date.now();
+    toast(T('Speichern fehlgeschlagen. Deine letzten Änderungen sind eventuell nicht gesichert.', 'Saving failed. Your latest changes may not be stored.'), 'err');
   }
 
   /* ---------- Connection to planner-extras.js ---------- */
@@ -214,7 +222,7 @@
   PX.host.rebuild = function(){
     if(!external) return null;
     var saved = state;
-    state = Object.assign(defaultState(), external.rec.state || {});
+    state = Object.assign(defaultState(), PX.sanitizeState(external.rec.state));
     try { return PX.buildChecklist(); } finally { state = saved; }
   };
 
@@ -348,7 +356,7 @@
       if(!rec){ toast(T('Plan nicht gefunden', 'Plan not found'), 'err'); return; }
       active = {id: rec.id, no: rec.no, name: rec.name, created: rec.created, finished: !!rec.finished};
       current = 'wizard';
-      state = Object.assign(defaultState(), rec.state || {});
+      state = Object.assign(defaultState(), PX.sanitizeState(rec.state));   // plans saved by 1.0.0 may carry unsafe ids
       PX.setCheck(rec.check || null);
       var total = screens().length - 1;
       pos = target === 'summary' ? total : Math.max(0, Math.min(rec.pos || 0, total));
@@ -416,7 +424,7 @@
   function icsOf(id){
     loadJson(KEY_PLAN + id).then(function(rec){
       if(!rec || !rec.check) return;
-      return PX.addToCalendar({groups: rec.check.groups, date: rec.check.date, time: rec.check.time, planName: rec.name, planId: rec.id});
+      return PX.addToCalendar({date: rec.check.date, time: rec.check.time, planNo: rec.no, planId: rec.id});
     });
   }
   function setupCheckFor(id){
@@ -585,7 +593,8 @@
     ask({title: T('Alle Daten löschen?', 'Delete all data?'), text: T('Alle Pläne, Termine und Erinnerungen werden von diesem Gerät entfernt. Das lässt sich nicht rückgängig machen.', 'All plans, dates and reminders will be removed from this device. This cannot be undone.'),
          ok: T('Alles löschen', 'Delete everything'), danger: true}).then(function(ok){
       if(!ok) return;
-      wipeEverything().then(function(){ toast(T('Alle Daten gelöscht', 'All data deleted')); renderShell(); });
+      wipeEverything().then(function(){ toast(T('Alle Daten gelöscht', 'All data deleted')); renderShell(); },
+                            function(){ toast(T('Löschen fehlgeschlagen. Bitte versuche es erneut.', 'Deleting failed. Please try again.'), 'err'); });
     });
   }
 
@@ -594,7 +603,7 @@
     return plug('Preferences').keys().then(function(r){
       var ks = ((r && r.keys) || []).filter(function(k){ return k === KEY_INDEX || k === KEY_PIN || k === KEY_FAIL || k.indexOf(KEY_PLAN) === 0; });
       return Promise.all(ks.map(function(k){ return store.remove(k); }));
-    }).then(function(){
+    }).then(function(){ return PX.cleanShared(); }).then(function(){
       var ln = plug('LocalNotifications');
       return ln.getPending().then(function(r){
         var list = ((r && r.notifications) || []).map(function(n){ return {id: n.id}; });
@@ -666,7 +675,7 @@
       if(f.until && f.until > now) return T('Zu viele Versuche. Bitte warte ', 'Too many attempts. Please wait ') + Math.ceil((f.until - now) / 1000) + T(' Sekunden.', ' seconds.');
       return deriveKek(pinStr, b64d(pin.meta.salt), pin.meta.iter).then(function(kek){ return unwrapDek(pin.meta.wrapped, kek); }).then(function(dek){
         pin.key = dek;
-        return store.remove(KEY_FAIL).then(function(){ return null; });
+        return store.remove(KEY_FAIL).then(function(){ return null; }, function(){ return null; });   // the PIN was right, a stale counter must not block
       }, function(){
         var n = (f.n || 0) + 1, until = n >= 5 ? now + Math.min(15 * 60000, 30000 * Math.pow(2, n - 5)) : 0;
         return saveJson(KEY_FAIL, {n: n, until: until}).then(function(){
@@ -684,7 +693,9 @@
         return wrapDek(dek, kek).then(function(wrapped){
           var meta = {salt: b64e(salt), iter: PIN_ITER, wrapped: wrapped};
           // Store the key first, then rewrite the data: everything stays readable even if interrupted (plaintext or encrypted)
-          return store.set(KEY_PIN, JSON.stringify(meta)).then(function(){
+          // Verified write: the data is only re-encrypted once the wrapped key is really stored and readable again.
+          // Otherwise a failed write would leave encrypted data behind without any way to open it.
+          return store.setVerified(KEY_PIN, JSON.stringify(meta)).then(function(){
             pin.meta = meta; pin.key = dek;
             var jobs = [];
             recs.forEach(function(rec, i){ if(rec) jobs.push(saveJson(KEY_PLAN + ids[i], rec)); });
@@ -710,7 +721,7 @@
     return deriveKek(newPin, salt, PIN_ITER).then(function(kek){
       return wrapDek(pin.key, kek).then(function(wrapped){
         var meta = {salt: b64e(salt), iter: PIN_ITER, wrapped: wrapped};
-        return store.set(KEY_PIN, JSON.stringify(meta)).then(function(){ pin.meta = meta; });
+        return store.setVerified(KEY_PIN, JSON.stringify(meta)).then(function(){ pin.meta = meta; });
       });
     });
   }
@@ -789,7 +800,7 @@
       extra: {label: T('PIN vergessen? Alle Daten löschen', 'Forgot your PIN? Delete all data'), onClick: function(finish){
         ask({title: T('Alle Daten löschen?', 'Delete all data?'), text: T('Ohne PIN lassen sich die Daten nicht entschlüsseln. Alle Pläne und Termine werden gelöscht, danach startet die App leer.', 'Without the PIN the data cannot be decrypted. All plans and dates will be deleted and the app starts empty.'),
              ok: T('Alles löschen', 'Delete everything'), danger: true}).then(function(ok){
-          if(ok) wipeEverything().then(function(){ finish('wiped'); });
+          if(ok) wipeEverything().then(function(){ finish('wiped'); }, function(){ toast(T('Löschen fehlgeschlagen. Bitte versuche es erneut.', 'Deleting failed. Please try again.'), 'err'); });
         });
       }}
     }).then(function(){ return afterUnlock(); });
@@ -801,6 +812,7 @@
     var m = $('px-modal'); if(m && m._cancel) m._cancel();
     var p = current === 'wizard' ? leaveWizard() : Promise.resolve();
     return p.catch(function(){}).then(function(){
+      PX.cleanShared();
       pin.key = null; index = []; external = null; active = null; PX.setCheck(null);
       state = defaultState();
       ['px-shell', 'wizard-host', 'pdf-body'].forEach(function(id){ var x = $(id); if(x) x.innerHTML = ''; });
@@ -1074,6 +1086,7 @@
   /* ---------- Start ---------- */
   function init(){
     ensureShell();
+    PX.cleanShared();   // leftovers of an earlier share (or of version 1.0.0) are removed on every start
     // Do not load external links in the WebView
     var logo = $('logo-link');
     if(logo) logo.addEventListener('click', function(ev){ ev.preventDefault(); openLink('https://clavastack.com'); }, true);
@@ -1100,7 +1113,8 @@
       plug('App').addListener('appStateChange', function(st){
         if(!st) return;
         if(st.isActive && PX.finishPrint) PX.finishPrint();   // back from the print dialog
-        if(!st.isActive){ bgAt = Date.now(); }
+        if(st.isActive) PX.cleanSharedIfOld();                // shared plan/calendar files are not kept
+        if(!st.isActive){ bgAt = Date.now(); if(active && current === 'wizard') saveActive().catch(saveFailed); }   // no edit is lost if the system kills the app in the background
         else if(pinOn() && pin.key && bgAt && Date.now() - bgAt > LOCK_AFTER_MS){ lockNow(); }
       });
       plug('LocalNotifications').addListener('localNotificationActionPerformed', function(ev){

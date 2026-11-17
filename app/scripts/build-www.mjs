@@ -54,7 +54,22 @@ mustReplace(/<link href="https:\/\/fonts\.googleapis\.com[^>]*>/, '<link rel="st
 // The Capacitor runtime (registerPlugin, isNativePlatform ...) must load as the first script. The native-bridge.js
 // built into the app does not know registerPlugin without a bundler.
 copyFileSync(join(appRoot, 'node_modules', '@capacitor', 'core', 'dist', 'capacitor.js'), join(www, 'capacitor.js'));
-mustReplace(/<head>/, '<head>\n<script src="capacitor.js"></script>', '<head>');
+// Content Security Policy for the app: nothing may be loaded from or sent to another host, no plugins, no frames,
+// no forms, no <base>. Inline scripts stay allowed because the planner still uses inline event handlers; the
+// network restriction is what limits the damage if a script ever gets injected (together with the missing INTERNET permission).
+const csp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "frame-src 'none'",
+  "base-uri 'none'",
+  "form-action 'none'",
+].join('; ');
+mustReplace(/<head>/, '<head>\n<meta http-equiv="Content-Security-Policy" content="' + csp + '">\n<script src="capacitor.js"></script>', '<head>');
 // Hook the app files in right after the diagram files (order: diagram, extensions, shell)
 mustReplace(/(<link rel="stylesheet" href="diagram\.css[^"]*">)/, '$1\n<link rel="stylesheet" href="planner-extras.css">\n<link rel="stylesheet" href="app-shell.css">', 'diagram.css-Link');
 mustReplace(/(<script src="diagram\.js[^"]*"><\/script>)/, '$1\n<script src="planner-extras.js"></script>\n<script src="app-shell.js"></script>', 'diagram.js-Skript');

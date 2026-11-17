@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <application
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -32,7 +33,10 @@
 
     <!-- Permissions -->
 
-    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- No network permission on purpose: the app works fully offline and must not be able to send data anywhere.
+         External links open in the system browser, which has its own permission. The remove marker also drops
+         the permission if a library adds it later. -->
+    <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
     <!-- Jahrescheck-Erinnerung (Android 13+ fragt zur Laufzeit nach) und Neuplanung nach Neustart -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
