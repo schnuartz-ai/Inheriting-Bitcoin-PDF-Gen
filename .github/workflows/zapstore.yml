@@ -1,0 +1,60 @@
+name: Publish to Zapstore
+
+# Manual, one click: GitHub > Actions > "Publish to Zapstore" > Run workflow.
+# It publishes the newest GitHub release tagged "app-v*" (see zapstore.yaml) to Zapstore.
+# Nothing here runs automatically, so no release is published unless you start it.
+#
+# One-time setup (done by the owner, not by this workflow):
+#   1. Run the "zsp" wizard locally once (claims the app for your Nostr key, needs the Android keystore).
+#   2. Add the repository secret ZAPSTORE_SIGN_WITH with a bunker:// URL or nsec of a DELEGATE key
+#      (a delegate can publish releases but cannot take over the app).
+#
+# For a new version: push a tag "app-vX.Y.Z" (app.yml builds the GitHub release), wait for it to finish,
+# then start this workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      check_only:
+        description: "Only run 'zsp check' (nothing is published)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zapstore
+  cancel-in-progress: false
+
+env:
+  # Pinned on purpose: this job handles the signing key. Update deliberately.
+  ZSP_VERSION: v2.0.1
+
+jobs:
+  publish:
+    name: ${{ inputs.check_only && 'Check' || 'Publish' }}
+    # The signing secret is only used from the default branch.
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: Install zsp
+        run: |
+          go install "github.com/zapstore/zsp/v2/cmd/zsp@${ZSP_VERSION}"
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - name: Show zsp version
+        run: zsp -v
+      - name: Check listing
+        env:
+          SIGN_WITH: ${{ secrets.ZAPSTORE_SIGN_WITH }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: zsp check
+      - name: Publish release
+        if: ${{ !inputs.check_only }}
+        env:
+          SIGN_WITH: ${{ secrets.ZAPSTORE_SIGN_WITH }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: zsp publish
