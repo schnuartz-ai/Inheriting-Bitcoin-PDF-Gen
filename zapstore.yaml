@@ -1,0 +1,28 @@
+# Zapstore listing for the Android app (see app/STORE_LAUNCH.md).
+# Releases come from GitHub releases tagged "app-v*". Only the APK is used, not the AAB.
+repository: https://github.com/Schnuartz/bitcoin-inheritance-planner
+release_filter: '^app-v'
+match: '\.apk$'
+
+name: Bitcoin Inheritance Planner
+summary: Create a Bitcoin inheritance plan as a PDF and check it yearly. No seeds.
+description: |
+  Build a clear inheritance plan for your Bitcoin setup, step by step, and get a readable PDF that guides your heirs through recovery without prior knowledge.
+
+  - Guided wizard in clear boxes: hardware wallets, seeds and backups, software wallets, exchanges, password manager, multisig, Liana, timelock recovery, trusted contacts
+  - No secrets in the app: you write seed phrases, PINs and passphrases by hand into the printed PDF
+  - Visual overview of your seeds, wallets and backups
+  - Yearly check: pick a fixed date, the app reminds you once a year and gives you a checklist tailored to your plan, also included as a page in the PDF
+  - Optional PIN lock with AES-256 encryption of everything on the device
+  - Back up your plan to a password manager such as Bitwarden
+  - English and German, works fully offline
+tags:
+  - bitcoin
+  - inheritance
+  - security
+license: CPAL-1.0
+website: https://clavastack.com
+icon: app/resources/play-store-icon-512.png
+
+# Do not let remote sources (GitHub, Play Store) override the text above.
+metadata_sources: []
