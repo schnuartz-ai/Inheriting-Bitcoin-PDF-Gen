@@ -1,5 +1,6 @@
-const CACHE_NAME = 'bitcoin-inheritance-offline-v40';
-const CORE_URLS = ['./', './index.html', './diagram.css', './diagram.js', './assets/apps/bitwarden.png', './assets/clavastack-logo.png', './assets/products/smartcard.png', './assets/diagram/backup-paper-rip-mask2.png', './assets/diagram/backup-tamper-evident-bag-mask2.png', './assets/diagram/backup-paper-mask2.png', './assets/diagram/backup-metal-mask2.png', './assets/diagram/smartcard-mask2.png', './assets/diagram/seed-mask2.png', './site.webmanifest', ...['mnemonic','safe','smartcard','tree-structure','wallet','shared-wallet','two-keys','file','password','cloud','clock','contacts','exchange','devices','printer'].map(name => './assets/bitcoin-icons/' + name + '.svg')];
+const CACHE_NAME = 'bitcoin-inheritance-offline-v41';
+const FONT_URLS = ['fonts/fonts.css', ...[400,500,600,700,800].flatMap(w => [`fonts/roboto-latin-${w}-normal.woff2`, `fonts/roboto-latin-ext-${w}-normal.woff2`])].map(url => './' + url);
+const CORE_URLS = ['./', './index.html', './diagram.css', './diagram.js', './assets/apps/bitwarden.png', './assets/clavastack-logo.png', './assets/products/smartcard.png', './assets/diagram/backup-paper-rip-mask2.png', './assets/diagram/backup-tamper-evident-bag-mask2.png', './assets/diagram/backup-paper-mask2.png', './assets/diagram/backup-metal-mask2.png', './assets/diagram/smartcard-mask2.png', './assets/diagram/seed-mask2.png', './site.webmanifest', ...FONT_URLS, ...['mnemonic','safe','smartcard','tree-structure','wallet','shared-wallet','two-keys','file','password','cloud','clock','contacts','exchange','devices','printer'].map(name => './assets/bitcoin-icons/' + name + '.svg')];
 
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
@@ -70,7 +71,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  if (url.origin === self.location.origin || url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+  if (url.origin === self.location.origin) {
     event.respondWith(cacheFirst(request));
   }
 });

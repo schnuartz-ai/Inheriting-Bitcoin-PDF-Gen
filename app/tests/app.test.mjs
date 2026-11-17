@@ -106,14 +106,14 @@ test('plan file: crafted iteration counts are bounded', () => {
   assert.equal(c.iterationsFor({ iterations: 600000 }), 600000);
 });
 
-/* ---------- PIN key handling (app-shell.js) ---------- */
+/* ---------- Password key handling (app-shell.js) ---------- */
 function loadShellCrypto() {
   const src = read('src', 'app-shell.js');
   const code = slice(src, 'var te = new TextEncoder()', 'function loadJson(key)');
   return new Function(code + '\nreturn {encBytes: encBytes, decBytes: decBytes, deriveKek: deriveKek, importDek: importDek, unwrapDek: unwrapDek, b64e: b64e, b64d: b64d};')();
 }
 
-test('pin: the data key is not extractable and survives wrap and unwrap', async () => {
+test('password: the data key is not extractable and survives wrap and unwrap', async () => {
   const s = loadShellCrypto();
   const raw = crypto.getRandomValues(new Uint8Array(32));
   const dek = await s.importDek(raw);
@@ -126,16 +126,16 @@ test('pin: the data key is not extractable and survives wrap and unwrap', async 
   const again = await s.unwrapDek(wrapped, await s.deriveKek('12345678', salt, 1000));
   assert.equal(again.extractable, false);
   assert.equal(new TextDecoder().decode(await s.decBytes(again, data)), 'secret plan');
-  await assert.rejects(s.unwrapDek(wrapped, await s.deriveKek('87654321', salt, 1000)), 'wrong PIN must fail');
+  await assert.rejects(s.unwrapDek(wrapped, await s.deriveKek('87654321', salt, 1000)), 'wrong password must fail');
 });
 
-test('pin: changing the PIN keeps the same data key', async () => {
+test('password: changing the password keeps the same data key', async () => {
   const s = loadShellCrypto();
   const raw = crypto.getRandomValues(new Uint8Array(32));
   const dek = await s.importDek(raw);
   const salt1 = crypto.getRandomValues(new Uint8Array(16)), salt2 = crypto.getRandomValues(new Uint8Array(16));
   const wrapped1 = await s.encBytes(await s.deriveKek('11111111', salt1, 1000), raw);
-  // same steps as changePin: decrypt with the old PIN key, wrap with the new one
+  // same steps as changePassword: decrypt with the old password key, wrap with the new one
   const raw2 = await s.decBytes(await s.deriveKek('11111111', salt1, 1000), wrapped1);
   const wrapped2 = await s.encBytes(await s.deriveKek('22222222', salt2, 1000), raw2);
   const data = await s.encBytes(dek, new TextEncoder().encode('kept'));
@@ -196,4 +196,13 @@ test('calendar entry carries no plan details', () => {
   assert.ok(/SUMMARY:.*Plan 2/.test(ics), 'plans are told apart by number only');
   const first = PX.buildIcs({ date: '2027-03-01', time: '10:00', planNo: 1, planId: 'abc' });
   assert.ok(!/Plan 1/.test(first));
+});
+
+test('password: new passwords require at least 10 characters', () => {
+  const src = read('src', 'app-shell.js');
+  assert.match(src, /PW_MIN_NEW = 10/);
+  assert.match(src, /PW_MAX = 128/);
+  assert.match(src, /PW_ITER = 600000/);
+  assert.ok(!src.includes('PIN_MIN_NEW'), 'old PIN constant must be gone');
+  assert.ok(!src.includes('pinPad('), 'old numeric keypad must be gone');
 });

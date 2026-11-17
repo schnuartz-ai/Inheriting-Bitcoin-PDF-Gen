@@ -11,13 +11,13 @@ Repo
 └── app/                                            ← app only
     ├── src/                                        ← app features, defined here only
     │   ├── planner-extras.js/.css                  yearly check, checklist, calendar event, PDF checklist page
-    │   └── app-shell.js/.css                       plans, calendar, settings, PIN, backup, onboarding, mobile summary
+    │   └── app-shell.js/.css                       plans, calendar, settings, password, backup, onboarding, mobile summary
     ├── scripts/build-www.mjs                       builds app/www from core + src
     ├── android/, ios/, plugins/                    Capacitor projects and small native plugins (print, calendar)
     └── resources/                                  logo sources for icons and splash screens
 ```
 
-- **Website:** Everything in the repo root is published to the website by `sync-to-clavastack.yml` on every push to `master`. It has no PIN, no plans list and no yearly check.
+- **Website:** Everything in the repo root is published to the website by `sync-to-clavastack.yml` on every push to `master`. It has no password lock, no plans list and no yearly check.
 - **App:** `npm run build:www` copies the shared files to `app/www`, hooks in the files from `app/src` and writes a fresh version number into every file reference (so the WebView never uses stale cached files). Capacitor then packages the result as an Android and an iOS app.
 - **Extension points:** `index.html` contains a few lines marked "app extension point" (they check `window.PX`, for example an additional wizard step). They are inactive on the website because `window.PX` does not exist there. CI checks that `index.html` never references app files directly.
 - **Bug fixes** in the shared core (for example character escaping or the diagram layout) automatically apply to both outputs. New features that only the app should have belong in `app/src`.
@@ -29,7 +29,7 @@ cd app
 npm ci
 npm run assets      # regenerate logo and icons (only after a logo change)
 npm run sync        # build app/www and copy it into android/ios
-npm test            # unit tests for import, PIN crypto, backup text, calendar privacy
+npm test            # unit tests for import, password crypto, backup text, calendar privacy
 npm run android     # opens Android Studio
 npm run ios         # opens Xcode (macOS only)
 ```

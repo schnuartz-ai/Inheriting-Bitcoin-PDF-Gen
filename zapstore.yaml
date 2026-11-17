@@ -13,7 +13,7 @@ description: |
   - No secrets in the app: you write seed phrases, PINs and passphrases by hand into the printed PDF
   - Visual overview of your seeds, wallets and backups
   - Yearly check: pick a fixed date, the app reminds you once a year and gives you a checklist tailored to your plan, also included as a page in the PDF
-  - Optional PIN lock with AES-256 encryption of everything on the device
+  - Optional password lock with AES-256 encryption of everything on the device
   - Back up your plan to a password manager such as Bitwarden
   - English and German, works fully offline
 tags:

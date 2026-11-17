@@ -1,6 +1,6 @@
 #diagram-view[hidden] { display: none !important; }
 body.diagram-open .github-footer,body.diagram-open #offline-status-badge { display: none !important; }
-#diagram-view { min-height: 100vh; background: #070d15; color: #e8eff5; font-family: Montserrat, system-ui, sans-serif; }
+#diagram-view { min-height: 100vh; background: #070d15; color: #e8eff5; font-family: Roboto, system-ui, sans-serif; }
 .diagram-entry { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
 .diagram-entry .btn { flex: 1 1 220px; max-width: 360px; }
 .dg-shell { max-width: 1300px; margin: 0 auto; padding: 28px 24px 70px; }
@@ -12,7 +12,7 @@ body.diagram-open .github-footer,body.diagram-open #offline-status-badge { displ
 .dg-print-logo span { color: #1c3449; }
 .dg-print-pages { display: none; }
 .dg-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.dg-actions button { cursor: pointer; font: 700 12px Montserrat,system-ui,sans-serif; border-radius: 6px; padding: 10px 13px; min-height: 38px; }
+.dg-actions button { cursor: pointer; font: 700 12px Roboto,system-ui,sans-serif; border-radius: 6px; padding: 10px 13px; min-height: 38px; }
 .dg-tab,.dg-close { color: #9eb1c2; background: #101e2d; border: 1px solid #31465a; }
 .dg-tab.active { color: #fff; border-color: #1f99e5; background: #153f5e; }
 .dg-print { display: inline-flex; align-items: center; gap: 6px; color: #06121c; background: #64bdf3; border: 1px solid #64bdf3; }
@@ -62,7 +62,7 @@ body.diagram-open .github-footer,body.diagram-open #offline-status-badge { displ
 .dg-branded .dg-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 50px; height: 50px; }
 .dg-branded ul { padding-left: 0; }
 .dg-node ul { list-style: none; padding: 0 0 0 36px; margin: 5px 0 0; }
-.dg-node li { color: #a9becd; font: 500 10.5px/1.4 Montserrat,system-ui,sans-serif; padding: 2px 0; overflow-wrap: anywhere; }
+.dg-node li { color: #a9becd; font: 500 10.5px/1.4 Roboto,system-ui,sans-serif; padding: 2px 0; overflow-wrap: anywhere; }
 .dg-node li::before { content: '·'; margin-right: 5px; color: #68bbeb; }
 .dg-backup { border-left-color: #c0a775; }
 .dg-backup .dg-icon { color: #dcc48d; background: rgba(220,196,141,.12); }
@@ -84,7 +84,7 @@ body.diagram-open .github-footer,body.diagram-open #offline-status-badge { displ
 .dg-flow-target { display: flex; align-items: center; gap: 10px; position: relative; }
 .dg-flow-target::before { content: '→'; position: absolute; left: -20px; top: 50%; transform: translate(-50%,-50%); color: #69b5e2; font: 500 20px/1 system-ui,sans-serif; }
 .dg-flow-target > .dg-node { flex: 1 1 190px; }
-.dg-edge-tag { color: #83b8d8; font: 700 9px/1.3 Montserrat,system-ui,sans-serif; min-width: 72px; text-transform: uppercase; letter-spacing: .06em; }
+.dg-edge-tag { color: #83b8d8; font: 700 9px/1.3 Roboto,system-ui,sans-serif; min-width: 72px; text-transform: uppercase; letter-spacing: .06em; }
 .dg-flow-source { display: flex; gap: 10px; align-items: center; }
 .dg-flow-source .dg-node { flex: 1; }
 .dg-flow-source .dg-edge-tag { text-align: right; }
@@ -132,9 +132,9 @@ body.diagram-open .github-footer,body.diagram-open #offline-status-badge { displ
   body.diagram-print .dg-paper-brand { display: flex; align-items: center; gap: 2.5mm; height: 9mm; }
   body.diagram-print .dg-paper-brand img { width: 8mm; height: 8mm; object-fit: contain; }
   body.diagram-print .dg-paper-brand div { display: grid; gap: .5mm; }
-  body.diagram-print .dg-paper-brand span { color: #3486b5; font: 800 8px/1 Montserrat,system-ui,sans-serif; letter-spacing: .12em; }
-  body.diagram-print .dg-paper-brand strong { color: #193348; font: 800 17px/1.1 Montserrat,system-ui,sans-serif; }
-  body.diagram-print .dg-paper-legend { display: flex; align-items: center; gap: 3mm; height: 6mm; border-bottom: 1px solid #c4d5e1; font: 700 9px/1 Montserrat,system-ui,sans-serif; }
+  body.diagram-print .dg-paper-brand span { color: #3486b5; font: 800 8px/1 Roboto,system-ui,sans-serif; letter-spacing: .12em; }
+  body.diagram-print .dg-paper-brand strong { color: #193348; font: 800 17px/1.1 Roboto,system-ui,sans-serif; }
+  body.diagram-print .dg-paper-legend { display: flex; align-items: center; gap: 3mm; height: 6mm; border-bottom: 1px solid #c4d5e1; font: 700 9px/1 Roboto,system-ui,sans-serif; }
   body.diagram-print .dg-paper-legend span { display: inline-flex; align-items: center; gap: 1mm; white-space: nowrap; }
   body.diagram-print .dg-paper-legend .dg-symbol { width: 11px; height: 11px; color: #458fb8; }
   body.diagram-print .dg-paper-legend .dg-legend-assets { gap: 1px; }
