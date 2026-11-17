@@ -5038,16 +5038,24 @@ pdfBody.innerHTML=h;
 }
 
 // ===== SPEICHERN / LADEN (JSON) =====
-var PBKDF2_ITER = 210000;
+// New files use 600,000 rounds (OWASP 2023 for PBKDF2-HMAC-SHA256). Files written by older versions carry
+// their own count in the header (210,000) and are still readable. The header value is bounded so a crafted
+// file cannot make the browser hang.
+var PBKDF2_ITER = 600000, PBKDF2_ITER_MIN = 100000, PBKDF2_ITER_MAX = 5000000;
+var BACKUP_MIN_PASSWORD = 10, MAX_IMPORT_BYTES = 2 * 1024 * 1024;
+function iterationsFor(env){
+  var n = env && env.iterations;
+  return (typeof n === "number" && isFinite(n) && n >= PBKDF2_ITER_MIN && n <= PBKDF2_ITER_MAX) ? Math.floor(n) : 210000;
+}
 // Base64 <-> ArrayBuffer
 function ab2b64(buf){ var b=new Uint8Array(buf), s=""; for(var i=0;i<b.length;i++) s+=String.fromCharCode(b[i]); return btoa(s); }
 function b642ab(b64){ var s=atob(b64), len=s.length, u=new Uint8Array(len); for(var i=0;i<len;i++) u[i]=s.charCodeAt(i); return u.buffer; }
 function cryptoOK(){ return (typeof crypto!=="undefined") && crypto.subtle && typeof crypto.getRandomValues==="function"; }
-function deriveKey(password, salt, usage){
+function deriveKey(password, salt, usage, iterations){
   return crypto.subtle.importKey("raw", new TextEncoder().encode(password), {name:"PBKDF2"}, false, ["deriveKey"])
     .then(function(base){
       return crypto.subtle.deriveKey(
-        {name:"PBKDF2", salt:salt, iterations:PBKDF2_ITER, hash:"SHA-256"},
+        {name:"PBKDF2", salt:salt, iterations:iterations||PBKDF2_ITER, hash:"SHA-256"},
         base, {name:"AES-GCM", length:256}, false, usage);
     });
 }
@@ -5068,7 +5076,7 @@ function encryptState(password){
 function decryptState(password, env){
   var salt = new Uint8Array(b642ab(env.salt));
   var iv = new Uint8Array(b642ab(env.iv));
-  return deriveKey(password, salt, ["decrypt"]).then(function(key){
+  return deriveKey(password, salt, ["decrypt"], iterationsFor(env)).then(function(key){
     return crypto.subtle.decrypt({name:"AES-GCM", iv:iv}, key, b642ab(env.ciphertext));
   }).then(function(buf){
     return JSON.parse(new TextDecoder().decode(buf));
@@ -5148,8 +5156,8 @@ function triggerDownload(text, fname){
 function savePlan(){
   askPassword({
     title:L('savePlanTitle'),
-    text:LANG==='de' ? 'Lege ein Passwort fest. Wenn du nichts eingibst, wird der Plan unverschlüsselt gespeichert.' : 'Set a password. If you leave it blank, the plan will be saved unencrypted.',
-    confirm:true, allowEmpty:true, okLabel:L('saveLabel')
+    text:LANG==='de' ? 'Lege ein Passwort mit mindestens 10 Zeichen fest. Wenn du nichts eingibst, wird der Plan unverschlüsselt gespeichert.' : 'Set a password of at least 10 characters. If you leave it blank, the plan will be saved unencrypted.',
+    confirm:true, allowEmpty:true, minLen:BACKUP_MIN_PASSWORD, okLabel:L('saveLabel')
   }).then(function(pw){
     if(pw===null) return;
     var d = new Date(), p = function(n){ return (n<10?"0":"")+n; };
@@ -5167,8 +5175,52 @@ function savePlan(){
     });
   }).catch(function(e){ alert("Save failed: "+e.message); });
 }
+// ---- Import: a loaded file is never trusted ----
+// Keeps only what the planner knows, forces every field to the type of its default and caps list sizes.
+// Unknown keys are dropped (also __proto__), wrong types fall back to the default value.
+var IMPORT_MAX_ITEMS = 200;
+function conformTo(value, tpl, depth){
+  if(Array.isArray(tpl)){
+    return Array.isArray(value) ? value.slice(0, IMPORT_MAX_ITEMS) : tpl.slice();
+  }
+  if(tpl && typeof tpl === "object"){
+    var src = (value && typeof value === "object" && !Array.isArray(value)) ? value : {};
+    var out = {};
+    Object.keys(tpl).forEach(function(k){ out[k] = depth > 0 ? conformTo(src[k], tpl[k], depth - 1) : (src[k] === undefined ? tpl[k] : src[k]); });
+    // objects used as maps (acc, pur, deviceOpts ...) are not part of the template and are carried over as plain data
+    Object.keys(src).forEach(function(k){ if(k !== "__proto__" && k !== "constructor" && k !== "prototype" && !(k in out)) out[k] = src[k]; });
+    return out;
+  }
+  if(tpl === null){
+    return (value === null || ["string","number","boolean"].indexOf(typeof value) >= 0) ? value : null;
+  }
+  if(typeof tpl === "number" && typeof value === "string" && value.trim() !== "" && isFinite(Number(value))) return Number(value);
+  if(typeof tpl === "string" && typeof value === "number" && isFinite(value)) return String(value);
+  return typeof value === typeof tpl ? value : tpl;
+}
+function conformList(list, factory, depth){
+  if(!Array.isArray(list)) return [];
+  return list.slice(0, IMPORT_MAX_ITEMS).filter(function(it){ return it && typeof it === "object" && !Array.isArray(it); })
+    .map(function(it){ return conformTo(it, factory(), depth); });
+}
+function normalizeLoadedState(loaded){
+  var base = defaultState(), src = (loaded && typeof loaded === "object" && !Array.isArray(loaded)) ? loaded : {};
+  var out = conformTo(src, base, 2);
+  out.contacts = conformList(src.contacts, function(){ return {info:"", note:""}; }, 1);
+  out.devices = conformList(src.devices, newDevice, 1);
+  out.seeds = conformList(src.seeds, newSeed, 1).map(function(sd){
+    sd.backups = conformList(sd.backups, newBackup, 1);
+    var w = conformTo(sd.wallet, newWallet(), 1); sd.wallet = w;
+    sd.pp = conformList(sd.pp, newWallet, 1);
+    return sd;
+  });
+  out.multisigs = conformList(src.multisigs, newMultisig, 1);
+  out.lianaWallets = conformList(src.lianaWallets, newLianaWallet, 1);
+  out.devices.forEach(function(dv){ dv.companions = conformList(dv.companions, newCompanion, 1); });
+  return out;
+}
 function applyLoadedState(loaded){
-  state = Object.assign(defaultState(), loaded);
+  state = normalizeLoadedState(loaded);
   pos = screens().length - 1; render(); window.scrollTo(0,0);
   showToast(L('planLoaded'));
 }
@@ -5226,6 +5278,7 @@ function openLoadModal(){
   }
 
   function setFile(file){
+    if(file.size > MAX_IMPORT_BYTES){ errEl.textContent = L('notValidFile'); return; }
     selectedFile = file;
     dz.classList.add("has-file");
     dz.querySelector(".load-dropzone-label").innerHTML = '<strong>'+esc(file.name)+'</strong><br><span style="font-size:0.78rem;opacity:0.7;">'+Math.round(file.size/1024*10)/10+' KB</span>';
@@ -5283,6 +5336,7 @@ function openLoadModal(){
 function loadPlan(input){
   var file = input && input.files && input.files[0];
   if(!file) return;
+  if(file.size > MAX_IMPORT_BYTES){ alert(L('notValidFile')); return; }
   var reader = new FileReader();
   reader.onload = function(){
     var parsed;
@@ -5341,6 +5395,6 @@ document.addEventListener("DOMContentLoaded", function(){
 <div style="text-align:center;padding:0 24px;">
   <button type="button" id="offline-status-badge" class="app-header-offline-badge is-checking" onclick="prepareOfflineNow()" aria-live="polite" title="Prepare offline cache"><span class="offline-status-dot" aria-hidden="true"></span><span id="offline-status-text">Offline available</span><span id="offline-status-check" class="offline-status-check" hidden>✓</span></button>
 </div>
-<div class="github-footer"><a id="github-footer-link" href="https://github.com/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen" target="_blank" rel="noopener">Open Source on GitHub</a></div>
+<div class="github-footer"><a id="github-footer-link" href="https://github.com/Schnuartz/bitcoin-inheritance-planner" target="_blank" rel="noopener">Open Source on GitHub</a></div>
 </body>
 </html>

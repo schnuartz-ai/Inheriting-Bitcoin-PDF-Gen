@@ -818,6 +818,6 @@
     sanitizeState: sanitizeState,
     cleanShared: cleanShared,
     cleanSharedIfOld: cleanSharedIfOld,
-    _icsForTest: function(){ var r = rem(); return buildIcs({date: r.date, time: r.time, planNo: host.planNo(), planId: host.planId()}); }
+    buildIcs: buildIcs
   };
 })();

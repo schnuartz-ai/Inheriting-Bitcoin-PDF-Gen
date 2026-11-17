@@ -12,6 +12,7 @@
   /* ---------- Safety net: make errors visible, never a black screen ---------- */
   var isApp = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
   var fatalLines = [];
+  function tr(de, en){ return (typeof LANG !== 'undefined' && LANG === 'de') ? de : en; }
   function showFatal(msg, watchdog){
     if(!isApp) return;
     fatalLines.push(String(msg).slice(0, 220));
@@ -37,7 +38,7 @@
     // While the user is still at the PIN prompt or the introduction, the shell is empty on purpose
     if(document.getElementById('px-pin') || document.getElementById('px-onb')) return;
     var shell = document.getElementById('px-shell');
-    if(!shell || !shell.children.length) showFatal('Die App-Oberflaeche wurde nicht aufgebaut (Shell leer). PX=' + (window.PX ? 'ok' : 'fehlt'), true);
+    if(!shell || !shell.children.length) showFatal(tr('Die App-Oberfläche konnte nicht geladen werden. Bitte starte die App neu.', 'The app screen could not be loaded. Please restart the app.'), true);
   }, 4000);
 
   var PX = window.PX;
@@ -45,7 +46,7 @@
 
   var T = PX.T, e = PX.e, store = PX.store, plug = PX.plug;
   var BOOK_URL_APP = 'https://clavastack.com/security-talk?utm_source=inheritance-planner-app';
-  var APP_VERSION = '1.0';
+  var APP_VERSION = '__APP_VERSION__';   // replaced by scripts/build-www.mjs
   var KEY_SETTINGS = 'px.settings.v1', KEY_INDEX = 'px.plans.index', KEY_PLAN = 'px.plan.';
 
   var settings = {lang: null, onboarded: false, nextNo: 1};
@@ -64,7 +65,9 @@
 
   /* ---------- Storage ---------- */
   var KEY_PIN = 'px.pin.v1', KEY_FAIL = 'px.pin.fail';
-  var PIN_ITER = 400000, PIN_MIN = 6, PIN_MAX = 12, LOCK_AFTER_MS = 30000;
+  // New PINs need 8 to 12 digits and 600,000 PBKDF2 rounds. Older installs have 6 digit PINs and 400,000 rounds
+  // (stored in meta.iter), so unlocking still accepts 6 digits.
+  var PIN_ITER = 600000, PIN_MIN = 6, PIN_MIN_NEW = 8, PIN_MAX = 12, LOCK_AFTER_MS = 30000;
   // meta: {salt, iter, wrapped}. key: the data key, kept in memory only and only while unlocked.
   var pin = {meta: null, key: null};
   function pinOn(){ return !!pin.meta; }
@@ -88,8 +91,10 @@
       return crypto.subtle.deriveKey({name: 'PBKDF2', salt: salt, iterations: iter, hash: 'SHA-256'}, km, {name: 'AES-GCM', length: 256}, false, ['encrypt', 'decrypt']);
     });
   }
-  function wrapDek(dek, kek){ return crypto.subtle.exportKey('raw', dek).then(function(raw){ return encBytes(kek, raw); }); }
-  function unwrapDek(wrapped, kek){ return decBytes(kek, wrapped).then(function(raw){ return crypto.subtle.importKey('raw', raw, 'AES-GCM', true, ['encrypt', 'decrypt']); }); }
+  // The data key is never extractable in memory: it is created from random bytes, wrapped once with the PIN key
+  // and imported as a non-extractable CryptoKey. Changing the PIN re-wraps the raw bytes (decrypted with the old PIN key).
+  function importDek(raw){ return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']); }
+  function unwrapDek(wrapped, kek){ return decBytes(kek, wrapped).then(importDek); }
 
   function loadJson(key){
     return store.get(key).then(function(v){
@@ -129,7 +134,9 @@
   }
   function savePlanRec(rec, total){
     upsertEntry(entryFrom(rec, total));
-    return Promise.all([saveJson(KEY_PLAN + rec.id, rec), saveIndex()]);
+    // One after the other: the plan itself first, the index afterwards. If the app dies in between, the plan exists
+    // without index entry (harmless) instead of an index entry that points to nothing.
+    return saveJson(KEY_PLAN + rec.id, rec).then(function(){ return saveIndex(); });
   }
 
   function createPlan(name){
@@ -485,6 +492,11 @@
              '<button class="btn btn-ghost" onclick="PXS.view(\'' + p.id + '\')">' + e(T('Ansehen', 'View')) + '</button></div></div>';
       });
     }
+    if(index.length && !pinOn()){
+      h += '<div class="empty small"><div class="empty-title">' + e(T('Plan nicht geschützt', 'Plans not protected')) + '</div><p>' +
+           e(T('Ohne PIN liegen deine Pläne unverschlüsselt im App-Speicher dieses Geräts. Aktiviere den PIN-Schutz in den Einstellungen.', 'Without a PIN your plans are stored unencrypted in the app storage of this device. Turn on the PIN protection in Settings.')) + '</p>' +
+           '<button class="btn btn-primary" onclick="PXS.tab(\'settings\')">' + e(T('Zu den Einstellungen', 'Open settings')) + '</button></div>';
+    }
     h += '<button class="row-btn" onclick="PXS.restore()"><span>' + e(T('Plan aus Backup wiederherstellen', 'Restore a plan from a backup')) + '</span>' + ico('right') + '</button>';
     return h + PX.consultCard() + '</div>';
   }
@@ -566,8 +578,8 @@
          '<p class="muted">' + e(T('Erinnerungen laufen lokal auf deinem Gerät und enthalten keine Details zu deinem Plan.', 'Reminders run locally on your device and contain no details about your plan.')) + '</p></div>';
     h += '<div class="sg"><div class="sg-title">' + e(T('Sicherheit', 'Security')) + '</div>' +
          '<div class="sg-row"><span>' + e(T('PIN-Schutz: ', 'PIN protection: ') + (pinOn() ? T('an', 'on') : T('aus', 'off'))) + '</span></div>' +
-         '<p class="muted">' + e(T('Optional. Mit PIN werden alle Pläne und Termine auf diesem Gerät verschlüsselt (AES-256), und die App sperrt sich, wenn sie 30 Sekunden im Hintergrund war. Mit „PIN zurücksetzen“ legst du mit deiner alten PIN eine neue fest. Ohne die alte PIN gibt es keine Wiederherstellung, dann bleibt nur, alle Daten zu löschen. Schreibe die PIN deshalb sicher auf.',
-                                 'Optional. With a PIN all plans and dates on this device are encrypted (AES-256), and the app locks after being in the background for 30 seconds. With "Reset PIN" you set a new one using your old PIN. Without the old PIN there is no recovery; the only way out is deleting all data. So write the PIN down safely.')) + '</p>' +
+         '<p class="muted">' + e(T('Optional. Mit PIN (8 bis 12 Ziffern) werden alle Pläne und Termine auf diesem Gerät verschlüsselt (AES-256), und die App sperrt sich, wenn sie 30 Sekunden im Hintergrund war. Mit „PIN zurücksetzen“ legst du mit deiner alten PIN eine neue fest. Ohne die alte PIN gibt es keine Wiederherstellung, dann bleibt nur, alle Daten zu löschen. Schreibe die PIN deshalb sicher auf.',
+                                 'Optional. With a PIN (8 to 12 digits) all plans and dates on this device are encrypted (AES-256), and the app locks after being in the background for 30 seconds. With "Reset PIN" you set a new one using your old PIN. Without the old PIN there is no recovery; the only way out is deleting all data. So write the PIN down safely.')) + '</p>' +
          (pinOn() ? '<div class="sg-btns"><button class="btn btn-primary" onclick="PXS.lock()">' + e(T('Jetzt sperren', 'Lock now')) + '</button><button class="btn btn-ghost" onclick="PXS.pinChange()">' + e(T('PIN zurücksetzen', 'Reset PIN')) + '</button><button class="btn btn-danger-ghost" onclick="PXS.pinRemove()">' + e(T('PIN entfernen', 'Remove PIN')) + '</button></div>'
                   : '<button class="btn btn-primary btn-wide" onclick="PXS.pinSet()">' + e(T('PIN festlegen', 'Set a PIN')) + '</button>') + '</div>';
     h += '<div class="sg"><div class="sg-title">' + e(T('Hilfe', 'Help')) + '</div>' +
@@ -578,7 +590,7 @@
          '<button class="btn btn-danger-ghost" onclick="PXS.wipe()">' + e(T('Alle Daten auf diesem Gerät löschen', 'Delete all data on this device')) + '</button></div>';
     h += '<div class="sg"><div class="sg-title">' + e(T('Über die App', 'About')) + '</div>' +
          '<p class="muted">Bitcoin Inheritance Planner ' + APP_VERSION + '<br>' + e(T('Entwickelt von ', 'Built by ')) + '<a href="#" onclick="PXS.link(\'https://clavastack.com\');return false;">ClavaStack</a> · ' +
-         '<a href="#" onclick="PXS.link(\'https://github.com/schnuartz-ai/Inheriting-Bitcoin-PDF-Gen\');return false;">' + e(T('Open Source', 'Open source')) + '</a></p></div></div>';
+         '<a href="#" onclick="PXS.link(\'https://github.com/Schnuartz/bitcoin-inheritance-planner\');return false;">' + e(T('Open Source', 'Open source')) + '</a></p></div></div>';
     return h;
   }
   function refreshNotifState(){
@@ -620,7 +632,7 @@
     return new Promise(function(resolve){
       var old = $('px-pin'); if(old && old.parentNode) old.parentNode.removeChild(old);
       var el = document.createElement('div'); el.id = 'px-pin'; padOpen = true;
-      var val = '', busy = false;
+      var val = '', busy = false, min = o.min || PIN_MIN;
       var keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'x', '0', 'b'];
       var h = '<div class="pin-inner"><img class="pin-logo" src="assets/app-logo.svg" alt="">' +
               '<div class="pin-title">' + e(o.title) + '</div><div class="pin-text">' + e(o.text || '') + '</div>' +
@@ -638,14 +650,14 @@
       function close(){ if(el.parentNode) el.parentNode.removeChild(el); padOpen = false; }
       function finish(v){ close(); resolve(v); }
       function paint(msg){
-        var n = Math.max(PIN_MIN, val.length), d = '';
+        var n = Math.max(min, val.length), d = '';
         for(var i = 0; i < n; i++) d += '<i class="' + (i < val.length ? 'on' : '') + '"></i>';
         $('px-pin-dots').innerHTML = d;
         $('px-pin-msg').textContent = msg || '';
-        $('px-pin-ok').disabled = busy || val.length < PIN_MIN;
+        $('px-pin-ok').disabled = busy || val.length < min;
       }
       function submit(){
-        if(busy || val.length < PIN_MIN) return;
+        if(busy || val.length < min) return;
         busy = true; paint(T('Bitte warten ...', 'Please wait ...'));
         Promise.resolve(o.submit(val)).then(function(err){
           if(!err){ finish(val); return; }
@@ -688,9 +700,10 @@
   function enablePin(pinStr){
     var ids = index.map(function(p){ return p.id; }), salt = crypto.getRandomValues(new Uint8Array(16));
     return Promise.all(ids.map(function(id){ return loadJson(KEY_PLAN + id); })).then(function(recs){
-      return Promise.all([crypto.subtle.generateKey({name: 'AES-GCM', length: 256}, true, ['encrypt', 'decrypt']), deriveKek(pinStr, salt, PIN_ITER)]).then(function(r){
+      var raw = crypto.getRandomValues(new Uint8Array(32));
+      return Promise.all([importDek(raw), deriveKek(pinStr, salt, PIN_ITER)]).then(function(r){
         var dek = r[0], kek = r[1];
-        return wrapDek(dek, kek).then(function(wrapped){
+        return encBytes(kek, raw).then(function(wrapped){
           var meta = {salt: b64e(salt), iter: PIN_ITER, wrapped: wrapped};
           // Store the key first, then rewrite the data: everything stays readable even if interrupted (plaintext or encrypted)
           // Verified write: the data is only re-encrypted once the wrapped key is really stored and readable again.
@@ -716,10 +729,11 @@
       return Promise.all(jobs).then(function(){ return store.remove(KEY_PIN); }).then(function(){ pin.key = null; }, function(err){ pin.meta = saved; throw err; });
     });
   }
-  function changePin(newPin){
+  // The old PIN is needed to read the raw data key again (it is not kept extractable in memory)
+  function changePin(oldPin, newPin){
     var salt = crypto.getRandomValues(new Uint8Array(16));
-    return deriveKek(newPin, salt, PIN_ITER).then(function(kek){
-      return wrapDek(pin.key, kek).then(function(wrapped){
+    return Promise.all([deriveKek(oldPin, b64d(pin.meta.salt), pin.meta.iter), deriveKek(newPin, salt, PIN_ITER)]).then(function(ks){
+      return decBytes(ks[0], pin.meta.wrapped).then(function(raw){ return encBytes(ks[1], raw); }).then(function(wrapped){
         var meta = {salt: b64e(salt), iter: PIN_ITER, wrapped: wrapped};
         return store.setVerified(KEY_PIN, JSON.stringify(meta)).then(function(){ pin.meta = meta; });
       });
@@ -727,10 +741,10 @@
   }
 
   function askNewPin(){
-    return pinPad({title: T('Neue PIN festlegen', 'Set a new PIN'), text: T('6 bis 12 Ziffern, besser 8 oder mehr. Schreibe die PIN sicher auf, sie lässt sich nicht wiederherstellen.', '6 to 12 digits, better 8 or more. Write the PIN down safely, it cannot be recovered.'),
-                   cancel: true, submit: function(){ return Promise.resolve(null); }}).then(function(p1){
+    return pinPad({title: T('Neue PIN festlegen', 'Set a new PIN'), text: T('8 bis 12 Ziffern. Wähle keine einfache Zahlenfolge wie Geburtstag oder 12345678. Schreibe die PIN sicher auf, sie lässt sich nicht wiederherstellen.', '8 to 12 digits. Do not pick an easy number like a birthday or 12345678. Write the PIN down safely, it cannot be recovered.'),
+                   min: PIN_MIN_NEW, cancel: true, submit: function(){ return Promise.resolve(null); }}).then(function(p1){
       if(!p1) return null;
-      return pinPad({title: T('PIN wiederholen', 'Repeat the PIN'), text: '', cancel: true,
+      return pinPad({title: T('PIN wiederholen', 'Repeat the PIN'), text: '', min: PIN_MIN_NEW, cancel: true,
                      submit: function(p2){ return Promise.resolve(p2 === p1 ? null : T('Die PINs stimmen nicht überein.', 'The PINs do not match.')); }}).then(function(p2){ return p2 ? p1 : null; });
     });
   }
@@ -766,7 +780,8 @@
         if(!acc) return;
         return askNewPin().then(function(p){
           if(!p) return;
-          return changePin(p).then(function(){ toast(T('PIN zurückgesetzt. Schreibe die neue PIN sicher auf.', 'PIN reset. Write the new PIN down safely.')); });
+          return changePin(ok, p).then(function(){ toast(T('PIN zurückgesetzt. Schreibe die neue PIN sicher auf.', 'PIN reset. Write the new PIN down safely.')); },
+                                       function(){ toast(T('PIN konnte nicht geändert werden. Die alte PIN gilt weiter.', 'Could not change the PIN. The old PIN still works.'), 'err'); });
         });
       });
     });
@@ -829,13 +844,37 @@
     var stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream('gzip'));
     return new Response(stream).arrayBuffer().then(function(buf){ return 'CSIP-GZ1:' + b64e(buf); });
   }
+  // Limits protect against crafted backup texts (huge input, gzip bombs)
+  var MAX_PACKED_CHARS = 3000000, MAX_UNPACKED_BYTES = 4 * 1024 * 1024;
+  function readLimited(stream){
+    var reader = stream.getReader(), chunks = [], total = 0;
+    function pump(){
+      return reader.read().then(function(r){
+        if(r.done){
+          var all = new Uint8Array(total), off = 0;
+          chunks.forEach(function(c){ all.set(c, off); off += c.length; });
+          return all;
+        }
+        total += r.value.length;
+        if(total > MAX_UNPACKED_BYTES){ reader.cancel(); throw new Error('too-large'); }
+        chunks.push(r.value);
+        return pump();
+      });
+    }
+    return pump();
+  }
   function unpackText(input){
-    var m = /CSIP-(GZ|RAW)1:([A-Za-z0-9+\/=]+)/.exec(input || '');
-    if(!m) return Promise.resolve(String(input || '').trim());
+    input = String(input || '');
+    if(input.length > MAX_PACKED_CHARS) return Promise.reject(new Error('too-large'));
+    var m = /CSIP-(GZ|RAW)1:([A-Za-z0-9+\/=]+)/.exec(input);
+    if(!m) return Promise.resolve(input.trim());
     var bytes = b64d(m[2]);
-    if(m[1] === 'RAW') return Promise.resolve(td.decode(bytes));
+    if(m[1] === 'RAW'){
+      if(bytes.length > MAX_UNPACKED_BYTES) return Promise.reject(new Error('too-large'));
+      return Promise.resolve(td.decode(bytes));
+    }
     if(typeof DecompressionStream === 'undefined') return Promise.reject(new Error('gunzip'));
-    return new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+    return readLimited(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).then(function(all){ return td.decode(all); });
   }
   function copyText(text){
     function legacy(){
@@ -918,7 +957,7 @@
     toast(T('PDF wird vorbereitet ...', 'Preparing the PDF ...'));
     try { origBuild.apply(this, arguments); } catch(err){ showFatal('PDF: ' + (err && err.message)); return; }
     setTimeout(function(){
-      if(!window.__pxPrintStart || window.__pxPrintStart < t0) showFatal('PDF: Der Druckdialog wurde nicht gestartet. Bitte sende mir ein Foto dieser Meldung.');
+      if(!window.__pxPrintStart || window.__pxPrintStart < t0) showFatal(tr('PDF: Der Druckdialog wurde nicht gestartet. Bitte versuche es erneut.', 'PDF: The print dialog did not start. Please try again.'));
     }, 8000);
   };
   var origOpenDiagram = window.openDiagram;
@@ -929,7 +968,7 @@
     try { origOpenDiagram.call(this, mode); } catch(err){ showFatal('Grafik: ' + (err && err.message)); return; }
     setTimeout(function(){
       var dv = $('diagram-view');
-      if(dv && !dv.hidden && dv.getBoundingClientRect().height < 50) showFatal('Grafik: Die Anzeige ist leer. Bitte sende mir ein Foto dieser Meldung.');
+      if(dv && !dv.hidden && dv.getBoundingClientRect().height < 50) showFatal(tr('Grafik: Die Anzeige ist leer. Bitte versuche es erneut.', 'Graphic: The display is empty. Please try again.'));
     }, 1200);
   };
   document.addEventListener('visibilitychange', function(){ if(!document.hidden && PX.finishPrint) PX.finishPrint(); });
@@ -1140,10 +1179,8 @@
     notif: function(){ plug('LocalNotifications').requestPermissions().then(refreshNotifState); },
     intro: function(){ settings.onboarded = true; showOnboarding(); },
     link: openLink, wipe: wipe, pinSet: pinSet, pinChange: pinChange, pinRemove: pinRemove, lock: lockNow, restore: restorePlan,
-    _pack: function(t){ return packText(t); }, _unpack: function(t){ return unpackText(t); },
     onbLang: function(l){ setLanguage(l); onb.i = 1; drawOnb(); },
     onbNext: function(){ if(onb.i >= onbSlides().length) onbDone(); else { onb.i++; drawOnb(); } },
-    onbDone: onbDone,
-    _state: function(){ return {index: index, settings: settings, current: current, active: active}; }
+    onbDone: onbDone
   };
 })();

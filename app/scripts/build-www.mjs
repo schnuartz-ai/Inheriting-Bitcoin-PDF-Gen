@@ -22,9 +22,15 @@ cpSync(join(webRoot, 'assets'), join(www, 'assets'), {
 });
 
 // 2. App-only files
-for (const f of ['planner-extras.js', 'planner-extras.css', 'app-shell.js', 'app-shell.css']) {
+for (const f of ['planner-extras.js', 'planner-extras.css', 'app-shell.css']) {
   copyFileSync(join(appRoot, 'src', f), join(www, f));
 }
+// The version shown in Settings comes from the build (APP_VERSION, set by CI from the release tag), not from a constant in the source.
+const pkgVersion = JSON.parse(readFileSync(join(appRoot, 'package.json'), 'utf8')).version;
+const appVersion = (process.env.APP_VERSION || pkgVersion).replace(/[^0-9A-Za-z.+-]/g, '');
+const shellJs = readFileSync(join(appRoot, 'src', 'app-shell.js'), 'utf8');
+if (!shellJs.includes('__APP_VERSION__')) throw new Error('app-shell.js: Versions-Platzhalter nicht gefunden');
+writeFileSync(join(www, 'app-shell.js'), shellJs.replace('__APP_VERSION__', appVersion));
 copyFileSync(join(appRoot, 'src', 'app-logo.svg'), join(www, 'assets', 'app-logo.svg'));
 
 // 3. Montserrat locally (latin + latin-ext, weights 400-800), no Google Fonts request in the app
