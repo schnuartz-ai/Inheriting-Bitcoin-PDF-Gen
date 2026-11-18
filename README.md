@@ -62,11 +62,12 @@ handwriting lines, filled in by hand only after printing.
 | `assets/bitcoin-icons/` | Local generic diagram icons from Bitcoin Design |
 | `app/` | Mobile app (Android and iOS), kept apart from the website: see [app/README.md](app/README.md) |
 | `sw.js` / `site.webmanifest` | Service worker + PWA manifest for offline mode ("Make available offline") |
+| `fonts/` | Self-hosted Roboto (latin + latin-ext), shared by the website and the app |
 | `assets/clavastack-logo.png` | ClavaStack logo (source) |
 | `.github/workflows/sync-to-clavastack.yml` | CI: mirrors the planner files to the ClavaStack website on every push |
 | `.gitignore` | OS/editor artifacts |
 
-No external dependencies besides the Google Fonts link (Montserrat).
+No external dependencies. Roboto is bundled locally under `fonts/`; no Google Fonts request is made.
 
 ## Live version
 
@@ -75,7 +76,7 @@ The current `index.html` runs live at **[clavastack.com/inheritance-planner](htt
 
 ## Mobile app (Android and iOS)
 
-The planner also ships as a mobile app, **Bitcoin Inheritance Planner**, built with [Capacitor](https://capacitorjs.com). It lives in [`app/`](app/README.md) and is built from the same core files as this website plus app-only features (PIN lock, plans list, calendar, yearly check, backup to a password manager). The website does not contain those features. GitHub Actions builds the app automatically when `app/` or the shared core files change.
+The planner also ships as a mobile app, **Bitcoin Inheritance Planner**, built with [Capacitor](https://capacitorjs.com). It lives in [`app/`](app/README.md) and is built from the same core files as this website plus app-only features (password lock, plans list, calendar, yearly check, backup to a password manager). The website does not contain those features. GitHub Actions builds the app automatically when `app/` or the shared core files change.
 
 ## Security notice
 

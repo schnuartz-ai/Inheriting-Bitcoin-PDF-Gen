@@ -125,26 +125,26 @@ html.native-app .app-header-title { max-width: none !important; flex: 1; font-si
 #px-plan-tag { order: 5; flex: 1 0 100%; max-width: none; margin: 0; text-align: left; border-radius: 8px; padding: 6px 12px; }
 #px-plan-tag:empty { display: none; }
 
-/* ---- PIN prompt ---- */
+/* ---- Password prompt ---- */
 .sg-btns { display: flex; flex-direction: column; gap: 10px; }
 .btn-wide { width: 100%; min-height: 46px; }
-#px-pin { position: fixed; inset: 0; z-index: 1400; background: var(--specter-dark); display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 16px; }
-.pin-inner { width: 100%; max-width: 340px; text-align: center; }
-.pin-logo { width: 72px; height: 72px; margin-bottom: 6px; }
-.pin-title { font-size: 1.25rem; font-weight: 800; margin-bottom: 6px; }
-.pin-text { font-size: 0.86rem; color: var(--specter-light-secondary); line-height: 1.5; min-height: 1.3em; margin-bottom: 14px; }
-.pin-dots { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; min-height: 18px; margin-bottom: 8px; }
-.pin-dots i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #4a5d72; }
-.pin-dots i.on { background: var(--specter-primary); border-color: var(--specter-primary); }
-.pin-msg { min-height: 1.5em; font-size: 0.82rem; color: var(--specter-coral); margin-bottom: 8px; }
-.pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
-.pin-key { height: 58px; border-radius: 14px; border: 1px solid #2a3a4a; background: var(--specter-dark-secondary); color: var(--specter-light); font-family: inherit; font-size: 1.4rem; font-weight: 700; cursor: pointer; }
-.pin-key:active { background: #2a3a4a; }
-.pin-aux { font-size: 0.8rem; color: var(--specter-light-secondary); }
-.pin-ok { width: 100%; min-height: 50px; }
-.pin-ok:disabled { opacity: 0.4; }
-.pin-link { margin-top: 14px; background: none; border: none; color: var(--specter-light-secondary); font-family: inherit; font-size: 0.8rem; text-decoration: underline; cursor: pointer; }
-@media print { #px-pin { display: none !important; } }
+#px-pw { position: fixed; inset: 0; z-index: 1400; background: var(--specter-dark); display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 16px; }
+.pw-inner { width: 100%; max-width: 420px; text-align: left; }
+.pw-logo { width: 72px; height: 72px; margin: 0 auto 10px; display: block; }
+.pw-title { font-size: 1.25rem; font-weight: 800; margin-bottom: 6px; text-align: center; }
+.pw-text { font-size: 0.86rem; color: var(--specter-light-secondary); line-height: 1.5; min-height: 1.3em; margin-bottom: 14px; white-space: pre-line; }
+.pw-field { display: block; margin-bottom: 10px; }
+.pw-field > span { display: block; font-size: 0.78rem; color: var(--specter-light-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
+.pw-input { width: 100%; padding: 12px 14px; border-radius: var(--radius); border: 1px solid #2a3a4a; background: var(--specter-dark-accent); color: var(--specter-light); font-family: inherit; font-size: 1rem; }
+.pw-input:focus { outline: none; border-color: var(--specter-primary); box-shadow: 0 0 0 3px rgba(31,153,229,0.15); }
+.pw-reveal { margin-top: 6px; background: none; border: none; color: var(--specter-light-secondary); font-family: inherit; font-size: 0.8rem; text-decoration: underline; cursor: pointer; }
+.pw-msg { min-height: 1.5em; font-size: 0.82rem; color: var(--specter-coral); margin-bottom: 8px; }
+.pw-ok { width: 100%; min-height: 50px; }
+.pw-ok:disabled { opacity: 0.4; }
+.pw-link { margin-top: 14px; background: none; border: none; color: var(--specter-light-secondary); font-family: inherit; font-size: 0.8rem; text-decoration: underline; cursor: pointer; }
+.pw-cancel { margin-top: 8px; }
+.pw-reveal:disabled, .pw-link:disabled { opacity: 0.4; cursor: default; }
+@media print { #px-pw { display: none !important; } }
 
 /* ---- Dialogs: checkbox, text field ---- */
 .m-text { white-space: pre-line; }

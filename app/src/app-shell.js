@@ -31,12 +31,12 @@
   window.addEventListener('error', function(ev){ showFatal((ev.message || 'error') + ' (' + String(ev.filename || '').split('/').pop() + ':' + ev.lineno + ')'); });
   window.addEventListener('unhandledrejection', function(ev){
     var m = ev.reason && (ev.reason.message || ev.reason);
-    if(m === 'locked') return;   // locked (PIN): expected behavior, not an error
+    if(m === 'locked') return;   // locked (password): expected behavior, not an error
     showFatal('Promise: ' + m);
   });
   if(isApp) setTimeout(function(){
-    // While the user is still at the PIN prompt or the introduction, the shell is empty on purpose
-    if(document.getElementById('px-pin') || document.getElementById('px-onb')) return;
+    // While the user is still at the password prompt or the introduction, the shell is empty on purpose
+    if(document.getElementById('px-pw') || document.getElementById('px-onb')) return;
     var shell = document.getElementById('px-shell');
     if(!shell || !shell.children.length) showFatal(tr('Die App-Oberfläche konnte nicht geladen werden. Bitte starte die App neu.', 'The app screen could not be loaded. Please restart the app.'), true);
   }, 4000);
@@ -65,9 +65,9 @@
 
   /* ---------- Storage ---------- */
   var KEY_PIN = 'px.pin.v1', KEY_FAIL = 'px.pin.fail';
-  // New PINs need 8 to 12 digits and 600,000 PBKDF2 rounds. Older installs have 6 digit PINs and 400,000 rounds
-  // (stored in meta.iter), so unlocking still accepts 6 digits.
-  var PIN_ITER = 600000, PIN_MIN = 6, PIN_MIN_NEW = 8, PIN_MAX = 12, LOCK_AFTER_MS = 30000;
+  // The storage key keeps its old name so existing installations keep their encrypted data.
+  // New passwords need at least 10 characters and 600,000 PBKDF2 rounds. Older 6-digit PINs still unlock.
+  var PW_ITER = 600000, PW_MIN_LEGACY = 6, PW_MIN_NEW = 10, PW_MAX = 128, LOCK_AFTER_MS = 30000;
   // meta: {salt, iter, wrapped}. key: the data key, kept in memory only and only while unlocked.
   var pin = {meta: null, key: null};
   function pinOn(){ return !!pin.meta; }
@@ -91,8 +91,8 @@
       return crypto.subtle.deriveKey({name: 'PBKDF2', salt: salt, iterations: iter, hash: 'SHA-256'}, km, {name: 'AES-GCM', length: 256}, false, ['encrypt', 'decrypt']);
     });
   }
-  // The data key is never extractable in memory: it is created from random bytes, wrapped once with the PIN key
-  // and imported as a non-extractable CryptoKey. Changing the PIN re-wraps the raw bytes (decrypted with the old PIN key).
+  // The data key is never extractable in memory: it is created from random bytes, wrapped once with the password key
+  // and imported as a non-extractable CryptoKey. Changing the password re-wraps the raw bytes (decrypted with the old password key).
   function importDek(raw){ return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']); }
   function unwrapDek(wrapped, kek){ return decBytes(kek, wrapped).then(importDek); }
 
@@ -494,7 +494,7 @@
     }
     if(index.length && !pinOn()){
       h += '<div class="empty small"><div class="empty-title">' + e(T('Plan nicht geschützt', 'Plans not protected')) + '</div><p>' +
-           e(T('Ohne PIN liegen deine Pläne unverschlüsselt im App-Speicher dieses Geräts. Aktiviere den PIN-Schutz in den Einstellungen.', 'Without a PIN your plans are stored unencrypted in the app storage of this device. Turn on the PIN protection in Settings.')) + '</p>' +
+           e(T('Ohne Passwort liegen deine Pläne unverschlüsselt im App-Speicher dieses Geräts. Aktiviere den Passwort-Schutz in den Einstellungen.', 'Without a password your plans are stored unencrypted in the app storage of this device. Turn on password protection in Settings.')) + '</p>' +
            '<button class="btn btn-primary" onclick="PXS.tab(\'settings\')">' + e(T('Zu den Einstellungen', 'Open settings')) + '</button></div>';
     }
     h += '<button class="row-btn" onclick="PXS.restore()"><span>' + e(T('Plan aus Backup wiederherstellen', 'Restore a plan from a backup')) + '</span>' + ico('right') + '</button>';
@@ -577,11 +577,11 @@
          '<button id="px-notif-btn" class="btn btn-ghost btn-sm" onclick="PXS.notif()" style="display:none">' + e(T('Erlauben', 'Allow')) + '</button></div>' +
          '<p class="muted">' + e(T('Erinnerungen laufen lokal auf deinem Gerät und enthalten keine Details zu deinem Plan.', 'Reminders run locally on your device and contain no details about your plan.')) + '</p></div>';
     h += '<div class="sg"><div class="sg-title">' + e(T('Sicherheit', 'Security')) + '</div>' +
-         '<div class="sg-row"><span>' + e(T('PIN-Schutz: ', 'PIN protection: ') + (pinOn() ? T('an', 'on') : T('aus', 'off'))) + '</span></div>' +
-         '<p class="muted">' + e(T('Optional. Mit PIN (8 bis 12 Ziffern) werden alle Pläne und Termine auf diesem Gerät verschlüsselt (AES-256), und die App sperrt sich, wenn sie 30 Sekunden im Hintergrund war. Mit „PIN zurücksetzen“ legst du mit deiner alten PIN eine neue fest. Ohne die alte PIN gibt es keine Wiederherstellung, dann bleibt nur, alle Daten zu löschen. Schreibe die PIN deshalb sicher auf.',
-                                 'Optional. With a PIN (8 to 12 digits) all plans and dates on this device are encrypted (AES-256), and the app locks after being in the background for 30 seconds. With "Reset PIN" you set a new one using your old PIN. Without the old PIN there is no recovery; the only way out is deleting all data. So write the PIN down safely.')) + '</p>' +
-         (pinOn() ? '<div class="sg-btns"><button class="btn btn-primary" onclick="PXS.lock()">' + e(T('Jetzt sperren', 'Lock now')) + '</button><button class="btn btn-ghost" onclick="PXS.pinChange()">' + e(T('PIN zurücksetzen', 'Reset PIN')) + '</button><button class="btn btn-danger-ghost" onclick="PXS.pinRemove()">' + e(T('PIN entfernen', 'Remove PIN')) + '</button></div>'
-                  : '<button class="btn btn-primary btn-wide" onclick="PXS.pinSet()">' + e(T('PIN festlegen', 'Set a PIN')) + '</button>') + '</div>';
+         '<div class="sg-row"><span>' + e(T('Passwort-Schutz: ', 'Password protection: ') + (pinOn() ? T('an', 'on') : T('aus', 'off'))) + '</span></div>' +
+         '<p class="muted">' + e(T('Optional. Mit einem Passwort (mindestens 10 Zeichen) werden alle Pläne und Termine auf diesem Gerät verschlüsselt (AES-256), und die App sperrt sich, wenn sie 30 Sekunden im Hintergrund war. Mit „Passwort zurücksetzen“ legst du mit deinem alten Passwort ein neues fest. Ohne das alte Passwort gibt es keine Wiederherstellung, dann bleibt nur, alle Daten zu löschen. Schreibe das Passwort deshalb sicher auf.',
+                                 'Optional. With a password (at least 10 characters) all plans and dates on this device are encrypted (AES-256), and the app locks after being in the background for 30 seconds. With "Reset password" you set a new one using your old password. Without the old password there is no recovery; the only way out is deleting all data. So write the password down safely.')) + '</p>' +
+         (pinOn() ? '<div class="sg-btns"><button class="btn btn-primary" onclick="PXS.lock()">' + e(T('Jetzt sperren', 'Lock now')) + '</button><button class="btn btn-ghost" onclick="PXS.pwChange()">' + e(T('Passwort zurücksetzen', 'Reset password')) + '</button><button class="btn btn-danger-ghost" onclick="PXS.pwRemove()">' + e(T('Passwort entfernen', 'Remove password')) + '</button></div>'
+                  : '<button class="btn btn-primary btn-wide" onclick="PXS.pwSet()">' + e(T('Passwort festlegen', 'Set a password')) + '</button>') + '</div>';
     h += '<div class="sg"><div class="sg-title">' + e(T('Hilfe', 'Help')) + '</div>' +
          '<button class="row-btn" onclick="PXS.intro()"><span>' + e(T('Einführung erneut ansehen', 'View the introduction again')) + '</span>' + ico('right') + '</button>' +
          '<button class="row-btn" onclick="PXS.link(\'' + BOOK_URL_APP + '\')"><span>' + e(T('Kostenloses Erstgespräch buchen', 'Book a free first consultation')) + '</span>' + ico('right') + '</button></div>';
@@ -610,7 +610,7 @@
     });
   }
 
-  // Deletes all plans, dates and the PIN, even without access to the (encrypted) index
+  // Deletes all plans, dates and the password, even without access to the (encrypted) index
   function wipeEverything(){
     return plug('Preferences').keys().then(function(r){
       var ks = ((r && r.keys) || []).filter(function(k){ return k === KEY_INDEX || k === KEY_PIN || k === KEY_FAIL || k.indexOf(KEY_PLAN) === 0; });
@@ -624,90 +624,87 @@
     }).then(function(){ index = []; pin.meta = null; pin.key = null; external = null; });
   }
 
-  /* ---------- PIN protection ---------- */
-  var pendingOpen = null, bgAt = 0, padOpen = false;
+  /* ---------- Password protection ---------- */
+  var pendingOpen = null, bgAt = 0, promptOpen = false;
 
-  // pinPad({title, text, cancel, submit(pinStr) -> Promise<error text|null>, extra:{label, onClick(finish)}}) -> Promise<pin|null>
-  function pinPad(o){
+  // passwordPrompt({title, text, cancel, submit(password) -> Promise<error text|null>, extra:{label, onClick(finish)}}) -> Promise<string|null>
+  function passwordPrompt(o){
     return new Promise(function(resolve){
-      var old = $('px-pin'); if(old && old.parentNode) old.parentNode.removeChild(old);
-      var el = document.createElement('div'); el.id = 'px-pin'; padOpen = true;
-      var val = '', busy = false, min = o.min || PIN_MIN;
-      var keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'x', '0', 'b'];
-      var h = '<div class="pin-inner"><img class="pin-logo" src="assets/app-logo.svg" alt="">' +
-              '<div class="pin-title">' + e(o.title) + '</div><div class="pin-text">' + e(o.text || '') + '</div>' +
-              '<div class="pin-dots" id="px-pin-dots"></div><div class="pin-msg" id="px-pin-msg"></div><div class="pin-pad">';
-      keys.forEach(function(k){
-        if(k === 'x') h += o.cancel ? '<button class="pin-key pin-aux" data-k="cancel">' + e(T('Abbrechen', 'Cancel')) + '</button>' : '<span></span>';
-        else if(k === 'b') h += '<button class="pin-key pin-aux" data-k="back" aria-label="' + e(T('Löschen', 'Delete')) + '">&#9003;</button>';
-        else h += '<button class="pin-key" data-k="' + k + '">' + k + '</button>';
-      });
-      h += '</div><button class="btn btn-primary pin-ok" id="px-pin-ok" disabled>OK</button>' +
-           (o.extra ? '<button class="pin-link" data-k="extra">' + e(o.extra.label) + '</button>' : '') + '</div>';
+      var old = $('px-pw'); if(old && old.parentNode) old.parentNode.removeChild(old);
+      var el = document.createElement('div'); el.id = 'px-pw'; promptOpen = true;
+      var busy = false, min = o.min || PW_MIN_LEGACY, max = o.max || PW_MAX;
+      var h = '<div class="pw-inner"><img class="pw-logo" src="assets/app-logo.svg" alt="">' +
+              '<div class="pw-title">' + e(o.title) + '</div><div class="pw-text">' + e(o.text || '') + '</div>' +
+              '<label class="pw-field"><span>' + e(T('Passwort', 'Password')) + '</span>' +
+              '<input class="pw-input" id="px-pw-input" type="password" autocomplete="' + (o.autocomplete || 'current-password') + '" maxlength="' + max + '">' +
+              '<button class="pw-reveal" type="button" id="px-pw-reveal" aria-label="' + e(T('Passwort anzeigen', 'Show password')) + '">' + e(T('anzeigen', 'show')) + '</button></label>' +
+              '<div class="pw-msg" id="px-pw-msg"></div>' +
+              '<button class="btn btn-primary pw-ok" id="px-pw-ok" disabled>OK</button>' +
+              (o.cancel ? '<button class="pw-link pw-cancel" id="px-pw-cancel">' + e(T('Abbrechen', 'Cancel')) + '</button>' : '') +
+              (o.extra ? '<button class="pw-link" id="px-pw-extra">' + e(o.extra.label) + '</button>' : '') + '</div>';
       el.innerHTML = h;
       document.body.appendChild(el);
-
-      function close(){ if(el.parentNode) el.parentNode.removeChild(el); padOpen = false; }
+      var inp = $('px-pw-input'), msg = $('px-pw-msg'), ok = $('px-pw-ok');
+      var reveal = $('px-pw-reveal'), extra = $('px-pw-extra'), cancel = $('px-pw-cancel');
+      function close(){ if(el.parentNode) el.parentNode.removeChild(el); promptOpen = false; }
       function finish(v){ close(); resolve(v); }
-      function paint(msg){
-        var n = Math.max(min, val.length), d = '';
-        for(var i = 0; i < n; i++) d += '<i class="' + (i < val.length ? 'on' : '') + '"></i>';
-        $('px-pin-dots').innerHTML = d;
-        $('px-pin-msg').textContent = msg || '';
-        $('px-pin-ok').disabled = busy || val.length < min;
+      function setBusy(on){
+        busy = on;
+        inp.disabled = on;
+        if(reveal) reveal.disabled = on;
+        if(extra) extra.disabled = on;
+        if(cancel) cancel.disabled = on;
       }
+      function paint(text){ msg.textContent = text || ''; ok.disabled = busy || inp.value.length < min; }
       function submit(){
-        if(busy || val.length < min) return;
-        busy = true; paint(T('Bitte warten ...', 'Please wait ...'));
-        Promise.resolve(o.submit(val)).then(function(err){
-          if(!err){ finish(val); return; }
-          busy = false; val = ''; paint(err);
-        }, function(){ busy = false; val = ''; paint(T('Das hat nicht geklappt.', 'That did not work.')); });
+        if(busy || inp.value.length < min) return;
+        var submitted = inp.value;
+        setBusy(true);
+        paint(T('Bitte warten ...', 'Please wait ...'));
+        Promise.resolve(o.submit(submitted)).then(function(err){
+          if(!err){ finish(submitted); return; }
+          setBusy(false); inp.value = ''; paint(err); inp.focus();
+        }, function(){ setBusy(false); inp.value = ''; paint(T('Das hat nicht geklappt.', 'That did not work.')); inp.focus(); });
       }
-      el._cancel = o.cancel ? function(){ finish(null); } : null;
-      el.addEventListener('click', function(ev){
-        var b = ev.target.closest ? ev.target.closest('button') : null;
-        if(!b || busy) return;
-        if(b.id === 'px-pin-ok'){ submit(); return; }
-        var k = b.getAttribute('data-k');
-        if(k === 'cancel'){ finish(null); }
-        else if(k === 'back'){ val = val.slice(0, -1); paint(''); }
-        else if(k === 'extra'){ o.extra.onClick(finish); }
-        else if(k && val.length < PIN_MAX){ val += k; paint(''); }
-      });
+      el._cancel = o.cancel ? function(){ if(!busy) finish(null); } : null;
+      inp.addEventListener('input', function(){ paint(''); });
+      inp.addEventListener('keydown', function(ev){ if(ev.key === 'Enter') submit(); else if(ev.key === 'Escape' && o.cancel && !busy) finish(null); });
+      ok.addEventListener('click', submit);
+      if(reveal) reveal.addEventListener('click', function(){ if(busy) return; inp.type = inp.type === 'password' ? 'text' : 'password'; inp.focus(); });
+      if(extra) extra.addEventListener('click', function(){ if(!busy) o.extra.onClick(finish); });
+      if(cancel) cancel.addEventListener('click', function(){ if(!busy) finish(null); });
+      el.addEventListener('mousedown', function(ev){ if(ev.target === el && o.cancel && !busy) finish(null); });
       paint('');
+      setTimeout(function(){ inp.focus(); }, 30);
     });
   }
 
   function failInfo(){ return loadJson(KEY_FAIL).then(function(f){ return f || {n: 0, until: 0}; }); }
-  // Checks the PIN and sets the data key on success. Returns null on success, otherwise the error text.
-  function verifyPin(pinStr){
+  // Checks the password and sets the data key on success. Returns null on success, otherwise the error text.
+  function verifyPassword(password){
     return failInfo().then(function(f){
       var now = Date.now();
       if(f.until && f.until > now) return T('Zu viele Versuche. Bitte warte ', 'Too many attempts. Please wait ') + Math.ceil((f.until - now) / 1000) + T(' Sekunden.', ' seconds.');
-      return deriveKek(pinStr, b64d(pin.meta.salt), pin.meta.iter).then(function(kek){ return unwrapDek(pin.meta.wrapped, kek); }).then(function(dek){
+      return deriveKek(password, b64d(pin.meta.salt), pin.meta.iter).then(function(kek){ return unwrapDek(pin.meta.wrapped, kek); }).then(function(dek){
         pin.key = dek;
-        return store.remove(KEY_FAIL).then(function(){ return null; }, function(){ return null; });   // the PIN was right, a stale counter must not block
+        return store.remove(KEY_FAIL).then(function(){ return null; }, function(){ return null; });
       }, function(){
         var n = (f.n || 0) + 1, until = n >= 5 ? now + Math.min(15 * 60000, 30000 * Math.pow(2, n - 5)) : 0;
         return saveJson(KEY_FAIL, {n: n, until: until}).then(function(){
-          return T('Falsche PIN.', 'Wrong PIN.') + (until ? T(' Bitte warte ', ' Please wait ') + Math.ceil((until - now) / 1000) + T(' Sekunden.', ' seconds.') : '');
+          return T('Falsches Passwort.', 'Wrong password.') + (until ? T(' Bitte warte ', ' Please wait ') + Math.ceil((until - now) / 1000) + T(' Sekunden.', ' seconds.') : '');
         });
       });
     });
   }
 
-  function enablePin(pinStr){
+  function enableLock(password){
     var ids = index.map(function(p){ return p.id; }), salt = crypto.getRandomValues(new Uint8Array(16));
     return Promise.all(ids.map(function(id){ return loadJson(KEY_PLAN + id); })).then(function(recs){
       var raw = crypto.getRandomValues(new Uint8Array(32));
-      return Promise.all([importDek(raw), deriveKek(pinStr, salt, PIN_ITER)]).then(function(r){
+      return Promise.all([importDek(raw), deriveKek(password, salt, PW_ITER)]).then(function(r){
         var dek = r[0], kek = r[1];
         return encBytes(kek, raw).then(function(wrapped){
-          var meta = {salt: b64e(salt), iter: PIN_ITER, wrapped: wrapped};
-          // Store the key first, then rewrite the data: everything stays readable even if interrupted (plaintext or encrypted)
-          // Verified write: the data is only re-encrypted once the wrapped key is really stored and readable again.
-          // Otherwise a failed write would leave encrypted data behind without any way to open it.
+          var meta = {salt: b64e(salt), iter: PW_ITER, wrapped: wrapped};
           return store.setVerified(KEY_PIN, JSON.stringify(meta)).then(function(){
             pin.meta = meta; pin.key = dek;
             var jobs = [];
@@ -719,77 +716,84 @@
       });
     });
   }
-  function disablePin(){
+  function disableLock(){
     var ids = index.map(function(p){ return p.id; });
     return Promise.all(ids.map(function(id){ return loadJson(KEY_PLAN + id); })).then(function(recs){
-      var saved = pin.meta; pin.meta = null;      // from now on plaintext is written
+      var saved = pin.meta; pin.meta = null;
       var jobs = [];
       recs.forEach(function(rec, i){ if(rec) jobs.push(saveJson(KEY_PLAN + ids[i], rec)); });
       jobs.push(saveIndex());
       return Promise.all(jobs).then(function(){ return store.remove(KEY_PIN); }).then(function(){ pin.key = null; }, function(err){ pin.meta = saved; throw err; });
     });
   }
-  // The old PIN is needed to read the raw data key again (it is not kept extractable in memory)
-  function changePin(oldPin, newPin){
+  // The old password is needed to read the raw data key again (it is not kept extractable in memory).
+  function changePassword(oldPassword, newPassword){
     var salt = crypto.getRandomValues(new Uint8Array(16));
-    return Promise.all([deriveKek(oldPin, b64d(pin.meta.salt), pin.meta.iter), deriveKek(newPin, salt, PIN_ITER)]).then(function(ks){
+    return Promise.all([deriveKek(oldPassword, b64d(pin.meta.salt), pin.meta.iter), deriveKek(newPassword, salt, PW_ITER)]).then(function(ks){
       return decBytes(ks[0], pin.meta.wrapped).then(function(raw){ return encBytes(ks[1], raw); }).then(function(wrapped){
-        var meta = {salt: b64e(salt), iter: PIN_ITER, wrapped: wrapped};
+        var meta = {salt: b64e(salt), iter: PW_ITER, wrapped: wrapped};
         return store.setVerified(KEY_PIN, JSON.stringify(meta)).then(function(){ pin.meta = meta; });
       });
     });
   }
 
-  function askNewPin(){
-    return pinPad({title: T('Neue PIN festlegen', 'Set a new PIN'), text: T('8 bis 12 Ziffern. Wähle keine einfache Zahlenfolge wie Geburtstag oder 12345678. Schreibe die PIN sicher auf, sie lässt sich nicht wiederherstellen.', '8 to 12 digits. Do not pick an easy number like a birthday or 12345678. Write the PIN down safely, it cannot be recovered.'),
-                   min: PIN_MIN_NEW, cancel: true, submit: function(){ return Promise.resolve(null); }}).then(function(p1){
+  function askNewPassword(){
+    return passwordPrompt({
+      title: T('Neues Passwort festlegen', 'Set a new password'),
+      text: T('Mindestens 10 Zeichen. Verwende Buchstaben, Zahlen und Sonderzeichen. Schreibe das Passwort sicher auf, es lässt sich nicht wiederherstellen.',
+              'At least 10 characters. Use letters, numbers and special characters. Write the password down safely; it cannot be recovered.'),
+      min: PW_MIN_NEW, max: PW_MAX, autocomplete: 'new-password', cancel: true,
+      submit: function(){ return Promise.resolve(null); }
+    }).then(function(p1){
       if(!p1) return null;
-      return pinPad({title: T('PIN wiederholen', 'Repeat the PIN'), text: '', min: PIN_MIN_NEW, cancel: true,
-                     submit: function(p2){ return Promise.resolve(p2 === p1 ? null : T('Die PINs stimmen nicht überein.', 'The PINs do not match.')); }}).then(function(p2){ return p2 ? p1 : null; });
+      return passwordPrompt({
+        title: T('Passwort wiederholen', 'Repeat the password'), text: '', min: PW_MIN_NEW, max: PW_MAX,
+        autocomplete: 'new-password', cancel: true,
+        submit: function(p2){ return Promise.resolve(p2 === p1 ? null : T('Die Passwörter stimmen nicht überein.', 'The passwords do not match.')); }
+      }).then(function(p2){ return p2 ? p1 : null; });
     });
   }
-  function askCurrentPin(title){
-    return pinPad({title: title, text: T('Gib deine aktuelle PIN ein.', 'Enter your current PIN.'), cancel: true, submit: verifyPin});
+  function askCurrentPassword(title){
+    return passwordPrompt({title: title, text: T('Gib dein aktuelles Passwort ein.', 'Enter your current password.'), cancel: true, submit: verifyPassword});
   }
-  // Warning with mandatory checkbox: the PIN cannot be recovered
-  function pinWarning(okLabel){
+  // Warning with mandatory checkbox: the password cannot be recovered.
+  function passwordWarning(okLabel){
     return ask({
-      title: T('Wichtig: PIN sicher aufschreiben', 'Important: write your PIN down safely'),
-      text: T('Die PIN ist der Schlüssel zu deinen verschlüsselten Daten. Verlierst oder vergisst du sie, ist die Verschlüsselung nicht mehr zu öffnen, und die Daten lassen sich nicht wiederherstellen. Auch wir können das nicht.\n\nSchreibe die PIN deshalb sicher auf, zum Beispiel auf Papier an einem sicheren Ort oder in deinem Passwort-Manager, und bewahre sie getrennt vom Handy auf.',
-              'The PIN is the key to your encrypted data. If you lose or forget it, the encryption can no longer be opened and the data cannot be recovered. We cannot do it either.\n\nSo write the PIN down safely, for example on paper in a safe place or in your password manager, and keep it apart from your phone.'),
-      check: T('Ich habe verstanden und schreibe die PIN sicher auf.', 'I understand and will write the PIN down safely.'),
+      title: T('Wichtig: Passwort sicher aufschreiben', 'Important: write your password down safely'),
+      text: T('Das Passwort ist der Schlüssel zu deinen verschlüsselten Daten. Verlierst oder vergisst du es, ist die Verschlüsselung nicht mehr zu öffnen, und die Daten lassen sich nicht wiederherstellen. Auch wir können das nicht.\n\nSchreibe das Passwort deshalb sicher auf, zum Beispiel auf Papier an einem sicheren Ort oder in deinem Passwort-Manager, und bewahre es getrennt vom Handy auf.',
+              'The password is the key to your encrypted data. If you lose or forget it, the encryption can no longer be opened and the data cannot be recovered. We cannot do it either.\n\nSo write the password down safely, for example on paper in a safe place or in your password manager, and keep it apart from your phone.'),
+      check: T('Ich habe verstanden und schreibe das Passwort sicher auf.', 'I understand and will write the password down safely.'),
       ok: okLabel
     });
   }
-  function pinSet(){
-    pinWarning(T('Weiter', 'Continue')).then(function(ok){
+  function pwSet(){
+    passwordWarning(T('Weiter', 'Continue')).then(function(ok){
       if(!ok) return;
-      askNewPin().then(function(p){
+      askNewPassword().then(function(p){
         if(!p) return;
         toast(T('Verschlüssele ...', 'Encrypting ...'));
-        return enablePin(p).then(function(){ toast(T('PIN-Schutz ist an. Schreibe die PIN sicher auf.', 'PIN protection is on. Write the PIN down safely.')); renderShell(); },
-                                 function(){ toast(T('PIN konnte nicht gesetzt werden', 'Could not set the PIN'), 'err'); });
+        return enableLock(p).then(function(){ toast(T('Passwort-Schutz ist an. Schreibe das Passwort sicher auf.', 'Password protection is on. Write the password down safely.')); renderShell(); },
+                                 function(){ toast(T('Passwort konnte nicht gesetzt werden', 'Could not set the password'), 'err'); });
       });
     });
   }
-  // Reset PIN: set a new one using the old PIN, the data is kept
-  function pinChange(){
-    askCurrentPin(T('PIN zurücksetzen', 'Reset PIN')).then(function(ok){
+  function pwChange(){
+    askCurrentPassword(T('Passwort zurücksetzen', 'Reset password')).then(function(ok){
       if(!ok) return;
-      return pinWarning(T('Weiter', 'Continue')).then(function(acc){
+      return passwordWarning(T('Weiter', 'Continue')).then(function(acc){
         if(!acc) return;
-        return askNewPin().then(function(p){
+        return askNewPassword().then(function(p){
           if(!p) return;
-          return changePin(ok, p).then(function(){ toast(T('PIN zurückgesetzt. Schreibe die neue PIN sicher auf.', 'PIN reset. Write the new PIN down safely.')); },
-                                       function(){ toast(T('PIN konnte nicht geändert werden. Die alte PIN gilt weiter.', 'Could not change the PIN. The old PIN still works.'), 'err'); });
+          return changePassword(ok, p).then(function(){ toast(T('Passwort zurückgesetzt. Schreibe das neue Passwort sicher auf.', 'Password reset. Write the new password down safely.')); },
+                                       function(){ toast(T('Passwort konnte nicht geändert werden. Das alte Passwort gilt weiter.', 'Could not change the password. The old password still works.'), 'err'); });
         });
       });
     });
   }
-  function pinRemove(){
-    askCurrentPin(T('PIN entfernen', 'Remove PIN')).then(function(ok){
+  function pwRemove(){
+    askCurrentPassword(T('Passwort entfernen', 'Remove password')).then(function(ok){
       if(!ok) return;
-      return disablePin().then(function(){ toast(T('PIN-Schutz ist aus', 'PIN protection is off')); renderShell(); }, function(){ toast(T('Das hat nicht geklappt', 'That did not work'), 'err'); });
+      return disableLock().then(function(){ toast(T('Passwort-Schutz ist aus', 'Password protection is off')); renderShell(); }, function(){ toast(T('Das hat nicht geklappt', 'That did not work'), 'err'); });
     });
   }
 
@@ -810,24 +814,26 @@
     });
   }
   function unlockFlow(){
-    return pinPad({
-      title: 'Bitcoin Inheritance Planner', text: T('Gib deine PIN ein.', 'Enter your PIN.'), cancel: false, submit: verifyPin,
-      extra: {label: T('PIN vergessen? Alle Daten löschen', 'Forgot your PIN? Delete all data'), onClick: function(finish){
-        ask({title: T('Alle Daten löschen?', 'Delete all data?'), text: T('Ohne PIN lassen sich die Daten nicht entschlüsseln. Alle Pläne und Termine werden gelöscht, danach startet die App leer.', 'Without the PIN the data cannot be decrypted. All plans and dates will be deleted and the app starts empty.'),
+    return passwordPrompt({
+      title: 'Bitcoin Inheritance Planner', text: T('Gib dein Passwort ein.', 'Enter your password.'), cancel: false, submit: verifyPassword,
+      extra: {label: T('Passwort vergessen? Alle Daten löschen', 'Forgot your password? Delete all data'), onClick: function(finish){
+        ask({title: T('Alle Daten löschen?', 'Delete all data?'), text: T('Ohne Passwort lassen sich die Daten nicht entschlüsseln. Alle Pläne und Termine werden gelöscht, danach startet die App leer.', 'Without the password the data cannot be decrypted. All plans and dates will be deleted and the app starts empty.'),
              ok: T('Alles löschen', 'Delete everything'), danger: true}).then(function(ok){
           if(ok) wipeEverything().then(function(){ finish('wiped'); }, function(){ toast(T('Löschen fehlgeschlagen. Bitte versuche es erneut.', 'Deleting failed. Please try again.'), 'err'); });
         });
       }}
     }).then(function(){ return afterUnlock(); });
   }
-  // Locks the app: data and display are removed from memory, then the PIN prompt follows
+  // Locks the app: data and display are removed from memory, then the password prompt follows.
   function lockNow(){
-    if(!pinOn() || !pin.key || padOpen) return Promise.resolve();
+    if(!pinOn() || !pin.key || promptOpen) return Promise.resolve();
     if(PX.isCheckOpen()) PX.closeCheck();
     var m = $('px-modal'); if(m && m._cancel) m._cancel();
     var p = current === 'wizard' ? leaveWizard() : Promise.resolve();
     return p.catch(function(){}).then(function(){
       PX.cleanShared();
+      if(typeof closeDiagram === 'function') closeDiagram();
+      var dv = $('diagram-view'); if(dv) dv.innerHTML = '';
       pin.key = null; index = []; external = null; active = null; PX.setCheck(null);
       state = defaultState();
       ['px-shell', 'wizard-host', 'pdf-body'].forEach(function(id){ var x = $(id); if(x) x.innerHTML = ''; });
@@ -1107,7 +1113,7 @@
   function onBack(){
     var mm = $('px-modal');
     if(mm && mm._cancel){ mm._cancel(); return; }
-    if(padOpen){ var pe = $('px-pin'); if(pe && pe._cancel) pe._cancel(); else plug('App').exitApp(); return; }
+    if(promptOpen){ var pe = $('px-pw'); if(pe && pe._cancel) pe._cancel(); else plug('App').exitApp(); return; }
     var m = $('px-modal');
     if(m && m._cancel){ m._cancel(); return; }
     if(PX.isCheckOpen()){ PX.closeCheck(); return; }
@@ -1147,7 +1153,7 @@
       settings = Object.assign(settings, r[0] || {});
       try { pin.meta = r[1] ? JSON.parse(r[1]) : null; } catch(err){ pin.meta = null; }
       if(settings.lang) setLanguage(settings.lang);
-      // Register listeners first so the back button also works at the PIN prompt
+      // Register listeners first so the back button also works at the password prompt
       plug('App').addListener('backButton', onBack);
       plug('App').addListener('appStateChange', function(st){
         if(!st) return;
@@ -1178,7 +1184,7 @@
     lang: function(l){ setLanguage(l); renderShell(); },
     notif: function(){ plug('LocalNotifications').requestPermissions().then(refreshNotifState); },
     intro: function(){ settings.onboarded = true; showOnboarding(); },
-    link: openLink, wipe: wipe, pinSet: pinSet, pinChange: pinChange, pinRemove: pinRemove, lock: lockNow, restore: restorePlan,
+    link: openLink, wipe: wipe, pwSet: pwSet, pwChange: pwChange, pwRemove: pwRemove, lock: lockNow, restore: restorePlan,
     onbLang: function(l){ setLanguage(l); onb.i = 1; drawOnb(); },
     onbNext: function(){ if(onb.i >= onbSlides().length) onbDone(); else { onb.i++; drawOnb(); } },
     onbDone: onbDone
