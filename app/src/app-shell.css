@@ -142,6 +142,8 @@ html.native-app .app-header-title { max-width: none !important; flex: 1; font-si
 .pw-ok { width: 100%; min-height: 50px; }
 .pw-ok:disabled { opacity: 0.4; }
 .pw-link { margin-top: 14px; background: none; border: none; color: var(--specter-light-secondary); font-family: inherit; font-size: 0.8rem; text-decoration: underline; cursor: pointer; }
+.pw-cancel { margin-top: 8px; }
+.pw-reveal:disabled, .pw-link:disabled { opacity: 0.4; cursor: default; }
 @media print { #px-pw { display: none !important; } }
 
 /* ---- Dialogs: checkbox, text field ---- */

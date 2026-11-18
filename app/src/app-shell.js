@@ -640,28 +640,40 @@
               '<button class="pw-reveal" type="button" id="px-pw-reveal" aria-label="' + e(T('Passwort anzeigen', 'Show password')) + '">' + e(T('anzeigen', 'show')) + '</button></label>' +
               '<div class="pw-msg" id="px-pw-msg"></div>' +
               '<button class="btn btn-primary pw-ok" id="px-pw-ok" disabled>OK</button>' +
+              (o.cancel ? '<button class="pw-link pw-cancel" id="px-pw-cancel">' + e(T('Abbrechen', 'Cancel')) + '</button>' : '') +
               (o.extra ? '<button class="pw-link" id="px-pw-extra">' + e(o.extra.label) + '</button>' : '') + '</div>';
       el.innerHTML = h;
       document.body.appendChild(el);
       var inp = $('px-pw-input'), msg = $('px-pw-msg'), ok = $('px-pw-ok');
+      var reveal = $('px-pw-reveal'), extra = $('px-pw-extra'), cancel = $('px-pw-cancel');
       function close(){ if(el.parentNode) el.parentNode.removeChild(el); promptOpen = false; }
       function finish(v){ close(); resolve(v); }
+      function setBusy(on){
+        busy = on;
+        inp.disabled = on;
+        if(reveal) reveal.disabled = on;
+        if(extra) extra.disabled = on;
+        if(cancel) cancel.disabled = on;
+      }
       function paint(text){ msg.textContent = text || ''; ok.disabled = busy || inp.value.length < min; }
       function submit(){
         if(busy || inp.value.length < min) return;
-        busy = true; paint(T('Bitte warten ...', 'Please wait ...'));
-        Promise.resolve(o.submit(inp.value)).then(function(err){
-          if(!err){ finish(inp.value); return; }
-          busy = false; inp.value = ''; paint(err); inp.focus();
-        }, function(){ busy = false; inp.value = ''; paint(T('Das hat nicht geklappt.', 'That did not work.')); inp.focus(); });
+        var submitted = inp.value;
+        setBusy(true);
+        paint(T('Bitte warten ...', 'Please wait ...'));
+        Promise.resolve(o.submit(submitted)).then(function(err){
+          if(!err){ finish(submitted); return; }
+          setBusy(false); inp.value = ''; paint(err); inp.focus();
+        }, function(){ setBusy(false); inp.value = ''; paint(T('Das hat nicht geklappt.', 'That did not work.')); inp.focus(); });
       }
-      el._cancel = o.cancel ? function(){ finish(null); } : null;
+      el._cancel = o.cancel ? function(){ if(!busy) finish(null); } : null;
       inp.addEventListener('input', function(){ paint(''); });
-      inp.addEventListener('keydown', function(ev){ if(ev.key === 'Enter') submit(); else if(ev.key === 'Escape' && o.cancel) finish(null); });
+      inp.addEventListener('keydown', function(ev){ if(ev.key === 'Enter') submit(); else if(ev.key === 'Escape' && o.cancel && !busy) finish(null); });
       ok.addEventListener('click', submit);
-      $('px-pw-reveal').addEventListener('click', function(){ inp.type = inp.type === 'password' ? 'text' : 'password'; inp.focus(); });
-      if(o.extra) $('px-pw-extra').addEventListener('click', function(){ o.extra.onClick(finish); });
-      el.addEventListener('mousedown', function(ev){ if(ev.target === el && o.cancel) finish(null); });
+      if(reveal) reveal.addEventListener('click', function(){ if(busy) return; inp.type = inp.type === 'password' ? 'text' : 'password'; inp.focus(); });
+      if(extra) extra.addEventListener('click', function(){ if(!busy) o.extra.onClick(finish); });
+      if(cancel) cancel.addEventListener('click', function(){ if(!busy) finish(null); });
+      el.addEventListener('mousedown', function(ev){ if(ev.target === el && o.cancel && !busy) finish(null); });
       paint('');
       setTimeout(function(){ inp.focus(); }, 30);
     });

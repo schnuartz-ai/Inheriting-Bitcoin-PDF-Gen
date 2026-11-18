@@ -206,3 +206,11 @@ test('password: new passwords require at least 10 characters', () => {
   assert.ok(!src.includes('PIN_MIN_NEW'), 'old PIN constant must be gone');
   assert.ok(!src.includes('pinPad('), 'old numeric keypad must be gone');
 });
+
+test('password prompt captures the submitted value and offers a visible cancel button', () => {
+  const src = read('src', 'app-shell.js');
+  assert.match(src, /var submitted = inp\.value;/);
+  assert.match(src, /inp\.disabled = on/);
+  assert.match(src, /id="px-pw-cancel"/);
+  assert.match(src, /pw-cancel/);
+});
